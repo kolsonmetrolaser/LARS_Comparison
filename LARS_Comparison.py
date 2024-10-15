@@ -700,8 +700,8 @@ def main():
     # folders = [r'K:\DI02_2018_PhII_JT\Data\20210502 - N-, M-, L-type brackets - free-floating - 5 test points - 10-60 kHz\Data_modernformat\M1',\
     #             r'K:\DI02_2018_PhII_JT\Data\20210502 - N-, M-, L-type brackets - free-floating - 5 test points - 10-60 kHz\Data_modernformat\M2']
     
-    # folders = [r'K:\DI02_2018_PhII_JT\Data\20210320 - L-, Y-, O-type brackets - free-floating - 5 test points - 10-60 kHz\Data original\L2',\
-    #             r'K:\DI02_2018_PhII_JT\Data\20210320 - L-, Y-, O-type brackets - free-floating - 5 test points - 10-60 kHz\Data original\L3']
+    # folders = [r'K:\DI02_2018_PhII_JT\Data\20210320 - L-, Y-, O-type brackets - free-floating - 5 test points - 10-60 kHz\Data original\L1',\
+    #             r'K:\DI02_2018_PhII_JT\Data\20210320 - L-, Y-, O-type brackets - free-floating - 5 test points - 10-60 kHz\Data original\L2']
         
     
     
