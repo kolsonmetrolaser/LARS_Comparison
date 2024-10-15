@@ -10,7 +10,8 @@ from scipy import sparse
 from numpy.typing import ArrayLike, NDArray
 import scipy.signal as sig
 
-def sgf(a:ArrayLike,n:int=1,w:int=101,p:int=0)->NDArray:
+
+def sgf(a: ArrayLike, n: int = 1, w: int = 101, p: int = 0) -> NDArray:
     """
     Recursively applies `scipy.signal.savgol_filter` `n` times to an array `a` with
     the settings `window_length = w` and `polyorder = p`
@@ -34,14 +35,15 @@ def sgf(a:ArrayLike,n:int=1,w:int=101,p:int=0)->NDArray:
     NDArray
         The filtered data.
     """
-    if w%2 == 0:
+    if w % 2 == 0:
         w += 1
     if n <= 0:
         return a
     elif n == 1:
-        return sig.savgol_filter(a,w,p,mode='nearest')
+        return sig.savgol_filter(a, w, p, mode='nearest')
     else:
-        return sgf(sig.savgol_filter(a,w,p,mode='nearest'),n-1)
+        return sgf(sig.savgol_filter(a, w, p, mode='nearest'), n-1)
+
 
 def whittaker_smooth(x, w, lam, differences=1):
     '''
@@ -74,7 +76,6 @@ def whittaker_smooth(x, w, lam, differences=1):
     B = sparse.csc_matrix(W * X.T)
     background = spsolve(A, B)
     return np.array(background)
-
 
 
 def airpls(x, lam=100, porder=1, itermax=100):
@@ -123,8 +124,8 @@ def airpls(x, lam=100, porder=1, itermax=100):
         z = whittaker_smooth(x, w, lam, porder)
         d = x - z
         dssn = np.abs(d[d < 0].sum())
-        if(dssn < 0.001 * (abs(x)).sum() or i == itermax):
-            if(i == itermax):
+        if (dssn < 0.001 * (abs(x)).sum() or i == itermax):
+            if (i == itermax):
                 print('airpls: max iteration reached!')
             break
         w[d >= 0] = 0  # d>0 means that this point is part of a peak,
