@@ -623,7 +623,7 @@ def main():
     settings['matching_penalty_order'] = 1 # Order of matching distance penalty.
     settings['nw_normalized'] = False # Whether to normalize the distance for the matching penalty.
     # SAVING
-    settings['save'] = True # Whether to save the results in .pkl files.
+    settings['save'] = False # Whether to save the results in .pkl files.
     # settings['save_tag'] = '20241009_sgfapp4' # Additional tag to give the default names 'pair_results.pkl' and 'data_dict.pkl'.
     settings['save_tag'] = '' # Additional tag to give the default names 'pair_results.pkl' and 'data_dict.pkl'.
     settings['pickled_data_path'] = '' # Path to pickled data_dict file. Useful when reanalyzing the same data with different settings.
