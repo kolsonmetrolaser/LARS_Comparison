@@ -10,7 +10,6 @@ import numpy as np
 from numpy.typing import NDArray
 from numba import njit
 
-#5000 runs of this with nx,ny = 66,61 took 96s without njit. 500000 runs took 68s with njit
 @njit
 def needleman_wunsch(x:NDArray,y:NDArray,penalty_order:float=1,gap:float=1,insert:float=-1,nw_normalized:bool=False):
     """
