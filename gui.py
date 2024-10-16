@@ -6,7 +6,8 @@ Created on Tue Oct 15 12:08:17 2024
 """
 # Import the tkinter module
 import tkinter as tk
-from tkinter import filedialog, DoubleVar, StringVar, Label, Entry, Button, OptionMenu, IntVar, Variable, BooleanVar
+from tkinter import filedialog, DoubleVar, StringVar, Label, Entry, Button
+from tkinter import OptionMenu, IntVar, Variable, BooleanVar, font
 from LARS_Comparison import LARS_Comparison_from_app
 
 
@@ -200,7 +201,7 @@ rootr.pack(side=tk.LEFT)
 
 
 def heading(txt, frame=root, lvl=0, padding=True, side=tk.TOP, subtext=None):
-    fonts = [("Helvetica", 20, "bold"), ("Helvetica", 14, "bold"), ("Helvetica", 10, "bold"), ("Helvetica", 9)]
+    fonts = [(default_font_name, 20, "bold"), (default_font_name, 14, "bold"), (default_font_name, 10, "bold"), (default_font_name, 9)]
     h = tk.Label(frame, text=txt, font=fonts[lvl])
     if subtext is not None:
         subframe = tk.Frame(frame)
@@ -227,6 +228,7 @@ dashes = '-'*45
 running_var = BooleanVar(root, value=False)
 prev_settings_var = Variable(root, value={})
 status_var = StringVar(root, value='nodir')
+default_font_name = font.nametofont('TkTextFont').actual()['family']
 
 # Start building App
 
@@ -747,15 +749,15 @@ save_directory_entry.pack(side=tk.LEFT, padx=4)
 frame_submit = tk.Frame(rootsubmit)
 frame_submit.pack(**padding_heading, side=tk.BOTTOM)
 
-submit_button = Button(root, text="Run Code", bg='firebrick4', fg='white', width=20, height=2, command=submit, font=("Helvetica", 20, "bold"))
+submit_button = Button(root, text="Run Code", bg='firebrick4', fg='white', width=20, height=2, command=submit, font=(default_font_name, 20, "bold"))
 submit_button.pack(**padding_heading)
 
 frame_status = tk.Frame(rootsubmit)
 frame_status.pack(side=tk.BOTTOM)
 
-status_label0 = Label(frame_status, text='Status:')
+status_label0 = Label(frame_status, text='Status:', font=(default_font_name, 12))
 status_label0.pack(**padding_setting, side=tk.LEFT)
-status_label = Label(frame_status, text='No directory selected.', bg='firebrick4', fg='white')
+status_label = Label(frame_status, text='No directory selected.', bg='firebrick4', fg='white', font=(default_font_name, 12))
 status_label.pack(**padding_setting, side=tk.RIGHT)
 
 # Start the main loop
