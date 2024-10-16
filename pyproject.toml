@@ -1,0 +1,18 @@
+[project]
+name = "MetroLaserLARS"
+version = "0.0.1"
+authors = [
+  { name="Karl Olson", email="kolson@metrolaserinc.com" },
+]
+description = "Data analysis for MetroLaser, Inc. Laser Acoustic Resonance Spectroscopy systems"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: Other/Proprietary License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/kolsonmetrolaser/LARS_Comparison"
+Issues = "https://github.com/kolsonmetrolaser/LARS_Comparison/issues"
