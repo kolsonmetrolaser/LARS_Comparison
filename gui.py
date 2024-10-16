@@ -16,7 +16,7 @@ def make_settings(suppress=False):
         # fmt: off
         # DATA
         settings['directory']                  = directory_var.get() # noqa
-        settings['pickled_data_path']    = pickled_data_path_var.get() # noqa
+        settings['pickled_data_path']          = pickled_data_path_var.get() # noqa
         # DATA DEFINITIONS
         settings['frange']                     = (frange_min_var.get()/1000, frange_max_var.get()/1000) # noqa
         settings['slc_limits']                 = (frange_min_var.get(), frange_max_var.get()) # noqa
@@ -43,7 +43,7 @@ def make_settings(suppress=False):
         # noise reduction
         settings['recursive_noise_reduction'] = True if recursive_noise_reduction_var.get() == 'True' else False  # noqa
         settings['max_noise_reduction_iter']  = max_noise_reduction_iter_var.get() # noqa
-        settings['regularization_ratio']      = regularization_ratio_var.get() # autopep8: ignore # noqa
+        settings['regularization_ratio']      = regularization_ratio_var.get() # noqa
         # PEAK MATCHING
         # stretching
         settings['max_stretch']               = max_stretch_var.get() # noqa
@@ -55,8 +55,10 @@ def make_settings(suppress=False):
         settings['matching_penalty_order']    = matching_penalty_order_var.get() # noqa
         settings['nw_normalized']             = True if nw_normalized_var.get() == 'True' else False  # noqa
         # SAVING
-        settings['save']                      = True if save_var.get() == 'True' else False  # noqa
+        settings['save_data']                 = True if save_data_var.get() == 'True' else False  # noqa
+        settings['save_results']              = True if save_results_var.get() == 'True' else False  # noqa
         settings['save_tag']                  = save_tag_var.get() # noqa
+        settings['save_folder']               = directory_var.get() if save_directory_var.get() == 'Same as LARS Data Directory' else save_directory_var.get() # noqa
         # fmt: on
     except tk.TclError as e:
         if not suppress:
@@ -69,20 +71,18 @@ def make_settings(suppress=False):
 
 
 def submit():
-    if submit_button.cget('bg') not in ['gold', 'green4']:
+    if status_var.get() in ['nodir', 'running']:
         return
 
     settings = make_settings()
     running_var.set(True)
     update_status()
-    # submit_button.config(text='Running Code...', bg='RoyalBlue2', relief=tk.SUNKEN)
 
     LARS_Comparison_from_app(settings)
 
     prev_settings_var.set(settings)
     running_var.set(False)
     update_status()
-    submit_button.config(text='Run Code', relief=tk.RAISED)
 
 
 def select_directory():
@@ -92,9 +92,16 @@ def select_directory():
         directory_entry.insert(0, directory)  # Insert the selected directory
 
 
+def select_save_directory():
+    save_directory = filedialog.askdirectory(title="Select a Directory")
+    if save_directory:
+        save_directory_entry.delete(0, tk.END)  # Clear the save_directory_entry box
+        save_directory_entry.insert(0, save_directory)  # Insert the selected save_directory
+
+
 def select_pickled_data_path():
     pickled_data_path = filedialog.askopenfilename(title="Select a data_dict[...].pkl file",
-                                                   filetypes=[("Pickled Data Dictionaries", "data_dict*.pkl")])
+                                                   filetypes=[("Pickled Data Dictionaries", "data_dict*.pkl"), ("All Files", "*.*")])
     if pickled_data_path:
         pickled_data_path_entry.delete(0, tk.END)  # Clear the pickled_data_path_entry box
         pickled_data_path_entry.insert(0, pickled_data_path)  # Insert the selected pickled_data_path
@@ -108,13 +115,13 @@ def update_peak_match_window_label(entry_text):
 
 def update_save_tag_label(*args):
     # Update the label text with the selected option
-    txt = "Save filename: data_dict_... and peak_results" if save_tag_var.get() == '' else 'Save filename: data_dict_... and peak_results_'
+    txt = "Save filename: data_dict... and peak_results" if save_tag_var.get() == '' else 'Save filename: data_dict_... and peak_results_'
     save_tag_label.config(text=txt)
 
 
-def hide_save_tag(selected_value):
+def hide_save_tag(*args):
     # update_status()  # also update submit button color
-    if selected_value == 'True':
+    if save_data_var.get() == 'True' or save_results_var.get() == 'True':
         save_tag_dummy_label.pack_forget()
         save_tag_label.pack(side=tk.LEFT)
         save_tag_entry.pack(side=tk.LEFT)
@@ -129,36 +136,48 @@ def hide_save_tag(selected_value):
 
 def update_status(*args):
     if running_var.get():
-        status = 'running'
+        status_var.set('running')
     elif Variable(root, make_settings(suppress=True)).get() == prev_settings_var.get():
-        status = 'ran'
-    elif directory_var.get() != '' and save_var.get() == 'True':
-        status = 'ready'
+        status_var.set('ran')
+    elif directory_var.get() != '' and save_results_var.get() == 'True':
+        status_var.set('ready')
     elif directory_var.get() != '':
-        status = 'nosave'
+        status_var.set('nosave')
     else:
-        status = 'nodir'
+        status_var.set('nodir')
 
-    if status == 'ready':
-        submit_button.config(bg='green4', fg='white')
-        status_label.config(bg='green4', fg='white')
-        status_label.config(text='Ready to run code!')
-    elif status == 'nosave':
-        submit_button.config(bg='gold', fg='black')
-        status_label.config(bg='gold', fg='black')
-        status_label.config(text='Warning: results will not be saved.')
-    elif status == 'nodir':
-        submit_button.config(bg='firebrick4', fg='white')
-        status_label.config(bg='firebrick4', fg='white')
-        status_label.config(text='No directory selected.')
-    elif status == 'running':
-        submit_button.config(bg='RoyalBlue2', fg='white')
-        status_label.config(bg='RoyalBlue2', fg='white')
-        status_label.config(text='')
-    elif status == 'ran':
-        submit_button.config(bg='DarkOrange1', fg='black')
-        status_label.config(bg='DarkOrange1', fg='black')
-        status_label.config(text='Just ran with these settings.')
+    if status_var.get() == 'ready':
+        bg, fg = 'green4', 'white'
+        button_text = 'Run Code'
+        label_state = tk.NORMAL
+        if save_data_var.get() == 'True':
+            label_text = 'Ready to run code!'
+        else:
+            label_text = 'Ready to run code! Results will be saved, but not data.'
+    elif status_var.get() == 'nosave':
+        bg, fg = 'gold', 'black'
+        button_text = 'Run Code'
+        label_text = 'Warning: results will not be saved.'
+        label_state = tk.NORMAL
+    elif status_var.get() == 'nodir':
+        bg, fg = 'firebrick4', 'white'
+        button_text = 'Run Code'
+        label_text = 'No directory selected.'
+        label_state = tk.NORMAL
+    elif status_var.get() == 'running':
+        bg, fg = 'RoyalBlue2', 'white'
+        button_text = 'Running Code...'
+        label_text = ''
+        label_state = tk.DISABLED
+    elif status_var.get() == 'ran':
+        bg, fg = 'DarkOrange1', 'black'
+        button_text = 'Run Code'
+        label_text = 'Just ran with these settings.'
+        label_state = tk.NORMAL
+
+    submit_button.config(bg=bg, fg=fg, text=button_text)
+    status_label.config(bg=bg, fg=fg, text=label_text, state=label_state)
+
     root.update()
     return
 
@@ -207,6 +226,7 @@ padding_option = {'pady': 0, 'padx': 4}
 dashes = '-'*45
 running_var = BooleanVar(root, value=False)
 prev_settings_var = Variable(root, value={})
+status_var = StringVar(root, value='nodir')
 
 # Start building App
 
@@ -227,7 +247,7 @@ directory_var = StringVar(root)
 directory_var.trace_add("write", update_status)
 directory_entry = Entry(frame_directory, width=40, textvariable=directory_var)
 
-directory_button = Button(frame_directory, text="Open", command=select_directory)
+directory_button = Button(frame_directory, text="Open", command=select_directory, bg='gray75')
 
 directory_label.pack(side=tk.LEFT, padx=4)
 directory_button.pack(side=tk.LEFT, padx=4)
@@ -251,7 +271,7 @@ pickled_data_path_var = StringVar(root)
 pickled_data_path_var.trace_add("write", update_status)
 pickled_data_path_entry = Entry(frame_pickled_data_path, width=40, textvariable=pickled_data_path_var)
 
-pickled_data_path_button = Button(frame_pickled_data_path, text="Open", command=select_pickled_data_path)
+pickled_data_path_button = Button(frame_pickled_data_path, text="Open", command=select_pickled_data_path, bg='gray75')
 
 pickled_data_path_label2.pack(side=tk.LEFT, padx=4)
 pickled_data_path_button.pack(side=tk.LEFT, padx=4)
@@ -292,6 +312,7 @@ combine_options = ['max', 'mean']
 combine_var = StringVar(root, value=combine_options[0])
 combine_var.trace_add("write", update_status)
 combine_menu = OptionMenu(frame_combine, combine_var, *combine_options)
+combine_menu.config(bg='gray75')
 
 combine_label.pack(side=tk.LEFT)
 combine_menu.pack(side=tk.LEFT)
@@ -318,14 +339,17 @@ frame_plot_menus.pack(side=tk.BOTTOM)
 plot_var = StringVar(root, value=bool_options[1])
 plot_var.trace_add("write", update_status)
 plot_menu = OptionMenu(frame_plot_menus, plot_var, *bool_options)
+plot_menu.config(bg='gray75')
 plot_menu.pack(side=tk.LEFT)
 plot_detail_var = StringVar(root, value=bool_options[1])
 plot_detail_var.trace_add("write", update_status)
 plot_detail_menu = OptionMenu(frame_plot_menus, plot_detail_var, *bool_options)
+plot_detail_menu.config(bg='gray75')
 plot_detail_menu.pack(side=tk.LEFT)
 plot_recursive_noise_var = StringVar(root, value=bool_options[1])
 plot_recursive_noise_var.trace_add("write", update_status)
 plot_recursive_noise_menu = OptionMenu(frame_plot_menus, plot_recursive_noise_var, *bool_options)
+plot_recursive_noise_menu.config(bg='gray75')
 plot_recursive_noise_menu.pack(side=tk.LEFT)
 
 # peak_plot_width
@@ -353,6 +377,7 @@ PRINT_MODE_label = Label(frame_PRINT_MODE, text="Print details:")
 PRINT_MODE_var = StringVar(root, value=PRINT_MODE_options[1])
 PRINT_MODE_var.trace_add("write", update_status)
 PRINT_MODE_menu = OptionMenu(frame_PRINT_MODE, PRINT_MODE_var, *PRINT_MODE_options)
+PRINT_MODE_menu.config(bg='gray75')
 
 PRINT_MODE_label.pack(side=tk.LEFT)
 PRINT_MODE_menu.pack(side=tk.LEFT)
@@ -501,6 +526,7 @@ recursive_noise_reduction_var = StringVar(root, value=bool_options[0])
 recursive_noise_reduction_var.trace_add("write", update_status)
 recursive_noise_reduction_menu = OptionMenu(frame_recursive_noise_reduction, recursive_noise_reduction_var,
                                             *bool_options)
+recursive_noise_reduction_menu.config(bg='gray75')
 
 recursive_noise_reduction_label.pack(side=tk.LEFT)
 recursive_noise_reduction_menu.pack(side=tk.LEFT)
@@ -513,7 +539,8 @@ max_noise_reduction_iter_label = Label(frame_max_noise_reduction_iter, text="Max
 
 max_noise_reduction_iter_var = IntVar(root, value=10)
 max_noise_reduction_iter_var.trace_add("write", update_status)
-max_noise_reduction_iter_entry = Entry(frame_max_noise_reduction_iter, width=6, textvariable=max_noise_reduction_iter_var)
+max_noise_reduction_iter_entry = Entry(frame_max_noise_reduction_iter, width=6,
+                                       textvariable=max_noise_reduction_iter_var)
 
 max_noise_reduction_iter_label.pack(side=tk.LEFT)
 max_noise_reduction_iter_entry.pack(side=tk.LEFT)
@@ -591,7 +618,8 @@ stretch_iteration_factor_label = Label(frame_stretch_iteration_factor,
 
 stretch_iteration_factor_var = DoubleVar(root, value=5)
 stretch_iteration_factor_var.trace_add("write", update_status)
-stretch_iteration_factor_entry = Entry(frame_stretch_iteration_factor, width=6, textvariable=stretch_iteration_factor_var)
+stretch_iteration_factor_entry = Entry(frame_stretch_iteration_factor, width=6,
+                                       textvariable=stretch_iteration_factor_var)
 
 stretch_iteration_factor_label.pack(side=tk.LEFT)
 stretch_iteration_factor_entry.pack(side=tk.LEFT)
@@ -606,6 +634,7 @@ nw_normalized_var = StringVar(root)
 nw_normalized_var.set(bool_options[1])
 nw_normalized_menu = OptionMenu(frame_nw_normalized, nw_normalized_var, *bool_options,
                                 command=update_peak_match_window_label)
+nw_normalized_menu.config(bg='gray75')
 
 nw_normalized_label.pack(side=tk.LEFT)
 nw_normalized_menu.pack(side=tk.LEFT)
@@ -648,24 +677,38 @@ dummy_label.pack(side=tk.LEFT)
 
 # SAVING
 
-# save
-frame_save = tk.Frame(rootl)
-frame_save.pack(**padding_option, side=tk.TOP)
-heading("Saving", lvl=1, frame=frame_save)
+# save_data
+frame_save_data = tk.Frame(rootl)
+frame_save_data.pack(**padding_option, side=tk.TOP)
+heading("Saving", lvl=1, frame=frame_save_data)
 
-save_label = Label(frame_save, text="Save data to .pkl files:")
-save_label.pack(side=tk.LEFT)
+save_data_label = Label(frame_save_data, text="Save data to .pkl file:")
+save_data_label.pack(side=tk.LEFT)
 
-save_var = StringVar(root, value=bool_options[1])
-save_var.trace_add("write", update_status)
-save_menu = OptionMenu(frame_save, save_var, *bool_options, command=hide_save_tag)
-save_menu.pack(side=tk.LEFT)
+save_data_var = StringVar(root, value=bool_options[1])
+save_data_var.trace_add("write", update_status)
+save_data_menu = OptionMenu(frame_save_data, save_data_var, *bool_options, command=hide_save_tag)
+save_data_menu.config(bg='gray75')
+save_data_menu.pack(side=tk.LEFT)
+
+# save_results
+frame_save_results = tk.Frame(rootl)
+frame_save_results.pack(**padding_option, side=tk.TOP)
+
+save_results_label = Label(frame_save_results, text="Save results to .pkl file:")
+save_results_label.pack(side=tk.LEFT)
+
+save_results_var = StringVar(root, value=bool_options[0])
+save_results_var.trace_add("write", update_status)
+save_results_menu = OptionMenu(frame_save_results, save_results_var, *bool_options, command=hide_save_tag)
+save_results_menu.config(bg='gray75')
+save_results_menu.pack(side=tk.LEFT)
 
 # save_tag
 frame_save_tag = tk.Frame(rootl)
 frame_save_tag.pack(**padding_setting, side=tk.TOP)
 
-save_tag_label = Label(frame_save_tag, text="Save filename: data_dict_... and peak_results")
+save_tag_label = Label(frame_save_tag, text="Save filename: data_dict... and peak_results")
 save_tag_label2 = Label(frame_save_tag, text=".pkl")
 
 save_tag_var = StringVar(root, value='')
@@ -674,11 +717,30 @@ save_tag_var.trace_add("write", update_status)
 save_tag_entry = Entry(frame_save_tag, width=6, textvariable=save_tag_var)
 
 save_tag_dummy_label = Label(frame_save_tag, text=" "*42, font=("Courier New", 9))
-save_tag_dummy_label.pack()
+# save_tag_dummy_label.pack()
 
-# save_tag_label.pack(side=tk.LEFT)
-# save_tag_entry.pack(side=tk.LEFT)
-# save_tag_label2.pack(side=tk.LEFT)
+save_tag_label.pack(side=tk.LEFT)
+save_tag_entry.pack(side=tk.LEFT)
+save_tag_label2.pack(side=tk.LEFT)
+
+# save_directory
+
+frame_save_directory_label = tk.Frame(rootl)
+frame_save_directory_label.pack(**padding_setting, side=tk.TOP)
+frame_save_directory = tk.Frame(rootl)
+frame_save_directory.pack(**padding_setting, side=tk.TOP)
+
+save_directory_label = Label(frame_save_directory_label, text="Enter path to save data to or select a folder:")
+
+save_directory_var = StringVar(root, value='Same as LARS Data Directory')
+save_directory_var.trace_add("write", update_status)
+save_directory_entry = Entry(frame_save_directory, width=40, textvariable=save_directory_var)
+
+save_directory_button = Button(frame_save_directory, text="Open", command=select_save_directory, bg='gray75')
+
+save_directory_label.pack(side=tk.LEFT, padx=4)
+save_directory_button.pack(side=tk.LEFT, padx=4)
+save_directory_entry.pack(side=tk.LEFT, padx=4)
 
 
 # SUBMIT
@@ -686,7 +748,6 @@ frame_submit = tk.Frame(rootsubmit)
 frame_submit.pack(**padding_heading, side=tk.BOTTOM)
 
 submit_button = Button(root, text="Run Code", bg='firebrick4', fg='white', width=20, height=2, command=submit, font=("Helvetica", 20, "bold"))
-# submit_button.grid(row=100, column=0, columnspan=100)
 submit_button.pack(**padding_heading)
 
 frame_status = tk.Frame(rootsubmit)

@@ -1,4 +1,6 @@
 # ignore all .pkl files
 *.pkl
+# ignore test files
+test*
 # ignore pycache folder
 __pycache__

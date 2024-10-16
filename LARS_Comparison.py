@@ -34,11 +34,17 @@ def analyze_pair_results(pair_results, data_dict, settings):
         print(f'{pair_result['name']} {m:3d} {ux:3d} {uy:3d}  {
               pair_result['match_probability']:.3f} {q:6.3f} {s:7.5f} {pair_result['same_part']}')
 
-    if 'save' not in settings or settings['save']:
-        save_tag = settings['save_tag'] if 'save_tag' in settings else ''
-        with open('pair_results'+save_tag+'.pkl', 'wb') as outp:
+    if 'save_results' in settings and settings['save_data']:
+        save_tag = '_'+settings['save_tag'] if 'save_tag' in settings else ''
+        save_path = 'pair_results'+save_tag+'.pkl' if 'save_folder' not in settings else\
+            os.path.join(settings['save_folder'], 'pair_results'+save_tag+'.pkl')
+        with open(save_path, 'wb') as outp:
             pickle.dump(pair_results, outp, pickle.HIGHEST_PROTOCOL)
-        with open('data_dict'+save_tag+'.pkl', 'wb') as outp:
+    if 'save_data' in settings and settings['save_results']:
+        save_tag = '_'+settings['save_tag'] if 'save_tag' in settings else ''
+        save_path = 'data_dict'+save_tag+'.pkl' if 'save_folder' not in settings else\
+            os.path.join(settings['save_folder'], 'data_dict'+save_tag+'.pkl')
+        with open(save_path, 'wb') as outp:
             pickle.dump(data_dict, outp, pickle.HIGHEST_PROTOCOL)
 
     mpthresh = np.linspace(0, 1, 100)
@@ -302,7 +308,8 @@ def main():
 
     # SAVING
 
-    settings['save'] = False  # Whether to save the results in .pkl files.
+    settings['save_data'] = False  # Whether to save the data in a .pkl file.
+    settings['save_results'] = False  # Whether to save the results in a .pkl file.
     # Additional tag to give the default names 'pair_results.pkl' and 'data_dict.pkl'.
     # They are saved as '[default_name]_[save_tag].pkl'.
     # settings['save_tag'] = '20241009_sgfapp4'
