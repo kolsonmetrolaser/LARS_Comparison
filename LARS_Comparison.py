@@ -3,8 +3,128 @@ import plotfunctions as pf
 from time import time
 import pickle
 from LarsFunctions import analyze_each_pair_of_folders
+import os
 
 np.set_printoptions(precision=3)
+
+
+def parts_match(pr):
+    # Y5 matches with nothing
+    if 'Y5' in pr['name']:
+        return False
+    # Ls and other Ys match each other
+    elif ('L' in pr['name'][0] or 'Y' in pr['name'][0]) and ('L' in pr['name'][1] or 'Y' in pr['name'][1]):
+        return True
+    # Others match if they share a letter and are both <=3 or both >=4
+    elif (pr['name'][0][0] == pr['name'][1][0]
+          and ((int(pr['name'][0][1]) <= 3 and int(pr['name'][1][1]) <= 3)
+               or (int(pr['name'][0][1]) >= 4 and int(pr['name'][1][1]) >= 4))):
+        return True
+    else:
+        return False
+
+
+def analyze_pair_results(pair_results, data_dict, settings):
+    for pr in pair_results:
+        pr['same_part'] = parts_match(pr)
+
+    for pair_result in pair_results:
+        m, ux, uy, q, s = len(pair_result['matched']), len(pair_result['unmatched'][0]), len(
+            pair_result['unmatched'][1]), pair_result['quality'], pair_result['stretch']
+        print(f'{pair_result['name']} {m:3d} {ux:3d} {uy:3d}  {
+              pair_result['match_probability']:.3f} {q:6.3f} {s:7.5f} {pair_result['same_part']}')
+
+    if 'save' not in settings or settings['save']:
+        save_tag = settings['save_tag'] if 'save_tag' in settings else ''
+        with open('pair_results'+save_tag+'.pkl', 'wb') as outp:
+            pickle.dump(pair_results, outp, pickle.HIGHEST_PROTOCOL)
+        with open('data_dict'+save_tag+'.pkl', 'wb') as outp:
+            pickle.dump(data_dict, outp, pickle.HIGHEST_PROTOCOL)
+
+    mpthresh = np.linspace(0, 1, 100)
+    match_recall = np.ones_like(mpthresh)
+    nomatch_recall = np.ones_like(mpthresh)
+    match_precision = np.ones_like(mpthresh)
+    nomatch_precision = np.ones_like(mpthresh)
+    accuracy = np.ones_like(mpthresh)
+    match_true = 0
+    nomatch_true = 0
+    for pr in pair_results:
+        if pr['same_part']:
+            match_true += 1
+        else:
+            nomatch_true += 1
+    for i, mpt in enumerate(mpthresh):
+        pred_match_correct = 0
+        pred_match_wrong = 0
+        pred_nomatch_correct = 0
+        pred_nomatch_wrong = 0
+        for pr in pair_results:
+            if pr['match_probability'] > mpt:
+                if pr['same_part']:
+                    pred_match_correct += 1
+                else:
+                    pred_match_wrong += 1
+            else:
+                if pr['same_part']:
+                    pred_nomatch_wrong += 1
+                else:
+                    pred_nomatch_correct += 1
+        match_recall[i] = pred_match_correct / \
+            (pred_match_correct+pred_nomatch_wrong) if pred_match_correct+pred_nomatch_wrong > 0 else np.nan
+        nomatch_recall[i] = pred_nomatch_correct / \
+            (pred_nomatch_correct+pred_match_wrong) if pred_nomatch_correct+pred_match_wrong > 0 else np.nan
+        match_precision[i] = pred_match_correct / \
+            (pred_match_correct+pred_match_wrong) if pred_match_correct+pred_match_wrong > 0 else np.nan
+        nomatch_precision[i] = pred_nomatch_correct / \
+            (pred_nomatch_correct+pred_nomatch_wrong) if pred_nomatch_correct+pred_nomatch_wrong > 0 else np.nan
+        accuracy[i] = (pred_match_correct+pred_nomatch_correct)/(pred_match_correct+pred_nomatch_correct
+                                                                 + pred_match_wrong+pred_nomatch_wrong)
+
+    pf.line_plot(mpthresh, [match_recall, nomatch_recall, match_precision, nomatch_precision, accuracy],
+                 legend=['match recall', 'nomatch recall', 'match precision', 'nomatch precision', 'accuracy'],
+                 x_label='Matching Probability Threshold', legend_location=(0.02, 0.4), line_width=6, cmap='list',
+                 cmap_custom=['darkblue', 'b', 'darkred', 'r', 'g', 'y', 'pink', 'y'],
+                 v_line_pos=[0.1*i for i in range(10)], vlinewidth=1, y_lim=[0, 1.05],
+                 x_lim=[mpthresh[0], mpthresh[-1]])
+    pf.line_plot(mpthresh,
+                 [match_recall, nomatch_recall, match_precision, nomatch_precision, accuracy,
+                  0.957*np.ones_like(mpthresh), 0.618*np.ones_like(mpthresh), 0.957*np.ones_like(mpthresh)],
+                 legend=['match recall', 'nomatch recall', 'match precision', 'nomatch precision', 'accuracy',
+                         '20220328 ML Recall', '20220328 ML Precision', '20220328 ML Accuracy'],
+                 x_label='Matching Probability Threshold', legend_location=(0.02, 0.3), line_width=6, cmap='list',
+                 cmap_custom=['darkblue', 'b', 'darkred', 'r', 'g', 'y', 'pink', 'y'],
+                 v_line_pos=[0.1*i for i in range(10)], vlinewidth=1, y_lim=[0, 1.05],
+                 x_lim=[mpthresh[0], mpthresh[-1]])
+
+
+def run_analysis(folders, settings):
+    time0 = time()
+    pair_results, data_dict = analyze_each_pair_of_folders(folders, **settings)
+    analyze_pair_results(pair_results, data_dict, settings)
+    print(f"""
+
+
+Done!
+
+
+All code finished running after a total of {time()-time0} s""")
+    return
+
+
+def get_subfolders(folder):
+    subfolders = []
+    for item in os.listdir(folder):
+        item_path = os.path.join(folder, item)
+        if os.path.isdir(item_path):
+            subfolders.append(item_path)
+    return subfolders
+
+
+def LARS_Comparison_from_app(settings):
+    folders = get_subfolders(settings['directory'])
+    run_analysis(folders, settings)
+    return
 
 
 def main():
@@ -260,97 +380,7 @@ def main():
     # CODE
     # MODIFY WITH CARE
     # =============================================================================
-    time0 = time()
-    pair_results, data_dict = analyze_each_pair_of_folders(folders, **settings)
-
-    def parts_match(pr):
-        # Y5 matches with nothing
-        if 'Y5' in pr['name']:
-            return False
-        # Ls and other Ys match each other
-        elif ('L' in pr['name'][0] or 'Y' in pr['name'][0]) and ('L' in pr['name'][1] or 'Y' in pr['name'][1]):
-            return True
-        # Others match if they share a letter and are both <=3 or both >=4
-        elif (pr['name'][0][0] == pr['name'][1][0]
-              and ((int(pr['name'][0][1]) <= 3 and int(pr['name'][1][1]) <= 3)
-                   or (int(pr['name'][0][1]) >= 4 and int(pr['name'][1][1]) >= 4))):
-            return True
-        else:
-            return False
-
-    for pr in pair_results:
-        pr['same_part'] = parts_match(pr)
-
-    for pair_result in pair_results:
-        m, ux, uy, q, s = len(pair_result['matched']), len(pair_result['unmatched'][0]), len(
-            pair_result['unmatched'][1]), pair_result['quality'], pair_result['stretch']
-        print(f'{pair_result['name']} {m:3d} {ux:3d} {uy:3d}  {
-              pair_result['match_probability']:.3f} {q:6.3f} {s:7.5f} {pair_result['same_part']}')
-
-    if 'save' not in settings or settings['save']:
-        save_tag = settings['save_tag'] if 'save_tag' in settings else ''
-        with open('pair_results'+save_tag+'.pkl', 'wb') as outp:
-            pickle.dump(pair_results, outp, pickle.HIGHEST_PROTOCOL)
-        with open('data_dict'+save_tag+'.pkl', 'wb') as outp:
-            pickle.dump(data_dict, outp, pickle.HIGHEST_PROTOCOL)
-
-    mpthresh = np.linspace(0, 1, 100)
-    match_recall = np.ones_like(mpthresh)
-    nomatch_recall = np.ones_like(mpthresh)
-    match_precision = np.ones_like(mpthresh)
-    nomatch_precision = np.ones_like(mpthresh)
-    accuracy = np.ones_like(mpthresh)
-    match_true = 0
-    nomatch_true = 0
-    for pr in pair_results:
-        if pr['same_part']:
-            match_true += 1
-        else:
-            nomatch_true += 1
-    for i, mpt in enumerate(mpthresh):
-        pred_match_correct = 0
-        pred_match_wrong = 0
-        pred_nomatch_correct = 0
-        pred_nomatch_wrong = 0
-        for pr in pair_results:
-            if pr['match_probability'] > mpt:
-                if pr['same_part']:
-                    pred_match_correct += 1
-                else:
-                    pred_match_wrong += 1
-            else:
-                if pr['same_part']:
-                    pred_nomatch_wrong += 1
-                else:
-                    pred_nomatch_correct += 1
-        match_recall[i] = pred_match_correct / \
-            (pred_match_correct+pred_nomatch_wrong) if pred_match_correct+pred_nomatch_wrong > 0 else np.nan
-        nomatch_recall[i] = pred_nomatch_correct / \
-            (pred_nomatch_correct+pred_match_wrong) if pred_nomatch_correct+pred_match_wrong > 0 else np.nan
-        match_precision[i] = pred_match_correct / \
-            (pred_match_correct+pred_match_wrong) if pred_match_correct+pred_match_wrong > 0 else np.nan
-        nomatch_precision[i] = pred_nomatch_correct / \
-            (pred_nomatch_correct+pred_nomatch_wrong) if pred_nomatch_correct+pred_nomatch_wrong > 0 else np.nan
-        accuracy[i] = (pred_match_correct+pred_nomatch_correct)/(pred_match_correct+pred_nomatch_correct
-                                                                 + pred_match_wrong+pred_nomatch_wrong)
-
-    pf.line_plot(mpthresh, [match_recall, nomatch_recall, match_precision, nomatch_precision, accuracy],
-                 legend=['match recall', 'nomatch recall', 'match precision', 'nomatch precision', 'accuracy'],
-                 x_label='Matching Probability Threshold', legend_location=(0.02, 0.4), line_width=6, cmap='list',
-                 cmap_custom=['darkblue', 'b', 'darkred', 'r', 'g', 'y', 'pink', 'y'],
-                 v_line_pos=[0.1*i for i in range(10)], vlinewidth=1, y_lim=[0, 1.05],
-                 x_lim=[mpthresh[0], mpthresh[-1]])
-    pf.line_plot(mpthresh,
-                 [match_recall, nomatch_recall, match_precision, nomatch_precision, accuracy,
-                  0.957*np.ones_like(mpthresh), 0.618*np.ones_like(mpthresh), 0.957*np.ones_like(mpthresh)],
-                 legend=['match recall', 'nomatch recall', 'match precision', 'nomatch precision', 'accuracy',
-                         '20220328 ML Recall', '20220328 ML Precision', '20220328 ML Accuracy'],
-                 x_label='Matching Probability Threshold', legend_location=(0.02, 0.3), line_width=6, cmap='list',
-                 cmap_custom=['darkblue', 'b', 'darkred', 'r', 'g', 'y', 'pink', 'y'],
-                 v_line_pos=[0.1*i for i in range(10)], vlinewidth=1, y_lim=[0, 1.05],
-                 x_lim=[mpthresh[0], mpthresh[-1]])
-
-    print(f'done after {time()-time0} s')
+    run_analysis(folders, settings)
 
 
 if __name__ == '__main__':
