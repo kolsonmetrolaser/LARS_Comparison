@@ -1,22 +1,22 @@
 [project]
 name = "MetroLaserLARS"
-version = "0.0.6"
+version = "0.0.10"
 authors = [
   { name="Karl Olson", email="kolson@metrolaserinc.com" },
 ]
 description = "Data analysis for MetroLaser, Inc. Laser Acoustic Resonance Spectroscopy systems"
 readme = "README.md"
-requires-python = ">=3.12.7,<3.13"
+requires-python = ">=3.8,<3.13"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: Other/Proprietary License",
     "Operating System :: OS Independent",
 ]
 dependencies = [
-  "matplotlib>=3.9.2",
-  "numpy<2,>=1.26.4",
-  "scipy>=1.13.1",
-  "numba>=0.60.0"
+  "matplotlib>=3",
+  "numpy<2,>=1.20",
+  "scipy>=1.10",
+  "numba>=0.55.0"
 ]
 
 [project.urls]

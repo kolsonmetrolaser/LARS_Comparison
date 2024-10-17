@@ -3,7 +3,7 @@ import os.path as osp
 from typing import Literal
 from numpy.typing import ArrayLike, NDArray
 import pathlib
-from helpers import are_equal
+from MetroLaserLARS.helpers import are_equal
 
 
 class LarsData:

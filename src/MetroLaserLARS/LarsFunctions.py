@@ -11,14 +11,14 @@ import os
 import pathlib
 from MetroLaserLARS import LarsDataClass
 from MetroLaserLARS.LarsDataClass import LarsData
-import plotfunctions as pf
+import MetroLaserLARS.plotfunctions as pf
 from numpy.typing import ArrayLike, NDArray
-from filters import airpls, sgf
-from helpers import group
+from MetroLaserLARS.filters import airpls, sgf
+from MetroLaserLARS.helpers import group
 from typing import Literal, Iterable
 from itertools import combinations
 import pickle
-from needlemanwunsch import find_matches
+from MetroLaserLARS.needlemanwunsch import find_matches
 
 
 def remove_baseline(y: ArrayLike, **settings) -> tuple[ArrayLike, ArrayLike]:
