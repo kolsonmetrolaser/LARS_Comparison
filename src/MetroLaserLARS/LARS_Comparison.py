@@ -1,8 +1,8 @@
 import numpy as np
-import plotfunctions as pf
+import MetroLaserLARS.plotfunctions as pf
 from time import time
 import pickle
-from LarsFunctions import analyze_each_pair_of_folders
+from MetroLaserLARS.LarsFunctions import analyze_each_pair_of_folders
 import os
 
 np.set_printoptions(precision=3)

@@ -8,7 +8,7 @@ Created on Tue Oct 15 12:08:17 2024
 import tkinter as tk
 from tkinter import filedialog, DoubleVar, StringVar, Label, Entry, Button
 from tkinter import OptionMenu, IntVar, Variable, BooleanVar, font
-from LARS_Comparison import LARS_Comparison_from_app
+from MetroLaserLARS.LARS_Comparison import LARS_Comparison_from_app
 
 
 def make_settings(suppress=False):

@@ -9,8 +9,8 @@ import numpy as np
 import scipy.signal as sig
 import os
 import pathlib
-import LarsDataClass
-from LarsDataClass import LarsData
+from MetroLaserLARS import LarsDataClass
+from MetroLaserLARS.LarsDataClass import LarsData
 import plotfunctions as pf
 from numpy.typing import ArrayLike, NDArray
 from filters import airpls, sgf
