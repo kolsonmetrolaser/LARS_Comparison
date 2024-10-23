@@ -87,21 +87,22 @@ def analyze_pair_results(pair_results, data_dict, settings):
         accuracy[i] = (pred_match_correct+pred_nomatch_correct)/(pred_match_correct+pred_nomatch_correct
                                                                  + pred_match_wrong+pred_nomatch_wrong)
 
-    pf.line_plot(mpthresh, [match_recall, nomatch_recall, match_precision, nomatch_precision, accuracy],
-                 legend=['match recall', 'nomatch recall', 'match precision', 'nomatch precision', 'accuracy'],
-                 x_label='Matching Probability Threshold', legend_location=(0.02, 0.4), line_width=6, cmap='list',
-                 cmap_custom=['darkblue', 'b', 'darkred', 'r', 'g', 'y', 'pink', 'y'],
-                 v_line_pos=[0.1*i for i in range(10)], vlinewidth=1, y_lim=[0, 1.05],
-                 x_lim=[mpthresh[0], mpthresh[-1]])
-    pf.line_plot(mpthresh,
-                 [match_recall, nomatch_recall, match_precision, nomatch_precision, accuracy,
-                  0.957*np.ones_like(mpthresh), 0.618*np.ones_like(mpthresh), 0.957*np.ones_like(mpthresh)],
-                 legend=['match recall', 'nomatch recall', 'match precision', 'nomatch precision', 'accuracy',
-                         '20220328 ML Recall', '20220328 ML Precision', '20220328 ML Accuracy'],
-                 x_label='Matching Probability Threshold', legend_location=(0.02, 0.3), line_width=6, cmap='list',
-                 cmap_custom=['darkblue', 'b', 'darkred', 'r', 'g', 'y', 'pink', 'y'],
-                 v_line_pos=[0.1*i for i in range(10)], vlinewidth=1, y_lim=[0, 1.05],
-                 x_lim=[mpthresh[0], mpthresh[-1]])
+    if 'plot_classification' in settings and settings['plot_classification']:
+        pf.line_plot(mpthresh, [match_recall, nomatch_recall, match_precision, nomatch_precision, accuracy],
+                     legend=['match recall', 'nomatch recall', 'match precision', 'nomatch precision', 'accuracy'],
+                     x_label='Matching Probability Threshold', legend_location=(0.02, 0.4), line_width=6, cmap='list',
+                     cmap_custom=['darkblue', 'b', 'darkred', 'r', 'g', 'y', 'pink', 'y'],
+                     v_line_pos=[0.1*i for i in range(10)], vlinewidth=1, y_lim=[0, 1.05],
+                     x_lim=[mpthresh[0], mpthresh[-1]])
+        pf.line_plot(mpthresh,
+                     [match_recall, nomatch_recall, match_precision, nomatch_precision, accuracy,
+                      0.957*np.ones_like(mpthresh), 0.618*np.ones_like(mpthresh), 0.957*np.ones_like(mpthresh)],
+                     legend=['match recall', 'nomatch recall', 'match precision', 'nomatch precision', 'accuracy',
+                             '20220328 ML Recall', '20220328 ML Precision', '20220328 ML Accuracy'],
+                     x_label='Matching Probability Threshold', legend_location=(0.02, 0.3), line_width=6, cmap='list',
+                     cmap_custom=['darkblue', 'b', 'darkred', 'r', 'g', 'y', 'pink', 'y'],
+                     v_line_pos=[0.1*i for i in range(10)], vlinewidth=1, y_lim=[0, 1.05],
+                     x_lim=[mpthresh[0], mpthresh[-1]])
 
 
 def run_analysis(folders, settings):

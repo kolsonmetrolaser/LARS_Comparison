@@ -27,6 +27,7 @@ def run_app():
             settings['plot']                       = True if plot_var.get() == 'True' else False  # noqa
             settings['plot_detail']                = True if plot_detail_var.get() == 'True' else False  # noqa
             settings['plot_recursive_noise']       = True if plot_recursive_noise_var.get() == 'True' else False # noqa
+            settings['plot_classification']        = True if plot_classification_var.get() == 'True' else False # noqa
             settings['peak_plot_width']            = peak_plot_width_var.get() # noqa
             settings['PRINT_MODE']                 = PRINT_MODE_var.get() # noqa
             # PEAK FITTING
@@ -311,7 +312,7 @@ def run_app():
 
     # PLOTTING AND PRINTING
 
-    # plot, plot_detail, and plot_recursive_noise
+    # plot, plot_detail, plot_recursive_noise and plot_classification
     frame_plot = tk.Frame(rootl)
     frame_plot.pack(**padding_option, side=tk.TOP)
 
@@ -320,7 +321,7 @@ def run_app():
     frame_plot_label = tk.Frame(frame_plot)
     frame_plot_label.pack(side=tk.TOP)
 
-    plot_label = Label(frame_plot_label, text="Create plots (with fitting details) (of recursive noise iterations):")
+    plot_label = Label(frame_plot_label, text="Create plots (with fitting details)\n(of recursive noise iterations) (of classification):")
     plot_label.pack(side=tk.BOTTOM)
 
     frame_plot_menus = tk.Frame(frame_plot)
@@ -341,6 +342,11 @@ def run_app():
     plot_recursive_noise_menu = OptionMenu(frame_plot_menus, plot_recursive_noise_var, *bool_options)
     plot_recursive_noise_menu.config(bg='gray75')
     plot_recursive_noise_menu.pack(side=tk.LEFT)
+    plot_classification_var = StringVar(root, value=bool_options[1])
+    plot_classification_var.trace_add("write", update_status)
+    plot_classification_menu = OptionMenu(frame_plot_menus, plot_classification_var, *bool_options)
+    plot_classification_menu.config(bg='gray75')
+    plot_classification_menu.pack(side=tk.LEFT)
 
     # peak_plot_width
     frame_peak_fit_plot_width = tk.Frame(rootl)
@@ -751,4 +757,5 @@ def run_app():
 
 
 if __name__ == '__main__':
+    from LARS_Comparison import LARS_Comparison_from_app
     run_app()
