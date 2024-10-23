@@ -411,8 +411,9 @@ You must supply 'z' only or all three.""")
         ax.set_xticks([])
         ax.set_yticks([])
 
-    from custommodules.settingshandler import handle_setting
-    _CLUSTERMODE = handle_setting('CLUSTERMODE', False)  # from settings import CLUSTERMODE as _CLUSTERMODE
+    # from custommodules.settingshandler import handle_setting
+    # _CLUSTERMODE = handle_setting('CLUSTERMODE', False)  # from settings import CLUSTERMODE as _CLUSTERMODE
+    _CLUSTERMODE = False
     if fname is not None:
         if save_folder is None:
             if not _CLUSTERMODE:
