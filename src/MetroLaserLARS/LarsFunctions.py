@@ -138,7 +138,7 @@ def detailed_plots(folder, name, peaks, freqs, vels, vels_baseline_removed, vels
     """
     Makes optional detailed plots inside `analyze_data()`.
     """
-    save_tag = '_'+settings['save_tag'] if 'save_tag' in settings and save_tag != '' else ''
+    save_tag = '_'+settings['save_tag'] if 'save_tag' in settings and settings['save_tag'] != '' else ''
     save_folder = settings['save_folder']
     save_plots = settings['save_plots'] if 'save_plots' in settings else False
     show_plots = settings['show_plots'] if 'show_plots' in settings else False
@@ -146,33 +146,33 @@ def detailed_plots(folder, name, peaks, freqs, vels, vels_baseline_removed, vels
     kwargs = {'x_label': 'Frequency (kHz)', 'vlinewidth': 1}
     pf.line_plot(freqs/1000, [vels], style='.', x_lim=xlim,
                  title=f'{folder}{name} raw data', y_lim=[-2, 200], **kwargs, y_label='Amplitude (μm/s)',
-                 fname=osp.join(save_folder, f'{folder}{name} raw data'+save_tag+'.png') if save_plots else None,
+                 fname=osp.join(save_folder, f'{folder}{name} raw data'+save_tag) if save_plots else None,
                  show_plot_in_spyder=show_plots)
     pf.line_plot(freqs/1000, [vels, vels-vels_baseline_removed], style='.', x_lim=xlim,
                  title=f'{folder}{name} raw data and baseline', y_lim=[-2, 200], **kwargs, y_label='Amplitude (μm/s)',
-                 fname=osp.join(save_folder, f'{folder}{name} raw data and baseline'+save_tag+'.png') if save_plots else None,
+                 fname=osp.join(save_folder, f'{folder}{name} raw data and baseline'+save_tag) if save_plots else None,
                  show_plot_in_spyder=show_plots)
     if vels_peaks_removed is not None:
         pf.line_plot(freqs/1000, [vels_peaks_removed, vels-vels_baseline_removed], style='.', x_lim=xlim,
                      title=f'{folder}{name} peaks removed and baseline', y_lim=[-2, 70],
                      **kwargs, y_label='Amplitude (μm/s)',
-                     fname=osp.join(save_folder, f'{folder}{name} peaks removed and baseline'+save_tag+'.png') if save_plots else None,
+                     fname=osp.join(save_folder, f'{folder}{name} peaks removed and baseline'+save_tag) if save_plots else None,
                      show_plot_in_spyder=show_plots)
     pf.line_plot(freqs/1000, [vels_baseline_removed], style='.', x_lim=xlim,
                  title=f'{folder}{name} baseline removed', y_lim=[-2, 200], **kwargs, y_label='Amplitude (μm/s)',
-                 fname=osp.join(save_folder, f'{folder}{name} baseline removed'+save_tag+'.png') if save_plots else None,
+                 fname=osp.join(save_folder, f'{folder}{name} baseline removed'+save_tag) if save_plots else None,
                  show_plot_in_spyder=show_plots)
     pf.line_plot(freqs/1000, [vels_rms_norm_zeroed], style='.', x_lim=xlim,
                  title=f'{folder}{name} rms_norm_zero', y_lim=[0, 15], **kwargs, y_label='Amplitude (arb.)',
-                 fname=osp.join(save_folder, f'{folder}{name} rms_norm_zero'+save_tag+'.png') if save_plots else None,
+                 fname=osp.join(save_folder, f'{folder}{name} rms_norm_zero'+save_tag) if save_plots else None,
                  show_plot_in_spyder=show_plots)
     pf.line_plot(freqs/1000, [vels_filtered], style='.', x_lim=xlim,
                  title=f'{folder}{name} filtered data', y_lim=ylim, **kwargs, y_label='Amplitude (arb.)',
-                 fname=osp.join(save_folder, f'{folder}{name} filtered data'+save_tag+'.png') if save_plots else None,
+                 fname=osp.join(save_folder, f'{folder}{name} filtered data'+save_tag) if save_plots else None,
                  show_plot_in_spyder=show_plots)
     pf.line_plot(freqs/1000, [vels_filtered], style='.', x_lim=xlim, v_line_pos=peaks['positions']/1000,
                  title=f'{folder}{name} peak fits', y_lim=ylim, **kwargs, y_label='Amplitude (arb.)',
-                 fname=osp.join(save_folder, f'{folder}{name} peak fits'+save_tag+'.png') if save_plots else None,
+                 fname=osp.join(save_folder, f'{folder}{name} peak fits'+save_tag) if save_plots else None,
                  show_plot_in_spyder=show_plots)
     return
 
@@ -225,7 +225,7 @@ def analyze_data(data: LarsData, **settings) -> tuple[dict, NDArray, NDArray, ND
     sgf_polyorder = settings['sgf_polyorder'] if 'sgf_polyorder' in settings else 0
     peak_plot_width = settings['peak_plot_width'] if 'peak_plot_width' in settings else 10
     regularization_ratio = settings['regularization_ratio'] if 'regularization_ratio' in settings else 0.5
-    save_tag = '_'+settings['save_tag'] if 'save_tag' in settings and save_tag != '' else ''
+    save_tag = '_'+settings['save_tag'] if 'save_tag' in settings and settings['save_tag'] != '' else ''
     save_folder = settings['save_folder']
     save_plots = settings['save_plots'] if 'save_plots' in settings else False
     show_plots = settings['show_plots'] if 'show_plots' in settings else False
@@ -317,7 +317,7 @@ def analyze_data(data: LarsData, **settings) -> tuple[dict, NDArray, NDArray, ND
 
         pf.line_plot(freqs/1000, [vels, newvels], style='.', x_lim=frange, v_line_pos=peaks['positions']/1000,
                      vlinewidth=1, title=f'{folder}{name} peak fit', y_norm='each',
-                     fname=osp.join(save_folder, f'{folder}{name} peak fit'+save_tag+'.png') if save_plots else None,
+                     fname=osp.join(save_folder, f'{folder}{name} peak fit'+save_tag) if save_plots else None,
                      show_plot_in_spyder=show_plots)
         for pg in peak_groups:
             if np.size(pg) > 1:
@@ -327,7 +327,7 @@ def analyze_data(data: LarsData, **settings) -> tuple[dict, NDArray, NDArray, ND
                 xl = [pg-peak_plot_width/2, pg+peak_plot_width/2]
             pf.line_plot(freqs/1000, [vels, newvels], style='.', x_lim=xl, v_line_pos=peaks['positions']/1000,
                          vlinewidth=1, title=f'{folder}{name} peak fit', y_norm='each',
-                         fname=osp.join(save_folder, f'{folder}{name} peak fit'+save_tag+'.png') if save_plots else None,
+                         fname=osp.join(save_folder, f'{folder}{name} peak fit'+save_tag) if save_plots else None,
                          show_plot_in_spyder=show_plots)
 
     return peaks, freqs, vels, newvels, name
@@ -436,7 +436,7 @@ def compare_LARS_measurements(folders: Iterable = [], previously_analyzed_data: 
     matching_penalty_order = settings['matching_penalty_order'] if 'matching_penalty_order' in settings else 1
     peak_match_window = settings['peak_match_window'] if 'peak_match_window' in settings else 150
     nw_normalized = settings['nw_normalized'] if 'nw_normalized' in settings else False
-    save_tag = '_'+settings['save_tag'] if 'save_tag' in settings and save_tag != '' else ''
+    save_tag = '_'+settings['save_tag'] if 'save_tag' in settings and settings['save_tag'] != '' else ''
     save_folder = settings['save_folder']
     save_plots = settings['save_plots'] if 'save_plots' in settings else False
     show_plots = settings['show_plots'] if 'show_plots' in settings else False
@@ -512,7 +512,7 @@ def compare_LARS_measurements(folders: Iterable = [], previously_analyzed_data: 
             pf.line_plot([freqs[0]/1000, freqs[1]/1000*best_stretch], [vels[0], vels[1]], style='.', x_lim=xlim,
                          v_line_pos=[matched, unmatched_X, unmatched_Y], v_line_color=['k', 'C0', 'C1'],
                          vlinewidth=[4, 2, 2], y_norm='each', title='Stretched peak matches raw',
-                         fname=osp.join(save_folder, f'{names[0]} and {names[1]} Stretched peak matches raw'+save_tag+'.png') if save_plots else None,
+                         fname=osp.join(save_folder, f'{names[0]} and {names[1]} Stretched peak matches raw'+save_tag) if save_plots else None,
                          show_plot_in_spyder=show_plots)
 
     matching_analysis = {'stretch': best_stretch, 'quality': best_quality, 'name': names, 'matched': matched,

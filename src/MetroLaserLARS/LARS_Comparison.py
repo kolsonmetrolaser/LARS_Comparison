@@ -28,7 +28,7 @@ def parts_match(pr):
 def analyze_pair_results(pair_results, data_dict, settings):
     save_results = settings['save_results'] if 'save_results' in settings else False
     save_data = settings['save_data'] if 'save_data' in settings else False
-    save_tag = '_'+settings['save_tag'] if 'save_tag' in settings and save_tag != '' else ''
+    save_tag = '_'+settings['save_tag'] if 'save_tag' in settings and settings['save_tag'] != '' else ''
     save_folder = settings['save_folder']
     save_plots = settings['save_plots'] if 'save_plots' in settings else False
     show_plots = settings['show_plots'] if 'show_plots' in settings else False
@@ -100,7 +100,7 @@ def analyze_pair_results(pair_results, data_dict, settings):
                      cmap_custom=['darkblue', 'b', 'darkred', 'r', 'g', 'y', 'pink', 'y'],
                      v_line_pos=[0.1*i for i in range(10)], vlinewidth=1, y_lim=[0, 1.05],
                      x_lim=[mpthresh[0], mpthresh[-1]],
-                     fname=osp.join(save_folder, 'classification_stats'+save_tag+'.png') if save_plots else None,
+                     fname=osp.join(save_folder, 'classification_stats'+save_tag) if save_plots else None,
                      show_plot_in_spyder=show_plots)
         pf.line_plot(mpthresh,
                      [match_recall, nomatch_recall, match_precision, nomatch_precision, accuracy,
@@ -111,7 +111,7 @@ def analyze_pair_results(pair_results, data_dict, settings):
                      cmap_custom=['darkblue', 'b', 'darkred', 'r', 'g', 'y', 'pink', 'y'],
                      v_line_pos=[0.1*i for i in range(10)], vlinewidth=1, y_lim=[0, 1.05],
                      x_lim=[mpthresh[0], mpthresh[-1]],
-                     fname=osp.join(save_folder, 'classification_comparison'+save_tag+'.png') if save_plots else None,
+                     fname=osp.join(save_folder, 'classification_comparison'+save_tag) if save_plots else None,
                      show_plot_in_spyder=show_plots)
 
 
