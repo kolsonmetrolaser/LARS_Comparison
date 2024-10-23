@@ -63,6 +63,7 @@ def run_app():
             settings['save_data']                 = True if save_data_var.get() == 'True' else False  # noqa
             settings['save_results']              = True if save_results_var.get() == 'True' else False  # noqa
             settings['save_tag']                  = save_tag_var.get() # noqa
+            print(save_tag_var.get())
             settings['save_folder']               = directory_var.get() if save_directory_var.get() == 'Same as LARS Data Directory' else save_directory_var.get() # noqa
             # fmt: on
         except tk.TclError as e:

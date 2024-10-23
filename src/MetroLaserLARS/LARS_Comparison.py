@@ -28,7 +28,7 @@ def parts_match(pr):
 def analyze_pair_results(pair_results, data_dict, settings):
     save_results = settings['save_results'] if 'save_results' in settings else False
     save_data = settings['save_data'] if 'save_data' in settings else False
-    save_tag = '_'+settings['save_tag'] if 'save_tag' in settings else ''
+    save_tag = '_'+settings['save_tag'] if 'save_tag' in settings and save_tag != '' else ''
     save_folder = settings['save_folder']
     save_plots = settings['save_plots'] if 'save_plots' in settings else False
     show_plots = settings['show_plots'] if 'show_plots' in settings else False

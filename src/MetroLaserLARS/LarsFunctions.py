@@ -138,7 +138,7 @@ def detailed_plots(folder, name, peaks, freqs, vels, vels_baseline_removed, vels
     """
     Makes optional detailed plots inside `analyze_data()`.
     """
-    save_tag = '_'+settings['save_tag'] if 'save_tag' in settings else ''
+    save_tag = '_'+settings['save_tag'] if 'save_tag' in settings and save_tag != '' else ''
     save_folder = settings['save_folder']
     save_plots = settings['save_plots'] if 'save_plots' in settings else False
     show_plots = settings['show_plots'] if 'show_plots' in settings else False
@@ -225,7 +225,7 @@ def analyze_data(data: LarsData, **settings) -> tuple[dict, NDArray, NDArray, ND
     sgf_polyorder = settings['sgf_polyorder'] if 'sgf_polyorder' in settings else 0
     peak_plot_width = settings['peak_plot_width'] if 'peak_plot_width' in settings else 10
     regularization_ratio = settings['regularization_ratio'] if 'regularization_ratio' in settings else 0.5
-    save_tag = '_'+settings['save_tag'] if 'save_tag' in settings else ''
+    save_tag = '_'+settings['save_tag'] if 'save_tag' in settings and save_tag != '' else ''
     save_folder = settings['save_folder']
     save_plots = settings['save_plots'] if 'save_plots' in settings else False
     show_plots = settings['show_plots'] if 'show_plots' in settings else False
@@ -436,7 +436,7 @@ def compare_LARS_measurements(folders: Iterable = [], previously_analyzed_data: 
     matching_penalty_order = settings['matching_penalty_order'] if 'matching_penalty_order' in settings else 1
     peak_match_window = settings['peak_match_window'] if 'peak_match_window' in settings else 150
     nw_normalized = settings['nw_normalized'] if 'nw_normalized' in settings else False
-    save_tag = '_'+settings['save_tag'] if 'save_tag' in settings else ''
+    save_tag = '_'+settings['save_tag'] if 'save_tag' in settings and save_tag != '' else ''
     save_folder = settings['save_folder']
     save_plots = settings['save_plots'] if 'save_plots' in settings else False
     show_plots = settings['show_plots'] if 'show_plots' in settings else False
