@@ -4,6 +4,7 @@ from time import time
 import pickle
 from MetroLaserLARS.LarsFunctions import analyze_each_pair_of_folders
 import os
+from os import path as osp
 
 np.set_printoptions(precision=3)
 
@@ -25,6 +26,13 @@ def parts_match(pr):
 
 
 def analyze_pair_results(pair_results, data_dict, settings):
+    save_results = settings['save_results'] if 'save_results' in settings else False
+    save_data = settings['save_data'] if 'save_data' in settings else False
+    save_tag = '_'+settings['save_tag'] if 'save_tag' in settings else ''
+    save_folder = settings['save_folder']
+    save_plots = settings['save_plots'] if 'save_plots' in settings else False
+    show_plots = settings['show_plots'] if 'show_plots' in settings else False
+
     for pr in pair_results:
         pr['same_part'] = parts_match(pr)
 
@@ -34,16 +42,14 @@ def analyze_pair_results(pair_results, data_dict, settings):
         print(f'{pair_result['name']} {m:3d} {ux:3d} {uy:3d}  {
               pair_result['match_probability']:.3f} {q:6.3f} {s:7.5f} {pair_result['same_part']}')
 
-    if 'save_results' in settings and settings['save_data']:
-        save_tag = '_'+settings['save_tag'] if 'save_tag' in settings else ''
+    if save_results:
         save_path = 'pair_results'+save_tag+'.pkl' if 'save_folder' not in settings else\
-            os.path.join(settings['save_folder'], 'pair_results'+save_tag+'.pkl')
+            osp.join(save_folder, 'pair_results'+save_tag+'.pkl')
         with open(save_path, 'wb') as outp:
             pickle.dump(pair_results, outp, pickle.HIGHEST_PROTOCOL)
-    if 'save_data' in settings and settings['save_results']:
-        save_tag = '_'+settings['save_tag'] if 'save_tag' in settings else ''
+    if save_data:
         save_path = 'data_dict'+save_tag+'.pkl' if 'save_folder' not in settings else\
-            os.path.join(settings['save_folder'], 'data_dict'+save_tag+'.pkl')
+            osp.join(save_folder, 'data_dict'+save_tag+'.pkl')
         with open(save_path, 'wb') as outp:
             pickle.dump(data_dict, outp, pickle.HIGHEST_PROTOCOL)
 
@@ -93,7 +99,9 @@ def analyze_pair_results(pair_results, data_dict, settings):
                      x_label='Matching Probability Threshold', legend_location=(0.02, 0.4), line_width=6, cmap='list',
                      cmap_custom=['darkblue', 'b', 'darkred', 'r', 'g', 'y', 'pink', 'y'],
                      v_line_pos=[0.1*i for i in range(10)], vlinewidth=1, y_lim=[0, 1.05],
-                     x_lim=[mpthresh[0], mpthresh[-1]])
+                     x_lim=[mpthresh[0], mpthresh[-1]],
+                     fname=osp.join(save_folder, 'classification_stats'+save_tag+'.png') if save_plots else None,
+                     show_plot_in_spyder=show_plots)
         pf.line_plot(mpthresh,
                      [match_recall, nomatch_recall, match_precision, nomatch_precision, accuracy,
                       0.957*np.ones_like(mpthresh), 0.618*np.ones_like(mpthresh), 0.957*np.ones_like(mpthresh)],
@@ -102,7 +110,9 @@ def analyze_pair_results(pair_results, data_dict, settings):
                      x_label='Matching Probability Threshold', legend_location=(0.02, 0.3), line_width=6, cmap='list',
                      cmap_custom=['darkblue', 'b', 'darkred', 'r', 'g', 'y', 'pink', 'y'],
                      v_line_pos=[0.1*i for i in range(10)], vlinewidth=1, y_lim=[0, 1.05],
-                     x_lim=[mpthresh[0], mpthresh[-1]])
+                     x_lim=[mpthresh[0], mpthresh[-1]],
+                     fname=osp.join(save_folder, 'classification_comparison'+save_tag+'.png') if save_plots else None,
+                     show_plot_in_spyder=show_plots)
 
 
 def run_analysis(folders, settings):
@@ -122,8 +132,8 @@ All code finished running after a total of {time()-time0} s""")
 def get_subfolders(folder):
     subfolders = []
     for item in os.listdir(folder):
-        item_path = os.path.join(folder, item)
-        if os.path.isdir(item_path):
+        item_path = osp.join(folder, item)
+        if osp.isdir(item_path):
             subfolders.append(item_path)
     return subfolders
 

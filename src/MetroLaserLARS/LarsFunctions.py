@@ -8,6 +8,7 @@ Created on Tue Oct 15 11:56:56 2024
 import numpy as np
 import scipy.signal as sig
 import os
+import os.path as osp
 import pathlib
 from MetroLaserLARS import LarsDataClass
 from MetroLaserLARS.LarsDataClass import LarsData
@@ -133,27 +134,46 @@ def fit_peaks(x: ArrayLike, y: ArrayLike, **settings) -> dict:
 
 
 def detailed_plots(folder, name, peaks, freqs, vels, vels_baseline_removed, vels_rms_norm_zeroed,
-                   vels_filtered, xlim=[10, 60], ylim=[0, 10], vels_peaks_removed=None):
+                   vels_filtered, xlim=[10, 60], ylim=[0, 10], vels_peaks_removed=None, **settings):
     """
     Makes optional detailed plots inside `analyze_data()`.
     """
+    save_tag = '_'+settings['save_tag'] if 'save_tag' in settings else ''
+    save_folder = settings['save_folder']
+    save_plots = settings['save_plots'] if 'save_plots' in settings else False
+    show_plots = settings['show_plots'] if 'show_plots' in settings else False
+
     kwargs = {'x_label': 'Frequency (kHz)', 'vlinewidth': 1}
     pf.line_plot(freqs/1000, [vels], style='.', x_lim=xlim,
-                 title=f'{folder}{name} raw data', y_lim=[-2, 200], **kwargs, y_label='Amplitude (μm/s)')
+                 title=f'{folder}{name} raw data', y_lim=[-2, 200], **kwargs, y_label='Amplitude (μm/s)',
+                 fname=osp.join(save_folder, f'{folder}{name} raw data'+save_tag+'.png') if save_plots else None,
+                 show_plot_in_spyder=show_plots)
     pf.line_plot(freqs/1000, [vels, vels-vels_baseline_removed], style='.', x_lim=xlim,
-                 title=f'{folder}{name} raw data and baseline', y_lim=[-2, 200], **kwargs, y_label='Amplitude (μm/s)')
+                 title=f'{folder}{name} raw data and baseline', y_lim=[-2, 200], **kwargs, y_label='Amplitude (μm/s)',
+                 fname=osp.join(save_folder, f'{folder}{name} raw data and baseline'+save_tag+'.png') if save_plots else None,
+                 show_plot_in_spyder=show_plots)
     if vels_peaks_removed is not None:
         pf.line_plot(freqs/1000, [vels_peaks_removed, vels-vels_baseline_removed], style='.', x_lim=xlim,
                      title=f'{folder}{name} peaks removed and baseline', y_lim=[-2, 70],
-                     **kwargs, y_label='Amplitude (μm/s)')
+                     **kwargs, y_label='Amplitude (μm/s)',
+                     fname=osp.join(save_folder, f'{folder}{name} peaks removed and baseline'+save_tag+'.png') if save_plots else None,
+                     show_plot_in_spyder=show_plots)
     pf.line_plot(freqs/1000, [vels_baseline_removed], style='.', x_lim=xlim,
-                 title=f'{folder}{name} baseline removed', y_lim=[-2, 200], **kwargs, y_label='Amplitude (μm/s)')
+                 title=f'{folder}{name} baseline removed', y_lim=[-2, 200], **kwargs, y_label='Amplitude (μm/s)',
+                 fname=osp.join(save_folder, f'{folder}{name} baseline removed'+save_tag+'.png') if save_plots else None,
+                 show_plot_in_spyder=show_plots)
     pf.line_plot(freqs/1000, [vels_rms_norm_zeroed], style='.', x_lim=xlim,
-                 title=f'{folder}{name} rms_norm_zero', y_lim=[0, 15], **kwargs, y_label='Amplitude (arb.)')
+                 title=f'{folder}{name} rms_norm_zero', y_lim=[0, 15], **kwargs, y_label='Amplitude (arb.)',
+                 fname=osp.join(save_folder, f'{folder}{name} rms_norm_zero'+save_tag+'.png') if save_plots else None,
+                 show_plot_in_spyder=show_plots)
     pf.line_plot(freqs/1000, [vels_filtered], style='.', x_lim=xlim,
-                 title=f'{folder}{name} filtered data', y_lim=ylim, **kwargs, y_label='Amplitude (arb.)')
+                 title=f'{folder}{name} filtered data', y_lim=ylim, **kwargs, y_label='Amplitude (arb.)',
+                 fname=osp.join(save_folder, f'{folder}{name} filtered data'+save_tag+'.png') if save_plots else None,
+                 show_plot_in_spyder=show_plots)
     pf.line_plot(freqs/1000, [vels_filtered], style='.', x_lim=xlim, v_line_pos=peaks['positions']/1000,
-                 title=f'{folder}{name} peak fits', y_lim=ylim, **kwargs, y_label='Amplitude (arb.)')
+                 title=f'{folder}{name} peak fits', y_lim=ylim, **kwargs, y_label='Amplitude (arb.)',
+                 fname=osp.join(save_folder, f'{folder}{name} peak fits'+save_tag+'.png') if save_plots else None,
+                 show_plot_in_spyder=show_plots)
     return
 
 
@@ -205,6 +225,10 @@ def analyze_data(data: LarsData, **settings) -> tuple[dict, NDArray, NDArray, ND
     sgf_polyorder = settings['sgf_polyorder'] if 'sgf_polyorder' in settings else 0
     peak_plot_width = settings['peak_plot_width'] if 'peak_plot_width' in settings else 10
     regularization_ratio = settings['regularization_ratio'] if 'regularization_ratio' in settings else 0.5
+    save_tag = '_'+settings['save_tag'] if 'save_tag' in settings else ''
+    save_folder = settings['save_folder']
+    save_plots = settings['save_plots'] if 'save_plots' in settings else False
+    show_plots = settings['show_plots'] if 'show_plots' in settings else False
 
     freqs = data.freq
     slc = np.logical_and(freqs > slc_limits[0], freqs < slc_limits[1])
@@ -223,7 +247,7 @@ def analyze_data(data: LarsData, **settings) -> tuple[dict, NDArray, NDArray, ND
 
     if plot and ((plot_detail and not recursive_noise_reduction)
                  or (recursive_noise_reduction and plot_recursive_noise)):
-        detailed_plots(folder, name, peaks, freqs, vels, vels_baseline_removed, vels_rms_norm_zeroed, vels_filtered)
+        detailed_plots(folder, name, peaks, freqs, vels, vels_baseline_removed, vels_rms_norm_zeroed, vels_filtered, **settings)
 
     recursive_noise_iterations = 0
     while recursive_noise_reduction:
@@ -274,10 +298,10 @@ def analyze_data(data: LarsData, **settings) -> tuple[dict, NDArray, NDArray, ND
 
         if plot and plot_detail and plot_recursive_noise:
             detailed_plots(folder, name, peaks, freqs, vels, vels_baseline_removed, vels_rms_norm_zeroed,
-                           vels_filtered, vels_peaks_removed=vels_peaks_removed_for_baseline)
+                           vels_filtered, vels_peaks_removed=vels_peaks_removed_for_baseline, **settings)
 
     if plot and plot_detail and recursive_noise_reduction and not plot_recursive_noise:
-        detailed_plots(folder, name, peaks, freqs, vels, vels_baseline_removed, vels_rms_norm_zeroed, vels_filtered)
+        detailed_plots(folder, name, peaks, freqs, vels, vels_baseline_removed, vels_rms_norm_zeroed, vels_filtered, **settings)
 
     newvels = vels_filtered
 
@@ -292,7 +316,9 @@ def analyze_data(data: LarsData, **settings) -> tuple[dict, NDArray, NDArray, ND
                             * 1000, peaks['positions'] < frange[1]*1000)]/1000, peak_plot_width)
 
         pf.line_plot(freqs/1000, [vels, newvels], style='.', x_lim=frange, v_line_pos=peaks['positions']/1000,
-                     vlinewidth=1, title=f'{folder}{name} peak fit', y_norm='each')
+                     vlinewidth=1, title=f'{folder}{name} peak fit', y_norm='each',
+                     fname=osp.join(save_folder, f'{folder}{name} peak fit'+save_tag+'.png') if save_plots else None,
+                     show_plot_in_spyder=show_plots)
         for pg in peak_groups:
             if np.size(pg) > 1:
                 avg_pos = (pg[0]+pg[-1])/2
@@ -300,7 +326,9 @@ def analyze_data(data: LarsData, **settings) -> tuple[dict, NDArray, NDArray, ND
             else:
                 xl = [pg-peak_plot_width/2, pg+peak_plot_width/2]
             pf.line_plot(freqs/1000, [vels, newvels], style='.', x_lim=xl, v_line_pos=peaks['positions']/1000,
-                         vlinewidth=1, title=f'{folder}{name} peak fit', y_norm='each')
+                         vlinewidth=1, title=f'{folder}{name} peak fit', y_norm='each',
+                         fname=osp.join(save_folder, f'{folder}{name} peak fit'+save_tag+'.png') if save_plots else None,
+                         show_plot_in_spyder=show_plots)
 
     return peaks, freqs, vels, newvels, name
 
@@ -341,7 +369,7 @@ def LARS_analysis(folder: str = '', previously_loaded_data: Literal[None, LarsDa
         alldata = []
         for subdir, dirs, files in os.walk(folder):
             for file in [f for f in files if '.all' in f]:
-                alldata.append(LarsData.from_file(os.path.join(subdir, file)))
+                alldata.append(LarsData.from_file(osp.join(subdir, file)))
 
         # Analyze data
         combine = settings['combine'] if 'combine' in settings else 'max'
@@ -408,6 +436,12 @@ def compare_LARS_measurements(folders: Iterable = [], previously_analyzed_data: 
     matching_penalty_order = settings['matching_penalty_order'] if 'matching_penalty_order' in settings else 1
     peak_match_window = settings['peak_match_window'] if 'peak_match_window' in settings else 150
     nw_normalized = settings['nw_normalized'] if 'nw_normalized' in settings else False
+    save_tag = '_'+settings['save_tag'] if 'save_tag' in settings else ''
+    save_folder = settings['save_folder']
+    save_plots = settings['save_plots'] if 'save_plots' in settings else False
+    show_plots = settings['show_plots'] if 'show_plots' in settings else False
+    print(f'show_plots: {show_plots}')
+    plot = settings['plot'] if 'plot' in settings else False
 
     # collect peak positions, and the frequency, raw velocity, and smoothed velocity vectors from each folder
     positions = []
@@ -460,8 +494,7 @@ def compare_LARS_measurements(folders: Iterable = [], previously_analyzed_data: 
         print(f'{len(matched)} matched peaks at {matched} kHz')
 
     # Plot results
-    # if plot:
-    if 'plot' in settings and settings['plot']:
+    if plot:
         xlims = ([10, 10+50/3], [10+50/3, 10+100/3], [10+100/3, 10+150/3])
         # for xlim in xlims:
         #     pf.line_plot([freqs[0]/1000, freqs[1]/1000], [newvels[0], newvels[1]], style='.',
@@ -478,7 +511,9 @@ def compare_LARS_measurements(folders: Iterable = [], previously_analyzed_data: 
         for xlim in xlims+([30, 34],):
             pf.line_plot([freqs[0]/1000, freqs[1]/1000*best_stretch], [vels[0], vels[1]], style='.', x_lim=xlim,
                          v_line_pos=[matched, unmatched_X, unmatched_Y], v_line_color=['k', 'C0', 'C1'],
-                         vlinewidth=[4, 2, 2], y_norm='each', title='Stretched peak matches raw')
+                         vlinewidth=[4, 2, 2], y_norm='each', title='Stretched peak matches raw',
+                         fname=osp.join(save_folder, f'{names[0]} and {names[1]} Stretched peak matches raw'+save_tag+'.png') if save_plots else None,
+                         show_plot_in_spyder=show_plots)
 
     matching_analysis = {'stretch': best_stretch, 'quality': best_quality, 'name': names, 'matched': matched,
                          'unmatched': [unmatched_X, unmatched_Y],
@@ -522,8 +557,8 @@ def analyze_each_pair_of_folders(folders: Iterable = [], **settings) -> tuple[li
     folder_pairs = list(combinations(folders, 2))
     for i, fpair in enumerate(folder_pairs):
         if 'PRINT_MODE' in settings and settings['PRINT_MODE'] in ['sparse', 'full']:
-            print(f"""Analyzing    {os.path.split(fpair[0])[1]}    and    {
-                  os.path.split(fpair[1])[1]}    (pair {i+1} of {len(folder_pairs)})""")
+            print(f"""Analyzing    {osp.split(fpair[0])[1]}    and    {
+                  osp.split(fpair[1])[1]}    (pair {i+1} of {len(folder_pairs)})""")
         data_0 = data_dict[fpair[0]] if fpair[0] in data_dict.keys() else None
         data_1 = data_dict[fpair[1]] if fpair[1] in data_dict.keys() else None
         matching_analysis, datas = compare_LARS_measurements(

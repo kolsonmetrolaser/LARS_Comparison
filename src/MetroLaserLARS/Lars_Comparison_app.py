@@ -28,6 +28,8 @@ def run_app():
             settings['plot_detail']                = True if plot_detail_var.get() == 'True' else False  # noqa
             settings['plot_recursive_noise']       = True if plot_recursive_noise_var.get() == 'True' else False # noqa
             settings['plot_classification']        = True if plot_classification_var.get() == 'True' else False # noqa
+            settings['show_plots']                 = True if show_plots_var.get() == 'True' else False  # noqa
+            settings['save_plots']                 = True if save_plots_var.get() == 'True' else False  # noqa
             settings['peak_plot_width']            = peak_plot_width_var.get() # noqa
             settings['PRINT_MODE']                 = PRINT_MODE_var.get() # noqa
             # PEAK FITTING
@@ -363,6 +365,31 @@ def run_app():
     peak_plot_width_entry.pack(side=tk.LEFT)
     peak_plot_width_label2.pack(side=tk.LEFT)
 
+    # show_plots
+    frame_show_save_plots = tk.Frame(rootl)
+    frame_show_save_plots.pack(**padding_option, side=tk.TOP)
+
+    show_plots_label = Label(frame_show_save_plots, text="Show plots:")
+
+    show_plots_var = StringVar(root, value=bool_options[1])
+    show_plots_var.trace_add("write", update_status)
+    show_plots_menu = OptionMenu(frame_show_save_plots, show_plots_var, *bool_options, command=hide_save_tag)
+    show_plots_menu.config(bg='gray75')
+
+    show_plots_label.pack(side=tk.LEFT)
+    show_plots_menu.pack(**padding_setting, side=tk.LEFT)
+
+    # save_plots
+    save_plots_label = Label(frame_show_save_plots, text="Save plots:")
+
+    save_plots_var = StringVar(root, value=bool_options[1])
+    save_plots_var.trace_add("write", update_status)
+    save_plots_menu = OptionMenu(frame_show_save_plots, save_plots_var, *bool_options, command=hide_save_tag)
+    save_plots_menu.config(bg='gray75')
+
+    save_plots_label.pack(**padding_setting, side=tk.LEFT)
+    save_plots_menu.pack(side=tk.LEFT)
+
     # PRINT_MODE
     frame_PRINT_MODE = tk.Frame(rootl)
     frame_PRINT_MODE.pack(**padding_option, side=tk.TOP)
@@ -377,6 +404,73 @@ def run_app():
 
     PRINT_MODE_label.pack(side=tk.LEFT)
     PRINT_MODE_menu.pack(side=tk.LEFT)
+
+    # SAVING
+
+    # save_data
+    frame_save_data = tk.Frame(rootl)
+    frame_save_data.pack(**padding_option, side=tk.TOP)
+    heading("Saving", lvl=1, frame=frame_save_data)
+
+    save_data_label = Label(frame_save_data, text="Save data to .pkl file:")
+    save_data_label.pack(side=tk.LEFT)
+
+    save_data_var = StringVar(root, value=bool_options[1])
+    save_data_var.trace_add("write", update_status)
+    save_data_menu = OptionMenu(frame_save_data, save_data_var, *bool_options, command=hide_save_tag)
+    save_data_menu.config(bg='gray75')
+    save_data_menu.pack(side=tk.LEFT)
+
+    # save_results
+    frame_save_results = tk.Frame(rootl)
+    frame_save_results.pack(**padding_option, side=tk.TOP)
+
+    save_results_label = Label(frame_save_results, text="Save results to .pkl file:")
+    save_results_label.pack(side=tk.LEFT)
+
+    save_results_var = StringVar(root, value=bool_options[0])
+    save_results_var.trace_add("write", update_status)
+    save_results_menu = OptionMenu(frame_save_results, save_results_var, *bool_options, command=hide_save_tag)
+    save_results_menu.config(bg='gray75')
+    save_results_menu.pack(side=tk.LEFT)
+
+    # save_tag
+    frame_save_tag = tk.Frame(rootl)
+    frame_save_tag.pack(**padding_setting, side=tk.TOP)
+
+    save_tag_label = Label(frame_save_tag, text="Save filename: data_dict... and peak_results")
+    save_tag_label2 = Label(frame_save_tag, text=".pkl")
+
+    save_tag_var = StringVar(root, value='')
+    save_tag_var.trace_add("write", update_save_tag_label)
+    save_tag_var.trace_add("write", update_status)
+    save_tag_entry = Entry(frame_save_tag, width=6, textvariable=save_tag_var)
+
+    save_tag_dummy_label = Label(frame_save_tag, text=" "*42, font=("Courier New", 9))
+    # save_tag_dummy_label.pack()
+
+    save_tag_label.pack(side=tk.LEFT)
+    save_tag_entry.pack(side=tk.LEFT)
+    save_tag_label2.pack(side=tk.LEFT)
+
+    # save_directory
+
+    frame_save_directory_label = tk.Frame(rootl)
+    frame_save_directory_label.pack(**padding_setting, side=tk.TOP)
+    frame_save_directory = tk.Frame(rootl)
+    frame_save_directory.pack(**padding_setting, side=tk.TOP)
+
+    save_directory_label = Label(frame_save_directory_label, text="Enter path to save data to or select a folder:")
+
+    save_directory_var = StringVar(root, value='Same as LARS Data Directory')
+    save_directory_var.trace_add("write", update_status)
+    save_directory_entry = Entry(frame_save_directory, width=40, textvariable=save_directory_var)
+
+    save_directory_button = Button(frame_save_directory, text="Open", command=select_save_directory, bg='gray75')
+
+    save_directory_label.pack(side=tk.LEFT, padx=4)
+    save_directory_button.pack(side=tk.LEFT, padx=4)
+    save_directory_entry.pack(side=tk.LEFT, padx=4)
 
     # PEAK FITTING
     frame_peak_fit = tk.Frame(rootr)
@@ -669,73 +763,6 @@ def run_app():
     dummy_label = Label(frame_dummy, text="")
 
     dummy_label.pack(side=tk.LEFT)
-
-    # SAVING
-
-    # save_data
-    frame_save_data = tk.Frame(rootl)
-    frame_save_data.pack(**padding_option, side=tk.TOP)
-    heading("Saving", lvl=1, frame=frame_save_data)
-
-    save_data_label = Label(frame_save_data, text="Save data to .pkl file:")
-    save_data_label.pack(side=tk.LEFT)
-
-    save_data_var = StringVar(root, value=bool_options[1])
-    save_data_var.trace_add("write", update_status)
-    save_data_menu = OptionMenu(frame_save_data, save_data_var, *bool_options, command=hide_save_tag)
-    save_data_menu.config(bg='gray75')
-    save_data_menu.pack(side=tk.LEFT)
-
-    # save_results
-    frame_save_results = tk.Frame(rootl)
-    frame_save_results.pack(**padding_option, side=tk.TOP)
-
-    save_results_label = Label(frame_save_results, text="Save results to .pkl file:")
-    save_results_label.pack(side=tk.LEFT)
-
-    save_results_var = StringVar(root, value=bool_options[0])
-    save_results_var.trace_add("write", update_status)
-    save_results_menu = OptionMenu(frame_save_results, save_results_var, *bool_options, command=hide_save_tag)
-    save_results_menu.config(bg='gray75')
-    save_results_menu.pack(side=tk.LEFT)
-
-    # save_tag
-    frame_save_tag = tk.Frame(rootl)
-    frame_save_tag.pack(**padding_setting, side=tk.TOP)
-
-    save_tag_label = Label(frame_save_tag, text="Save filename: data_dict... and peak_results")
-    save_tag_label2 = Label(frame_save_tag, text=".pkl")
-
-    save_tag_var = StringVar(root, value='')
-    save_tag_var.trace_add("write", update_save_tag_label)
-    save_tag_var.trace_add("write", update_status)
-    save_tag_entry = Entry(frame_save_tag, width=6, textvariable=save_tag_var)
-
-    save_tag_dummy_label = Label(frame_save_tag, text=" "*42, font=("Courier New", 9))
-    # save_tag_dummy_label.pack()
-
-    save_tag_label.pack(side=tk.LEFT)
-    save_tag_entry.pack(side=tk.LEFT)
-    save_tag_label2.pack(side=tk.LEFT)
-
-    # save_directory
-
-    frame_save_directory_label = tk.Frame(rootl)
-    frame_save_directory_label.pack(**padding_setting, side=tk.TOP)
-    frame_save_directory = tk.Frame(rootl)
-    frame_save_directory.pack(**padding_setting, side=tk.TOP)
-
-    save_directory_label = Label(frame_save_directory_label, text="Enter path to save data to or select a folder:")
-
-    save_directory_var = StringVar(root, value='Same as LARS Data Directory')
-    save_directory_var.trace_add("write", update_status)
-    save_directory_entry = Entry(frame_save_directory, width=40, textvariable=save_directory_var)
-
-    save_directory_button = Button(frame_save_directory, text="Open", command=select_save_directory, bg='gray75')
-
-    save_directory_label.pack(side=tk.LEFT, padx=4)
-    save_directory_button.pack(side=tk.LEFT, padx=4)
-    save_directory_entry.pack(side=tk.LEFT, padx=4)
 
     # SUBMIT
     frame_submit = tk.Frame(rootsubmit)
