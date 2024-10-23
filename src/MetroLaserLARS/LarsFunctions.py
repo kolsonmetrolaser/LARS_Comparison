@@ -319,7 +319,7 @@ def analyze_data(data: LarsData, **settings) -> tuple[dict, NDArray, NDArray, ND
                      vlinewidth=1, title=f'{folder}{name} peak fit', y_norm='each',
                      fname=osp.join(save_folder, f'{folder}{name} peak fit'+save_tag) if save_plots else None,
                      show_plot_in_spyder=show_plots)
-        for pg in peak_groups:
+        for pgnum, pg in enumerate(peak_groups):
             if np.size(pg) > 1:
                 avg_pos = (pg[0]+pg[-1])/2
                 xl = [avg_pos-peak_plot_width/2, avg_pos+peak_plot_width/2]
@@ -327,7 +327,7 @@ def analyze_data(data: LarsData, **settings) -> tuple[dict, NDArray, NDArray, ND
                 xl = [pg-peak_plot_width/2, pg+peak_plot_width/2]
             pf.line_plot(freqs/1000, [vels, newvels], style='.', x_lim=xl, v_line_pos=peaks['positions']/1000,
                          vlinewidth=1, title=f'{folder}{name} peak fit', y_norm='each',
-                         fname=osp.join(save_folder, f'{folder}{name} peak fit_{xl[0]}_{xl[1]}'+save_tag) if save_plots else None,
+                         fname=osp.join(save_folder, f'{folder}{name} peak fit_{pgnum}'+save_tag) if save_plots else None,
                          show_plot_in_spyder=show_plots)
 
     return peaks, freqs, vels, newvels, name
