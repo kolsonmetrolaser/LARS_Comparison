@@ -63,7 +63,6 @@ def run_app():
             settings['save_data']                 = True if save_data_var.get() == 'True' else False  # noqa
             settings['save_results']              = True if save_results_var.get() == 'True' else False  # noqa
             settings['save_tag']                  = save_tag_var.get() # noqa
-            print(save_tag_var.get())
             settings['save_folder']               = directory_var.get() if save_directory_var.get() == 'Same as LARS Data Directory' else save_directory_var.get() # noqa
             # fmt: on
         except tk.TclError as e:
@@ -89,24 +88,24 @@ def run_app():
         running_var.set(False)
         update_status()
 
-    def select_directory():
+    # def select_directory(entry, **kwargs):
+    def select_directory(entry):
         directory = filedialog.askdirectory(title="Select a Directory")
         if directory:
-            directory_entry.delete(0, tk.END)  # Clear the directory_entry box
-            directory_entry.insert(0, directory)  # Insert the selected directory
+            entry.delete(0, tk.END)  # Clear the directory_entry box
+            entry.insert(0, directory)  # Insert the selected directory
 
-    def select_save_directory():
-        save_directory = filedialog.askdirectory(title="Select a Directory")
-        if save_directory:
-            save_directory_entry.delete(0, tk.END)  # Clear the save_directory_entry box
-            save_directory_entry.insert(0, save_directory)  # Insert the selected save_directory
+    # def select_save_directory():
+    #     save_directory = filedialog.askdirectory(title="Select a Directory")
+    #     if save_directory:
+    #         save_directory_entry.delete(0, tk.END)  # Clear the save_directory_entry box
+    #         save_directory_entry.insert(0, save_directory)  # Insert the selected save_directory
 
-    def select_pickled_data_path():
-        pickled_data_path = filedialog.askopenfilename(title="Select a data_dict[...].pkl file",
-                                                       filetypes=[("Pickled Data Dictionaries", "data_dict*.pkl"), ("All Files", "*.*")])
-        if pickled_data_path:
-            pickled_data_path_entry.delete(0, tk.END)  # Clear the pickled_data_path_entry box
-            pickled_data_path_entry.insert(0, pickled_data_path)  # Insert the selected pickled_data_path
+    def select_file(entry, **kwargs):
+        path = filedialog.askopenfilename(**kwargs)
+        if path:
+            entry.delete(0, tk.END)  # Clear the pickled_data_path_entry box
+            entry.insert(0, path)  # Insert the selected pickled_data_path
 
     def update_peak_match_window_label(entry_text):
         # Update the label text with the selected option
@@ -181,6 +180,19 @@ def run_app():
 
     # Create the main window
     root = tk.Tk()
+    root.state('zoomed')
+
+    menu_bar = tk.Menu(root)
+    menu_bar.config(bg='lightblue', fg='black')
+    # file_menu = tk.Menu(menu_bar)
+    file_menu = tk.Menu(menu_bar, tearoff=0, bg="lightblue", fg="black")
+    file_menu.add_command(label="New", command=lambda: print("New File"))
+    file_menu.add_command(label="Open", command=lambda: print("Open File"))
+    file_menu.add_separator()
+    file_menu.add_command(label="Exit", command=lambda: root.destroy())
+    menu_bar.add_cascade(label="File", menu=file_menu)
+    root.config(menu=menu_bar)
+
     root.title("LARS Comparison Settings")
 
     roottop = tk.Frame(root)
@@ -195,6 +207,19 @@ def run_app():
     rootr = tk.Frame(rootsettings)
     rootr.pack(side=tk.LEFT)
 
+    # Global info
+    bool_options = ['True', 'False']
+    padding_heading = {'pady': 10, 'padx': 10}
+    padding_setting = {'pady': 4, 'padx': 4}
+    padding_option = {'pady': 0, 'padx': 4}
+    padding_none = {'pady': 0, 'padx': 0}
+    running_var = BooleanVar(root, value=False)
+    prev_settings_var = Variable(root, value={})
+    status_var = StringVar(root, value='nodir')
+    default_font_name = font.nametofont('TkTextFont').actual()['family']
+    kwargs_pickle = {'title': "Select a data_dict[...].pkl file",
+                     'filetypes': [("Pickled Data Dictionaries", "data_dict*.pkl"), ("All Files", "*.*")]}
+
     def heading(txt, frame=root, lvl=0, padding=True, side=tk.TOP, subtext=None):
         fonts = [(default_font_name, 20, "bold"), (default_font_name, 14, "bold"), (default_font_name, 10, "bold"), (default_font_name, 9)]
         h = tk.Label(frame, text=txt, font=fonts[lvl])
@@ -208,110 +233,116 @@ def run_app():
             h2 = heading(subtext, frame=subframe, lvl=3, padding=False, side=tk.BOTTOM)
             return h, h2
         if padding:
-            h.pack(**padding_heading, side=side)
+            h.pack(**padding_heading, side=side, fill='x')
         else:
-            h.pack(side=side)
+            h.pack(side=side, fill='x')
         return h
 
-    # Global info
-    bool_options = ['True', 'False']
-    padding_heading = {'pady': 10, 'padx': 10}
-    padding_setting = {'pady': 4, 'padx': 4}
-    padding_option = {'pady': 0, 'padx': 4}
-    dashes = '-'*45
-    running_var = BooleanVar(root, value=False)
-    prev_settings_var = Variable(root, value={})
-    status_var = StringVar(root, value='nodir')
-    default_font_name = font.nametofont('TkTextFont').actual()['family']
+    def labeled_entry(baseframe=root, label: str = '', postlabel: str = '', padding=padding_setting,
+                      entry_width: int = 6, vardefault=0, vartype=None, varframe=root, do_update_status=True,
+                      side=tk.TOP):
+        label1, entry, label2 = None, None, None
+        leframe = tk.Frame(baseframe)
+        leframe.pack(**padding, side=side)
+        if label != '':
+            label1 = Label(leframe, text=label)
+            label1.pack(side=tk.LEFT)
+        if vartype is not None:
+            var = vartype(varframe, value=vardefault)
+            if do_update_status:
+                var.trace_add("write", update_status)
+            entry = Entry(leframe, width=entry_width, textvariable=var)
+            entry.pack(side=tk.LEFT)
+        if postlabel != '':
+            label2 = Label(leframe, text=postlabel)
+            label2.pack(side=tk.LEFT)
+        return var, leframe, label1, entry, label2
+
+    def labeled_options(baseframe=root, label: str = '', postlabel: str = '', padding=padding_setting,
+                        vardefault=0, vartype=None, varframe=root, do_update_status=True,
+                        command=None, side=tk.TOP, options=bool_options):
+        label1, optionmenu, label2 = None, None, None
+        lbframe = tk.Frame(baseframe)
+        lbframe.pack(**padding, side=side)
+        if label != '':
+            label1 = Label(lbframe, text=label)
+            label1.pack(side=tk.LEFT)
+        if vartype is not None:
+            var = vartype(varframe, value=vardefault)
+            if do_update_status:
+                var.trace_add("write", update_status)
+            optionmenu = OptionMenu(lbframe, var, *options, command=command)
+            optionmenu.config(bg='gray75')
+            optionmenu.pack(side=tk.LEFT)
+        if postlabel != '':
+            label2 = Label(lbframe, text=postlabel)
+            label2.pack(side=tk.LEFT)
+        return var, lbframe, label1, optionmenu, label2
+
+    def labeled_file_select(baseframe=root, headingtxt: str = '', subheading: str = '', label: str = '', padding=padding_setting,
+                            entry_width: int = 40, vardefault='', vartype=StringVar, varframe=root, do_update_status=True,
+                            command=None, side=tk.TOP, selection='file', filetype='pickle'):
+        label1, entry, button = None, None, None
+        ldframe = tk.Frame(baseframe)
+        ldframe.pack(**padding, side=side)
+        if headingtxt != '':
+            heading(headingtxt, lvl=1, frame=ldframe,
+                    subtext=subheading)
+        if label != '':
+            label1 = Label(ldframe, text=label)
+            label1.pack(side=tk.LEFT, padx=4)
+        if vartype is not None:
+            var = vartype(varframe, value=vardefault)
+            if do_update_status:
+                var.trace_add("write", update_status)
+            entry = Entry(ldframe, width=entry_width, textvariable=var)
+            if selection == 'file':
+                fun = select_file
+                if filetype == 'pickle':
+                    kwargs = kwargs_pickle
+            elif selection == 'dir':
+                kwargs = {}
+                fun = select_directory
+            button = Button(ldframe, text="Open", command=lambda: fun(entry, **kwargs), bg='gray75')
+            button.pack(side=tk.LEFT, padx=4)
+            entry.pack(side=tk.LEFT, padx=4)
+        return var, ldframe, label1, entry, button
 
     # Start building App
 
-    heading(dashes+' Load Data '+dashes, frame=roottop, padding=False, side=tk.TOP)
+    heading('Load Data', frame=roottop, padding=False, side=tk.TOP)
     rootload = tk.Frame(roottop)
     rootload.pack(side=tk.TOP)
     # DIRECTORY
-
-    frame_directory = tk.Frame(rootload)
-    frame_directory.pack(**padding_setting, side=tk.TOP)
-    heading("Directory", lvl=1, frame=frame_directory,
-            subtext="""Select a folder which contains subfolders, each of which contain LARS data in .all format.
-    All pairs of subfolders will be compared.""")
-
-    directory_label = Label(frame_directory, text="Enter path to LARS data or select a folder:")
-
-    directory_var = StringVar(root)
-    directory_var.trace_add("write", update_status)
-    directory_entry = Entry(frame_directory, width=40, textvariable=directory_var)
-
-    directory_button = Button(frame_directory, text="Open", command=select_directory, bg='gray75')
-
-    directory_label.pack(side=tk.LEFT, padx=4)
-    directory_button.pack(side=tk.LEFT, padx=4)
-    directory_entry.pack(side=tk.LEFT, padx=4)
-
-    # frame_or = tk.Frame(rootload)
-    # frame_or.pack(**padding_setting, side=tk.LEFT)
-    # heading("OR", lvl=1, frame=frame_or, padding=padding_heading, side=tk.TOP)
-    # or_label = Label(frame_or, text='')
-    # or_label.pack(side=tk.BOTTOM)
-
+    directory_var, _, _, _, _ = labeled_file_select(rootload, headingtxt='Directory',
+                                                    subheading="""Select a folder which contains subfolders, each of which contain LARS data in .all format.
+All pairs of subfolders will be compared.""",
+                                                    label='Enter path to LARS data or select a folder:', selection='dir')
     # pickled_data_path
 
-    frame_pickled_data_path = tk.Frame(rootload)
-    frame_pickled_data_path.pack(**padding_setting, side=tk.BOTTOM)
-    heading("Pickled data", lvl=1, frame=frame_pickled_data_path, subtext='Load data from previous analysis.')
-
-    pickled_data_path_label2 = Label(frame_pickled_data_path, text="Enter path to pickled data or select a folder:")
-
-    pickled_data_path_var = StringVar(root)
-    pickled_data_path_var.trace_add("write", update_status)
-    pickled_data_path_entry = Entry(frame_pickled_data_path, width=40, textvariable=pickled_data_path_var)
-
-    pickled_data_path_button = Button(frame_pickled_data_path, text="Open", command=select_pickled_data_path, bg='gray75')
-
-    pickled_data_path_label2.pack(side=tk.LEFT, padx=4)
-    pickled_data_path_button.pack(side=tk.LEFT, padx=4)
-    pickled_data_path_entry.pack(side=tk.LEFT, padx=4)
-
-    heading('-'+dashes+' Settings '+dashes+'-', frame=roottop, side=tk.BOTTOM)
+    pickled_data_path_var, _, _, _, _ = labeled_file_select(rootload, headingtxt='Pickled Data',
+                                                            subheading='Load data from previous analysis.',
+                                                            label='Enter path to pickled data or select a file:')
+    heading('Settings', frame=roottop, side=tk.BOTTOM)
 
     # DATA DEFINITIONS
+
+    heading("Data", lvl=1, frame=rootl, side=tk.TOP)
 
     # frange and slc limits
     frame_frange = tk.Frame(rootl)
     frame_frange.pack(**padding_setting, side=tk.TOP)
-    heading("Data", lvl=1, frame=frame_frange)
-
-    frange_label = Label(frame_frange, text="The data minimum and maximum frequency:")
-    frange_label2 = Label(frame_frange, text="-")
-    frange_label3 = Label(frame_frange, text="Hz")
-
-    frange_min_var, frange_max_var = DoubleVar(root, value=10000), DoubleVar(root, value=60000)
-    frange_min_var.trace_add("write", update_status)
-    frange_max_var.trace_add("write", update_status)
-    frange_min_entry = Entry(frame_frange, width=6, textvariable=frange_min_var)
-    frange_max_entry = Entry(frame_frange, width=6, textvariable=frange_max_var)
-
-    frange_label.pack(side=tk.LEFT)
-    frange_min_entry.pack(side=tk.LEFT)
-    frange_label2.pack(side=tk.LEFT)
-    frange_max_entry.pack(side=tk.LEFT)
-    frange_label3.pack(side=tk.LEFT)
+    frange_min_var, _, _, _, _ = labeled_entry(frame_frange, 'Data minimum and maximum frequency:',
+                                               padding=padding_none,
+                                               vardefault=10000, vartype=DoubleVar, side=tk.LEFT)
+    frange_max_var, _, _, _, _ = labeled_entry(frame_frange, '-',
+                                               postlabel='Hz', padding=padding_none,
+                                               vardefault=60000, vartype=DoubleVar, side=tk.LEFT)
 
     # combine
-    frame_combine = tk.Frame(rootl)
-    frame_combine.pack(**padding_option, side=tk.TOP)
-
-    combine_label = Label(frame_combine, text="How data within a folder should be combined:")
-
-    combine_options = ['max', 'mean']
-    combine_var = StringVar(root, value=combine_options[0])
-    combine_var.trace_add("write", update_status)
-    combine_menu = OptionMenu(frame_combine, combine_var, *combine_options)
-    combine_menu.config(bg='gray75')
-
-    combine_label.pack(side=tk.LEFT)
-    combine_menu.pack(side=tk.LEFT)
+    combine_var, _, _, _, _ = labeled_options(rootl, 'How data within a folder should be combined:',
+                                              padding=padding_setting, vartype=StringVar,
+                                              vardefault='max', options=['max', 'mean'])
 
     # PLOTTING AND PRINTING
 
@@ -352,126 +383,46 @@ def run_app():
     plot_classification_menu.grid(row=1, column=1)
 
     # peak_plot_width
-    frame_peak_fit_plot_width = tk.Frame(rootl)
-    frame_peak_fit_plot_width.pack(**padding_setting, side=tk.TOP)
-
-    peak_plot_width_label = Label(frame_peak_fit_plot_width, text="Width of peak fit plots:")
-    peak_plot_width_label2 = Label(frame_peak_fit_plot_width, text="kHz")
-
-    peak_plot_width_var = DoubleVar(root, value=20)
-    peak_plot_width_var.trace_add("write", update_status)
-    peak_plot_width_entry = Entry(frame_peak_fit_plot_width, width=6, textvariable=peak_plot_width_var)
-
-    peak_plot_width_label.pack(side=tk.LEFT)
-    peak_plot_width_entry.pack(side=tk.LEFT)
-    peak_plot_width_label2.pack(side=tk.LEFT)
+    peak_plot_width_var, _, _, _, _ = labeled_entry(rootl, 'Width of peak fit plots:',
+                                                    postlabel='kHz', padding=padding_setting,
+                                                    vardefault=20, vartype=DoubleVar)
 
     # show_plots
     frame_show_save_plots = tk.Frame(rootl)
-    frame_show_save_plots.pack(**padding_option, side=tk.TOP)
-
-    show_plots_label = Label(frame_show_save_plots, text="Show plots:")
-
-    show_plots_var = StringVar(root, value=bool_options[1])
-    show_plots_var.trace_add("write", update_status)
-    show_plots_menu = OptionMenu(frame_show_save_plots, show_plots_var, *bool_options, command=hide_save_tag)
-    show_plots_menu.config(bg='gray75')
-
-    show_plots_label.pack(side=tk.LEFT)
-    show_plots_menu.pack(**padding_setting, side=tk.LEFT)
+    frame_show_save_plots.pack(side=tk.TOP)
+    show_plots_var, _, _, _, _ = labeled_options(frame_show_save_plots, 'Show plots:', padding=padding_setting,
+                                                 side=tk.LEFT, vartype=StringVar, vardefault=bool_options[1])
 
     # save_plots
-    save_plots_label = Label(frame_show_save_plots, text="Save plots:")
-
-    save_plots_var = StringVar(root, value=bool_options[1])
-    save_plots_var.trace_add("write", update_status)
-    save_plots_menu = OptionMenu(frame_show_save_plots, save_plots_var, *bool_options, command=hide_save_tag)
-    save_plots_menu.config(bg='gray75')
-
-    save_plots_label.pack(**padding_setting, side=tk.LEFT)
-    save_plots_menu.pack(side=tk.LEFT)
+    save_plots_var, _, _, _, _ = labeled_options(frame_show_save_plots, 'Save plots:', padding=padding_setting,
+                                                 side=tk.LEFT, vartype=StringVar, vardefault=bool_options[1])
 
     # PRINT_MODE
-    frame_PRINT_MODE = tk.Frame(rootl)
-    frame_PRINT_MODE.pack(**padding_option, side=tk.TOP)
-
-    PRINT_MODE_options = ['none', 'sparse', 'full']
-    PRINT_MODE_label = Label(frame_PRINT_MODE, text="Print details:")
-
-    PRINT_MODE_var = StringVar(root, value=PRINT_MODE_options[1])
-    PRINT_MODE_var.trace_add("write", update_status)
-    PRINT_MODE_menu = OptionMenu(frame_PRINT_MODE, PRINT_MODE_var, *PRINT_MODE_options)
-    PRINT_MODE_menu.config(bg='gray75')
-
-    PRINT_MODE_label.pack(side=tk.LEFT)
-    PRINT_MODE_menu.pack(side=tk.LEFT)
-
+    PRINT_MODE_var, _, _, _, _ = labeled_options(rootl, 'Print details:',
+                                                 padding=padding_setting, vartype=StringVar,
+                                                 vardefault='sparse', options=['none', 'sparse', 'full'])
     # SAVING
 
+    heading("Saving", lvl=1, frame=rootl, padding=False)
+
     # save_data
-    frame_save_data = tk.Frame(rootl)
-    frame_save_data.pack(**padding_option, side=tk.TOP)
-    heading("Saving", lvl=1, frame=frame_save_data)
-
-    save_data_label = Label(frame_save_data, text="Save data to .pkl file:")
-    save_data_label.pack(side=tk.LEFT)
-
-    save_data_var = StringVar(root, value=bool_options[1])
-    save_data_var.trace_add("write", update_status)
-    save_data_menu = OptionMenu(frame_save_data, save_data_var, *bool_options, command=hide_save_tag)
-    save_data_menu.config(bg='gray75')
-    save_data_menu.pack(side=tk.LEFT)
+    save_data_var, _, _, _, _ = labeled_options(rootl, 'Save data to .pkl file:', padding=padding_setting,
+                                                vartype=StringVar, vardefault=bool_options[1], command=hide_save_tag)
 
     # save_results
-    frame_save_results = tk.Frame(rootl)
-    frame_save_results.pack(**padding_option, side=tk.TOP)
-
-    save_results_label = Label(frame_save_results, text="Save results to .pkl file:")
-    save_results_label.pack(side=tk.LEFT)
-
-    save_results_var = StringVar(root, value=bool_options[0])
-    save_results_var.trace_add("write", update_status)
-    save_results_menu = OptionMenu(frame_save_results, save_results_var, *bool_options, command=hide_save_tag)
-    save_results_menu.config(bg='gray75')
-    save_results_menu.pack(side=tk.LEFT)
+    save_results_var, _, _, _, _ = labeled_options(rootl, 'Save results to .pkl file:', padding=padding_setting,
+                                                   vartype=StringVar, vardefault=bool_options[0], command=hide_save_tag)
 
     # save_tag
-    frame_save_tag = tk.Frame(rootl)
-    frame_save_tag.pack(**padding_setting, side=tk.TOP)
-
-    save_tag_label = Label(frame_save_tag, text="Save filename: data_dict... and peak_results")
-    save_tag_label2 = Label(frame_save_tag, text=".pkl")
-
-    save_tag_var = StringVar(root, value='')
-    save_tag_var.trace_add("write", update_save_tag_label)
-    save_tag_var.trace_add("write", update_status)
-    save_tag_entry = Entry(frame_save_tag, width=6, textvariable=save_tag_var)
+    save_tag_var, frame_save_tag, save_tag_label, save_tag_entry, save_tag_label2 =\
+        labeled_entry(rootl, 'Save filename: data_dict... and peak_results', postlabel='.pkl', padding=padding_setting,
+                      vardefault='', vartype=StringVar)
 
     save_tag_dummy_label = Label(frame_save_tag, text=" "*42, font=("Courier New", 9))
-    # save_tag_dummy_label.pack()
-
-    save_tag_label.pack(side=tk.LEFT)
-    save_tag_entry.pack(side=tk.LEFT)
-    save_tag_label2.pack(side=tk.LEFT)
 
     # save_directory
-
-    frame_save_directory_label = tk.Frame(rootl)
-    frame_save_directory_label.pack(**padding_setting, side=tk.TOP)
-    frame_save_directory = tk.Frame(rootl)
-    frame_save_directory.pack(**padding_setting, side=tk.TOP)
-
-    save_directory_label = Label(frame_save_directory_label, text="Enter path to save data to or select a folder:")
-
-    save_directory_var = StringVar(root, value='Same as LARS Data Directory')
-    save_directory_var.trace_add("write", update_status)
-    save_directory_entry = Entry(frame_save_directory, width=40, textvariable=save_directory_var)
-
-    save_directory_button = Button(frame_save_directory, text="Open", command=select_save_directory, bg='gray75')
-
-    save_directory_label.pack(side=tk.LEFT, padx=4)
-    save_directory_button.pack(side=tk.LEFT, padx=4)
-    save_directory_entry.pack(side=tk.LEFT, padx=4)
+    save_directory_var, _, _, _, _ = labeled_file_select(rootl, subheading='Enter path to save data to or select a folder:',
+                                                         selection='dir', vardefault='Same as LARS Data Directory')
 
     # PEAK FITTING
     frame_peak_fit = tk.Frame(rootr)
@@ -486,167 +437,57 @@ def run_app():
     heading("Smoothing", lvl=2, frame=frame_peak_fitr, padding=False)
 
     # baseline_smoothness
-    frame_baseline_smoothness = tk.Frame(frame_peak_fitl)
-    frame_baseline_smoothness.pack(**padding_setting, side=tk.TOP)
-
-    baseline_smoothness_label = Label(frame_baseline_smoothness, text="Basline smoothness: 10^")
-
-    baseline_smoothness_var = DoubleVar(root, value=12)
-    baseline_smoothness_var.trace_add("write", update_status)
-    baseline_smoothness_entry = Entry(frame_baseline_smoothness, width=6, textvariable=baseline_smoothness_var)
-
-    baseline_smoothness_label.pack(side=tk.LEFT)
-    baseline_smoothness_entry.pack(side=tk.LEFT)
+    baseline_smoothness_var, _, _, _, _ = labeled_entry(frame_peak_fitl, 'Basline smoothness: 10^',
+                                                        padding=padding_setting, vardefault=12, vartype=DoubleVar)
 
     # baseline_polyorder
-    frame_baseline_polyorder = tk.Frame(frame_peak_fitl)
-    frame_baseline_polyorder.pack(**padding_setting, side=tk.TOP)
-
-    baseline_polyorder_label = Label(frame_baseline_polyorder, text="Basline polyorder:")
-
-    baseline_polyorder_var = IntVar(root, value=2)
-    baseline_polyorder_var.trace_add("write", update_status)
-    baseline_polyorder_entry = Entry(frame_baseline_polyorder, width=6, textvariable=baseline_polyorder_var)
-
-    baseline_polyorder_label.pack(side=tk.LEFT)
-    baseline_polyorder_entry.pack(side=tk.LEFT)
+    baseline_polyorder_var, _, _, _, _ = labeled_entry(frame_peak_fitl, 'Basline polyorder:',
+                                                       padding=padding_setting, vardefault=2, vartype=IntVar)
 
     # baseline_itermax
-    frame_baseline_itermax = tk.Frame(frame_peak_fitl)
-    frame_baseline_itermax.pack(**padding_setting, side=tk.TOP)
-
-    baseline_itermax_label = Label(frame_baseline_itermax, text="Basline itermax:")
-
-    baseline_itermax_var = IntVar(root, value=10)
-    baseline_itermax_var.trace_add("write", update_status)
-    baseline_itermax_entry = Entry(frame_baseline_itermax, width=6, textvariable=baseline_itermax_var)
-
-    baseline_itermax_label.pack(side=tk.LEFT)
-    baseline_itermax_entry.pack(side=tk.LEFT)
+    baseline_itermax_var, _, _, _, _ = labeled_entry(frame_peak_fitl, 'Basline itermax:',
+                                                     padding=padding_setting, vardefault=10, vartype=IntVar)
 
     # sgf_windowsize
-    frame_sgf_windowsize = tk.Frame(frame_peak_fitr)
-    frame_sgf_windowsize.pack(**padding_setting, side=tk.TOP)
-
-    sgf_windowsize_label = Label(frame_sgf_windowsize, text="SGF Window Size:")
-
-    sgf_windowsize_var = IntVar(root, value=101)
-    sgf_windowsize_var.trace_add("write", update_status)
-    sgf_windowsize_entry = Entry(frame_sgf_windowsize, width=6, textvariable=sgf_windowsize_var)
-
-    sgf_windowsize_label.pack(side=tk.LEFT)
-    sgf_windowsize_entry.pack(side=tk.LEFT)
+    sgf_windowsize_var, _, _, _, _ = labeled_entry(frame_peak_fitr, 'SGF Windowsize:',
+                                                   padding=padding_setting, vardefault=101, vartype=IntVar)
 
     # sgf_applications
-    frame_sgf_applications = tk.Frame(frame_peak_fitr)
-    frame_sgf_applications.pack(**padding_setting, side=tk.TOP)
-
-    sgf_applications_label = Label(frame_sgf_applications, text="SGF Applications:")
-
-    sgf_applications_var = IntVar(root, value=2)
-    sgf_applications_var.trace_add("write", update_status)
-    sgf_applications_entry = Entry(frame_sgf_applications, width=6, textvariable=sgf_applications_var)
-
-    sgf_applications_label.pack(side=tk.LEFT)
-    sgf_applications_entry.pack(side=tk.LEFT)
+    sgf_applications_var, _, _, _, _ = labeled_entry(frame_peak_fitr, 'SGF Applications:',
+                                                     padding=padding_setting, vardefault=2, vartype=IntVar)
 
     # sgf_polyorder
-    frame_sgf_polyorder = tk.Frame(frame_peak_fitr)
-    frame_sgf_polyorder.pack(**padding_setting, side=tk.TOP)
-
-    sgf_polyorder_label = Label(frame_sgf_polyorder, text="SGF polyorder:")
-
-    sgf_polyorder_var = IntVar(root, value=0)
-    sgf_polyorder_var.trace_add("write", update_status)
-    sgf_polyorder_entry = Entry(frame_sgf_polyorder, width=6, textvariable=sgf_polyorder_var)
-
-    sgf_polyorder_label.pack(side=tk.LEFT)
-    sgf_polyorder_entry.pack(side=tk.LEFT)
+    sgf_polyorder_var, _, _, _, _ = labeled_entry(frame_peak_fitr, 'SGF polyorder:',
+                                                  padding=padding_setting, vardefault=0, vartype=IntVar)
 
     # headings
     heading("Peak Finding", lvl=2, frame=frame_peak_fitl, padding=False)
     heading("Noise Reduction", lvl=2, frame=frame_peak_fitr, padding=False)
 
     # peak_height_min
-    frame_peak_fit_height_min = tk.Frame(frame_peak_fitl)
-    frame_peak_fit_height_min.pack(**padding_setting, side=tk.TOP)
-
-    peak_height_min_label = Label(frame_peak_fit_height_min, text="Peak height minimum: noise *")
-
-    peak_height_min_var = DoubleVar(root, value=0.2)
-    peak_height_min_var.trace_add("write", update_status)
-    peak_height_min_entry = Entry(frame_peak_fit_height_min, width=6, textvariable=peak_height_min_var)
-
-    peak_height_min_label.pack(side=tk.LEFT)
-    peak_height_min_entry.pack(side=tk.LEFT)
+    peak_height_min_var, _, _, _, _ = labeled_entry(frame_peak_fitl, 'Peak height minimum: noise *:',
+                                                    padding=padding_setting, vardefault=0.2, vartype=DoubleVar)
 
     # peak_prominence_min
-    frame_peak_fit_prominence_min = tk.Frame(frame_peak_fitl)
-    frame_peak_fit_prominence_min.pack(**padding_setting, side=tk.TOP)
-
-    peak_prominence_min_label = Label(frame_peak_fit_prominence_min, text="Peak prominence minimum: noise *")
-
-    peak_prominence_min_var = DoubleVar(root, value=0.2)
-    peak_prominence_min_var.trace_add("write", update_status)
-    peak_prominence_min_entry = Entry(frame_peak_fit_prominence_min, width=6, textvariable=peak_prominence_min_var)
-
-    peak_prominence_min_label.pack(side=tk.LEFT)
-    peak_prominence_min_entry.pack(side=tk.LEFT)
+    peak_prominence_min_var, _, _, _, _ = labeled_entry(frame_peak_fitl, 'Peak prominence minimum: noise *:',
+                                                        padding=padding_setting, vardefault=0.2, vartype=DoubleVar)
 
     # peak_ph_ratio_min
-    frame_peak_fit_ph_ratio_min = tk.Frame(frame_peak_fitl)
-    frame_peak_fit_ph_ratio_min.pack(**padding_setting, side=tk.TOP)
-
-    peak_ph_ratio_min_label = Label(frame_peak_fit_ph_ratio_min, text="Peak prominence-to-height minimum:")
-
-    peak_ph_ratio_min_var = DoubleVar(root, value=0.5)
-    peak_ph_ratio_min_var.trace_add("write", update_status)
-    peak_ph_ratio_min_entry = Entry(frame_peak_fit_ph_ratio_min, width=6, textvariable=peak_ph_ratio_min_var)
-
-    peak_ph_ratio_min_label.pack(side=tk.LEFT)
-    peak_ph_ratio_min_entry.pack(side=tk.LEFT)
+    peak_ph_ratio_min_var, _, _, _, _ = labeled_entry(frame_peak_fitl, 'Peak prominence-to-height minimum:',
+                                                      padding=padding_setting, vardefault=0.5, vartype=DoubleVar)
 
     # recursive_noise_reduction
-    frame_recursive_noise_reduction = tk.Frame(frame_peak_fitr)
-    frame_recursive_noise_reduction.pack(**padding_option, side=tk.TOP)
-
-    recursive_noise_reduction_label = Label(frame_recursive_noise_reduction, text="Recursively reduce noise:")
-
-    recursive_noise_reduction_var = StringVar(root, value=bool_options[0])
-    recursive_noise_reduction_var.trace_add("write", update_status)
-    recursive_noise_reduction_menu = OptionMenu(frame_recursive_noise_reduction, recursive_noise_reduction_var,
-                                                *bool_options)
-    recursive_noise_reduction_menu.config(bg='gray75')
-
-    recursive_noise_reduction_label.pack(side=tk.LEFT)
-    recursive_noise_reduction_menu.pack(side=tk.LEFT)
+    recursive_noise_reduction_var, _, _, _, _ = labeled_options(frame_peak_fitr, 'Recursively reduce noise:',
+                                                                padding=padding_setting, vartype=StringVar,
+                                                                vardefault=bool_options[0])
 
     # max_noise_reduction_iter
-    frame_max_noise_reduction_iter = tk.Frame(frame_peak_fitr)
-    frame_max_noise_reduction_iter.pack(**padding_setting, side=tk.TOP)
-
-    max_noise_reduction_iter_label = Label(frame_max_noise_reduction_iter, text="Max noise reduction iterations:")
-
-    max_noise_reduction_iter_var = IntVar(root, value=10)
-    max_noise_reduction_iter_var.trace_add("write", update_status)
-    max_noise_reduction_iter_entry = Entry(frame_max_noise_reduction_iter, width=6,
-                                           textvariable=max_noise_reduction_iter_var)
-
-    max_noise_reduction_iter_label.pack(side=tk.LEFT)
-    max_noise_reduction_iter_entry.pack(side=tk.LEFT)
+    max_noise_reduction_iter_var, _, _, _, _ = labeled_entry(frame_peak_fitr, 'Max noise reduction iterations:',
+                                                             padding=padding_setting, vardefault=10, vartype=IntVar)
 
     # regularization_ratio
-    frame_regularization_ratio = tk.Frame(frame_peak_fitr)
-    frame_regularization_ratio.pack(**padding_setting, side=tk.TOP)
-
-    regularization_ratio_label = Label(frame_regularization_ratio, text="Noise reduction regularization factor:")
-
-    regularization_ratio_var = DoubleVar(root, value=0.5)
-    regularization_ratio_var.trace_add("write", update_status)
-    regularization_ratio_entry = Entry(frame_regularization_ratio, width=6, textvariable=regularization_ratio_var)
-
-    regularization_ratio_label.pack(side=tk.LEFT)
-    regularization_ratio_entry.pack(side=tk.LEFT)
+    regularization_ratio_var, _, _, _, _ = labeled_entry(frame_peak_fitr, 'Noise reduction regularization factor:',
+                                                         padding=padding_setting, vardefault=0.5, vartype=DoubleVar)
 
     # PEAK MATCHING
     frame_peak_match = tk.Frame(rootr)
@@ -661,108 +502,45 @@ def run_app():
     heading("Matching", lvl=2, frame=frame_peak_matchr, padding=False)
 
     # max_stretch
-    frame_max_stretch = tk.Frame(frame_peak_matchl)
-    frame_max_stretch.pack(**padding_setting, side=tk.TOP)
-
-    max_stretch_label = Label(frame_max_stretch, text="Max stretching: 1 ±")
-
-    max_stretch_var = DoubleVar(root, value=0.02)
-    max_stretch_var.trace_add("write", update_status)
-    max_stretch_entry = Entry(frame_max_stretch, width=6, textvariable=max_stretch_var)
-
-    max_stretch_label.pack(side=tk.LEFT)
-    max_stretch_entry.pack(side=tk.LEFT)
+    max_stretch_var, _, _, _, _ = labeled_entry(frame_peak_matchl, 'Max stretching: 1 ±',
+                                                padding=padding_setting, vardefault=0.02, vartype=DoubleVar)
 
     # num_stretches
-    frame_num_stretches = tk.Frame(frame_peak_matchl)
-    frame_num_stretches.pack(**padding_setting, side=tk.TOP)
-
-    num_stretches_label = Label(frame_num_stretches, text="Number of stretches per iteration:")
-
-    num_stretches_var = IntVar(root, value=1000)
-    num_stretches_var.trace_add("write", update_status)
-    num_stretches_entry = Entry(frame_num_stretches, width=6, textvariable=num_stretches_var)
-
-    num_stretches_label.pack(side=tk.LEFT)
-    num_stretches_entry.pack(side=tk.LEFT)
+    num_stretches_var, _, _, _, _ = labeled_entry(frame_peak_matchl, 'Number of stretches per iteration:',
+                                                  padding=padding_setting, vardefault=1000, vartype=IntVar)
 
     # stretching_iterations
-    frame_stretching_iterations = tk.Frame(frame_peak_matchl)
-    frame_stretching_iterations.pack(**padding_setting, side=tk.TOP)
-
-    stretching_iterations_label = Label(frame_stretching_iterations, text="Number of stretching iterations:")
-
-    stretching_iterations_var = IntVar(root, value=10)
-    stretching_iterations_var.trace_add("write", update_status)
-    stretching_iterations_entry = Entry(frame_stretching_iterations, width=6, textvariable=stretching_iterations_var)
-
-    stretching_iterations_label.pack(side=tk.LEFT)
-    stretching_iterations_entry.pack(side=tk.LEFT)
+    stretching_iterations_var, _, _, _, _ = labeled_entry(frame_peak_matchl, 'Number of stretching iterations:',
+                                                          padding=padding_setting, vardefault=10, vartype=IntVar)
 
     # stretch_iteration_factor
-    frame_stretch_iteration_factor = tk.Frame(frame_peak_matchl)
-    frame_stretch_iteration_factor.pack(**padding_setting, side=tk.TOP)
-
-    stretch_iteration_factor_label = Label(frame_stretch_iteration_factor,
-                                           text="Factor to reduce stretch space each iteration:")
-
-    stretch_iteration_factor_var = DoubleVar(root, value=5)
-    stretch_iteration_factor_var.trace_add("write", update_status)
-    stretch_iteration_factor_entry = Entry(frame_stretch_iteration_factor, width=6,
-                                           textvariable=stretch_iteration_factor_var)
-
-    stretch_iteration_factor_label.pack(side=tk.LEFT)
-    stretch_iteration_factor_entry.pack(side=tk.LEFT)
+    stretch_iteration_factor_var, _, _, _, _ = labeled_entry(frame_peak_matchl,
+                                                             'Factor to reduce stretch space each iteration:',
+                                                             padding=padding_setting, vardefault=5,
+                                                             vartype=DoubleVar)
 
     # nw_normalized
-    frame_nw_normalized = tk.Frame(frame_peak_matchr)
-    frame_nw_normalized.pack(**padding_option, side=tk.TOP)
-
-    nw_normalized_label = Label(frame_nw_normalized, text="Normalize distance for peak matching:")
-
-    nw_normalized_var = StringVar(root)
-    nw_normalized_var.set(bool_options[1])
-    nw_normalized_menu = OptionMenu(frame_nw_normalized, nw_normalized_var, *bool_options,
-                                    command=update_peak_match_window_label)
-    nw_normalized_menu.config(bg='gray75')
-
-    nw_normalized_label.pack(side=tk.LEFT)
-    nw_normalized_menu.pack(side=tk.LEFT)
+    nw_normalized_var, _, _, _, _ = labeled_options(frame_peak_matchr, 'Normalize distance for peak matching:',
+                                                    padding=padding_setting, vartype=StringVar,
+                                                    vardefault=bool_options[1],
+                                                    command=update_peak_match_window_label)
 
     # peak_match_window
-    frame_peak_match_window = tk.Frame(frame_peak_matchr)
-    frame_peak_match_window.pack(**padding_setting, side=tk.TOP)
-
-    peak_match_window_label = Label(frame_peak_match_window, text="Peak Matching Window:")
-    peak_match_window_label2 = Label(frame_peak_match_window, text="Hz")
-
-    peak_match_window_var = DoubleVar(root, value=150)
-    peak_match_window_var.trace_add("write", update_status)
-    peak_match_window_entry = Entry(frame_peak_match_window, width=6, textvariable=peak_match_window_var)
-
-    peak_match_window_label.pack(side=tk.LEFT)
-    peak_match_window_entry.pack(side=tk.LEFT)
-    peak_match_window_label2.pack(side=tk.LEFT)
+    peak_match_window_var, _, _, _, peak_match_window_label2 = labeled_entry(frame_peak_matchr,
+                                                                             'Factor to reduce stretch space each iteration:',
+                                                                             postlabel='Hz',
+                                                                             padding=padding_setting, vardefault=150,
+                                                                             vartype=DoubleVar)
 
     # matching_penalty_order
-    frame_matching_penalty_order = tk.Frame(frame_peak_matchr)
-    frame_matching_penalty_order.pack(**padding_setting, side=tk.TOP)
-
-    matching_penalty_order_label = Label(frame_matching_penalty_order, text="Matching penalty order:")
-
-    matching_penalty_order_var = DoubleVar(root, value=1)
-    matching_penalty_order_var.trace_add("write", update_status)
-    matching_penalty_order_entry = Entry(frame_matching_penalty_order, width=6, textvariable=matching_penalty_order_var)
-
-    matching_penalty_order_label.pack(side=tk.LEFT)
-    matching_penalty_order_entry.pack(side=tk.LEFT)
+    matching_penalty_order_var, _, _, _, _ = labeled_entry(frame_peak_matchr,
+                                                           'Matching penalty order:',
+                                                           padding=padding_setting, vardefault=1, vartype=DoubleVar)
 
     # dummy
     frame_dummy = tk.Frame(frame_peak_matchr)
     frame_dummy.pack(**padding_setting, side=tk.TOP)
-
     dummy_label = Label(frame_dummy, text="")
-
     dummy_label.pack(side=tk.LEFT)
 
     # SUBMIT
