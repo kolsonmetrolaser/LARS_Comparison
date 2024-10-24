@@ -11,6 +11,49 @@ from tkinter import OptionMenu, IntVar, Variable, BooleanVar, font
 from MetroLaserLARS.LARS_Comparison import LARS_Comparison_from_app
 
 
+class ToolTip(object):
+
+    def __init__(self, widget):
+        self.widget = widget
+        self.tipwindow = None
+        self.id = None
+        self.x = self.y = 0
+
+    def showtip(self, text):
+        "Display text in tooltip window"
+        self.text = text
+        if self.tipwindow or not self.text:
+            return
+        x, y, cx, cy = self.widget.bbox("insert")
+        x = x + self.widget.winfo_rootx() + 57
+        y = y + cy + self.widget.winfo_rooty() + 27
+        self.tipwindow = tw = tk.Toplevel(self.widget)
+        tw.wm_overrideredirect(1)
+        tw.wm_geometry("+%d+%d" % (x, y))
+        label = Label(tw, text=self.text, justify=tk.LEFT,
+                      background="#ffffe0", relief=tk.SOLID, borderwidth=1,
+                      font=("tahoma", "8", "normal"))
+        label.pack(ipadx=1)
+
+    def hidetip(self):
+        tw = self.tipwindow
+        self.tipwindow = None
+        if tw:
+            tw.destroy()
+
+
+def CreateToolTip(widget, text):
+    toolTip = ToolTip(widget)
+
+    def enter(event):
+        toolTip.showtip(text)
+
+    def leave(event):
+        toolTip.hidetip()
+    widget.bind('<Enter>', enter)
+    widget.bind('<Leave>', leave)
+
+
 def run_app():
     def make_settings(suppress=False):
         try:
@@ -238,64 +281,75 @@ def run_app():
             h.pack(side=side, fill='x')
         return h
 
+    def labeled_widget_frame(baseframe, padding, side):
+        lwframe = tk.Frame(baseframe)
+        lwframe.pack(**padding, side=side)
+        return lwframe
+
+    def labeled_widget_label(frame, text):
+        label = None
+        if text != '':
+            label = Label(frame, text=text)
+            label.pack(side=tk.LEFT)
+            if text == '(?)':
+                f = font.Font(label, label.cget("font"))
+                f.configure(underline=True)
+                label.configure(font=f)
+        return label
+
     def labeled_entry(baseframe=root, label: str = '', postlabel: str = '', padding=padding_setting,
                       entry_width: int = 6, vardefault=0, vartype=None, varframe=root, do_update_status=True,
-                      side=tk.TOP):
-        label1, entry, label2 = None, None, None
-        leframe = tk.Frame(baseframe)
-        leframe.pack(**padding, side=side)
-        if label != '':
-            label1 = Label(leframe, text=label)
-            label1.pack(side=tk.LEFT)
+                      side=tk.TOP, infobox=True, infotext='Placeholder info text.'):
+        entry = None
+        frame = labeled_widget_frame(baseframe, padding, side)
+        label1 = labeled_widget_label(frame, label)
         if vartype is not None:
             var = vartype(varframe, value=vardefault)
             if do_update_status:
                 var.trace_add("write", update_status)
-            entry = Entry(leframe, width=entry_width, textvariable=var)
+            entry = Entry(frame, width=entry_width, textvariable=var)
             entry.pack(side=tk.LEFT)
-        if postlabel != '':
-            label2 = Label(leframe, text=postlabel)
-            label2.pack(side=tk.LEFT)
-        return var, leframe, label1, entry, label2
+        label2 = labeled_widget_label(frame, postlabel)
+        if infobox:
+            infolabel = labeled_widget_label(frame, '(?)')
+            CreateToolTip(infolabel, infotext)
+        return var, frame, label1, entry, label2
 
     def labeled_options(baseframe=root, label: str = '', postlabel: str = '', padding=padding_setting,
                         vardefault=0, vartype=None, varframe=root, do_update_status=True,
-                        command=None, side=tk.TOP, options=bool_options):
-        label1, optionmenu, label2 = None, None, None
-        lbframe = tk.Frame(baseframe)
-        lbframe.pack(**padding, side=side)
-        if label != '':
-            label1 = Label(lbframe, text=label)
-            label1.pack(side=tk.LEFT)
+                        command=None, side=tk.TOP, options=bool_options, infobox=True,
+                        infotext='Placeholder info text.'):
+        optionmenu = None
+        frame = labeled_widget_frame(baseframe, padding, side)
+        label1 = labeled_widget_label(frame, label)
         if vartype is not None:
             var = vartype(varframe, value=vardefault)
             if do_update_status:
                 var.trace_add("write", update_status)
-            optionmenu = OptionMenu(lbframe, var, *options, command=command)
+            optionmenu = OptionMenu(frame, var, *options, command=command)
             optionmenu.config(bg='gray75')
             optionmenu.pack(side=tk.LEFT)
-        if postlabel != '':
-            label2 = Label(lbframe, text=postlabel)
-            label2.pack(side=tk.LEFT)
-        return var, lbframe, label1, optionmenu, label2
+        label2 = labeled_widget_label(frame, postlabel)
+        if infobox:
+            infolabel = labeled_widget_label(frame, '(?)')
+            CreateToolTip(infolabel, infotext)
+        return var, frame, label1, optionmenu, label2
 
-    def labeled_file_select(baseframe=root, headingtxt: str = '', subheading: str = '', label: str = '', padding=padding_setting,
-                            entry_width: int = 40, vardefault='', vartype=StringVar, varframe=root, do_update_status=True,
-                            command=None, side=tk.TOP, selection='file', filetype='pickle'):
-        label1, entry, button = None, None, None
-        ldframe = tk.Frame(baseframe)
-        ldframe.pack(**padding, side=side)
+    def labeled_file_select(baseframe=root, headingtxt: str = '', subheading: str = '', label: str = '',
+                            padding=padding_setting, entry_width: int = 40, vardefault='', vartype=StringVar,
+                            varframe=root, do_update_status=True, command=None, side=tk.TOP, selection='file',
+                            filetype='pickle', infobox=True, infotext='Placeholder info text.'):
+        entry, button = None, None
+        frame = labeled_widget_frame(baseframe, padding, side)
         if headingtxt != '':
-            heading(headingtxt, lvl=1, frame=ldframe,
+            heading(headingtxt, lvl=1, frame=frame,
                     subtext=subheading)
-        if label != '':
-            label1 = Label(ldframe, text=label)
-            label1.pack(side=tk.LEFT, padx=4)
+        label1 = labeled_widget_label(frame, label)
         if vartype is not None:
             var = vartype(varframe, value=vardefault)
             if do_update_status:
                 var.trace_add("write", update_status)
-            entry = Entry(ldframe, width=entry_width, textvariable=var)
+            entry = Entry(frame, width=entry_width, textvariable=var)
             if selection == 'file':
                 fun = select_file
                 if filetype == 'pickle':
@@ -303,10 +357,13 @@ def run_app():
             elif selection == 'dir':
                 kwargs = {}
                 fun = select_directory
-            button = Button(ldframe, text="Open", command=lambda: fun(entry, **kwargs), bg='gray75')
+            button = Button(frame, text="Open", command=lambda: fun(entry, **kwargs), bg='gray75')
             button.pack(side=tk.LEFT, padx=4)
             entry.pack(side=tk.LEFT, padx=4)
-        return var, ldframe, label1, entry, button
+            if infobox:
+                infolabel = labeled_widget_label(frame, '(?)')
+                CreateToolTip(infolabel, infotext)
+        return var, frame, label1, entry, button
 
     # Start building App
 
