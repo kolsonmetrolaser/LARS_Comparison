@@ -38,6 +38,9 @@ def parts_match(pr):
     else:
         return False
 
+# def parts_match(pr):
+#     return pr['name'][0][2:] == pr['name'][1][2:]
+
 
 def analyze_pair_results(pair_results, data_dict, settings):
     save_results = settings['save_results'] if 'save_results' in settings else False
@@ -377,6 +380,9 @@ def main():
     folders = [r'K:\DI02_2018_PhII_JT\Data\20210320 - L-, Y-, O-type brackets - free-floating - 5 test points - 10-60 kHz\Data original\L1',
                r'K:\DI02_2018_PhII_JT\Data\20210320 - L-, Y-, O-type brackets - free-floating - 5 test points - 10-60 kHz\Data original\L2',
                r'K:\DI02_2018_PhII_JT\Data\20210320 - L-, Y-, O-type brackets - free-floating - 5 test points - 10-60 kHz\Data original\L3']
+
+    folders = [r'C:/Users/KOlson/OneDrive - Metrolaser, Inc/Documents/MD05/DI02Data/Brackets/L1',
+               r'C:/Users/KOlson/OneDrive - Metrolaser, Inc/Documents/MD05/DI02Data/Brackets/L2']
 
     # Many Brackets
     # according to file:///K:/DI02_2018_PhII_JT/Reporting/_Completed/DARPA%20PORTAL/Milestone%20%237_CLIN%200002%20Qtrly%2001/140D6318C0085_CLIN0002_Qtrly01.pdf

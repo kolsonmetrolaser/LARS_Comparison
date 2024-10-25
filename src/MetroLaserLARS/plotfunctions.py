@@ -566,10 +566,10 @@ def line_plot(x: ArrayLike, y: ArrayLike, legend=None, x_lim: tuple[float, float
 
     plt.draw()
 
-    try:
-        from settings import CLUSTERMODE as _CLUSTERMODE
-    except ModuleNotFoundError:
-        _CLUSTERMODE = False
+    # try:
+    #     from settings import CLUSTERMODE as _CLUSTERMODE
+    # except ModuleNotFoundError:
+    _CLUSTERMODE = False
     if fname is not None:
         if save_folder is None:
             if not _CLUSTERMODE:

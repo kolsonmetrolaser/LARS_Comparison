@@ -323,7 +323,7 @@ def analyze_data(data: LarsData, **settings) -> tuple[dict, NDArray, NDArray, ND
         print(f"""for {folder}/{name}
               peaks at:     {peaklist/1000} kHz""")
 
-    if plot:
+    if plot and plot_detail:
         peak_groups = group(peaks['positions'][np.logical_and(peaks['positions'] > frange[0]
                             * 1000, peaks['positions'] < frange[1]*1000)]/1000, peak_plot_width)
 
@@ -441,6 +441,8 @@ def compare_LARS_measurements(folders: Iterable = [], previously_analyzed_data: 
     if len(folders) != 2:
         return False
 
+    frange = settings['frange'] if 'frange' in settings else (10, 60)
+    peak_plot_width = settings['peak_plot_width'] if 'peak_plot_width' in settings else 20
     max_stretch = settings['max_stretch'] if 'max_stretch' in settings else 0.02
     num_stretches = settings['num_stretches'] if 'num_stretches' in settings else 1000
     stretching_iterations = settings['stretching_iterations'] if 'stretching_iterations' in settings else 5
@@ -454,6 +456,7 @@ def compare_LARS_measurements(folders: Iterable = [], previously_analyzed_data: 
     show_plots = settings['show_plots'] if 'show_plots' in settings else False
     print(f'show_plots: {show_plots}')
     plot = settings['plot'] if 'plot' in settings else False
+    plot_detail = settings['plot_detail'] if 'plot' in settings else False
 
     # collect peak positions, and the frequency, raw velocity, and smoothed velocity vectors from each folder
     positions = []
@@ -506,8 +509,13 @@ def compare_LARS_measurements(folders: Iterable = [], previously_analyzed_data: 
         print(f'{len(matched)} matched peaks at {matched} kHz')
 
     # Plot results
-    if plot:
-        xlims = ([10, 60], [10, 10+50/3], [10+50/3, 10+100/3], [10+100/3, 10+150/3])
+    if plot and plot_detail:
+        xlims = [[frange[0], frange[1]]] +\
+            [[min(frange[0]+(i-1)*peak_plot_width, frange[1]-peak_plot_width),
+              min(frange[0]+(i)*peak_plot_width, frange[1])]
+             for i in range(np.ceil((frange[1]-frange[0])/peak_plot_width))]
+
+        # ([10, 60], [10, 10+50/3], [10+50/3, 10+100/3], [10+100/3, 10+150/3])
         # for xlim in xlims:
         #     pf.line_plot([freqs[0]/1000, freqs[1]/1000], [newvels[0], newvels[1]], style='.',
         #                  x_lim=xlim, v_line_pos=[positions[0]/1000, positions[1]/1000],
