@@ -783,7 +783,7 @@ def radial_plot(x, y, legend=None, x_lim=None, y_lim=None, fig_size=(12, 9),
     try:
         from settings import CLUSTERMODE as _CLUSTERMODE
     except ModuleNotFoundError:
-        _CLUSTERMODE = False
+        _CLUSTERMODE = True
 
     if fname is not None:
         if save_folder is None:
