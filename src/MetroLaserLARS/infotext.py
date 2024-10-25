@@ -266,7 +266,7 @@ An optional addition to the .pkl files to avoid overwriting files.
 """
 
 save_folder = """
-Folder to save .pkl and plot files. By default, this is the same as the main 
+Folder to save .pkl and plot files. By default, this is the same as the main
 "Directory" under "Load Data".
 """
 

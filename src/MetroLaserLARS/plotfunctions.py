@@ -4,6 +4,7 @@ Created on Wed Aug 18 14:10:40 2021
 
 @author: olson
 """
+# External imports
 from matplotlib.colors import colorConverter
 import matplotlib.projections as proj
 from mpl_toolkits.mplot3d.axis3d import Axis

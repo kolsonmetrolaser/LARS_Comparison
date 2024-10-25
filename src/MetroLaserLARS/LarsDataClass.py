@@ -1,9 +1,22 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Oct 15 12:08:17 2024
+
+@author: KOlson
+"""
+# External imports
 import numpy as np
 import os.path as osp
 from typing import Literal
 from numpy.typing import ArrayLike, NDArray
 import pathlib
-from MetroLaserLARS.helpers import are_equal
+
+# Internal imports
+
+if __name__ == '__main__':
+    from helpers import are_equal
+else:
+    from MetroLaserLARS.helpers import are_equal
 
 
 class LarsData:

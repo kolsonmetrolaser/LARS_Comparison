@@ -4,13 +4,19 @@ Created on Tue Oct 15 12:08:17 2024
 
 @author: KOlson
 """
-# Import the tkinter module
+# External imports
 import tkinter as tk
 from tkinter import filedialog, DoubleVar, StringVar, Label, Entry, Button
 from tkinter import OptionMenu, IntVar, Variable, BooleanVar, font
-from MetroLaserLARS.LARS_Comparison import LARS_Comparison_from_app
-from infotext import infotext
 from time import time
+
+# Internal imports
+if __name__ == '__main__':
+    from infotext import infotext
+    from LARS_Comparison import LARS_Comparison_from_app
+else:
+    from MetroLaserLARS.infotext import infotext
+    from MetroLaserLARS.LARS_Comparison import LARS_Comparison_from_app
 
 
 class ToolTip(object):
@@ -678,5 +684,4 @@ All pairs of subfolders will be compared.""",
 
 
 if __name__ == '__main__':
-    from LARS_Comparison import LARS_Comparison_from_app
     run_app()

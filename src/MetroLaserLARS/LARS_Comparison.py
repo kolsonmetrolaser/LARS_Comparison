@@ -1,10 +1,24 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Oct 15 12:08:17 2024
+
+@author: KOlson
+"""
+# External imports
 import numpy as np
-import MetroLaserLARS.plotfunctions as pf
 from time import time
 import pickle
-from MetroLaserLARS.LarsFunctions import analyze_each_pair_of_folders
 import os
 from os import path as osp
+
+# Internal imports
+if __name__ == '__main__':
+    import plotfunctions as pf
+    from LarsFunctions import analyze_each_pair_of_folders
+else:
+    import MetroLaserLARS.plotfunctions as pf
+    from MetroLaserLARS.LarsFunctions import analyze_each_pair_of_folders
+
 
 np.set_printoptions(precision=3)
 

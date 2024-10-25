@@ -4,22 +4,32 @@ Created on Tue Oct 15 11:56:56 2024
 
 @author: KOlson
 """
-
+# External imports
 import numpy as np
 import scipy.signal as sig
 import os
 import os.path as osp
 import pathlib
-from MetroLaserLARS import LarsDataClass
-from MetroLaserLARS.LarsDataClass import LarsData
-import MetroLaserLARS.plotfunctions as pf
 from numpy.typing import ArrayLike, NDArray
-from MetroLaserLARS.filters import airpls, sgf
-from MetroLaserLARS.helpers import group
 from typing import Literal, Iterable
 from itertools import combinations
 import pickle
-from MetroLaserLARS.needlemanwunsch import find_matches
+
+# Internal imports
+if __name__ == '__main__':
+    import LarsDataClass
+    from LarsDataClass import LarsData
+    import plotfunctions as pf
+    from filters import airpls, sgf
+    from helpers import group
+    from needlemanwunsch import find_matches
+else:
+    from MetroLaserLARS import LarsDataClass
+    from MetroLaserLARS.LarsDataClass import LarsData
+    import MetroLaserLARS.plotfunctions as pf
+    from MetroLaserLARS.filters import airpls, sgf
+    from MetroLaserLARS.helpers import group
+    from MetroLaserLARS.needlemanwunsch import find_matches
 
 
 def remove_baseline(y: ArrayLike, **settings) -> tuple[ArrayLike, ArrayLike]:

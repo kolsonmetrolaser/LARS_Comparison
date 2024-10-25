@@ -5,7 +5,7 @@ Created on Thu Oct 10 08:58:36 2024
 @author: KOlson
 
 """
-
+# External imports
 import numpy as np
 from numpy.typing import NDArray
 from numba import njit

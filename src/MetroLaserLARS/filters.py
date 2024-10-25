@@ -4,6 +4,7 @@ Created on Wed Oct  2 08:48:12 2024
 
 @author: KOlson
 """
+# External imports
 import numpy as np
 from scipy.sparse.linalg import spsolve
 from scipy import sparse

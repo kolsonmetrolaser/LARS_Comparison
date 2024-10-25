@@ -4,6 +4,7 @@ Created on Wed Oct  2 08:49:38 2024
 
 @author: KOlson
 """
+# External imports
 import numpy as np
 from numpy.typing import ArrayLike
 from numpy.testing import assert_equal
