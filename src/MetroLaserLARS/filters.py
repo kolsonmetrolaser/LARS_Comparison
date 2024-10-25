@@ -6,9 +6,9 @@ Created on Wed Oct  2 08:48:12 2024
 """
 # External imports
 import numpy as np
-from scipy.sparse.linalg import spsolve
-from scipy import sparse
 from numpy.typing import ArrayLike, NDArray
+from scipy import sparse
+from scipy.sparse.linalg import spsolve
 import scipy.signal as sig
 
 

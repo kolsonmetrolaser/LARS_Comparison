@@ -6,11 +6,11 @@ Created on Tue Oct 15 11:56:56 2024
 """
 # External imports
 import numpy as np
+from numpy.typing import ArrayLike, NDArray
 import scipy.signal as sig
 import os
 import os.path as osp
 import pathlib
-from numpy.typing import ArrayLike, NDArray
 from typing import Literal, Iterable
 from itertools import combinations
 import pickle

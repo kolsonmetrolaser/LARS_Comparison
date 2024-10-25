@@ -5,16 +5,16 @@ Created on Wed Aug 18 14:10:40 2021
 @author: olson
 """
 # External imports
-from matplotlib.colors import colorConverter
-import matplotlib.projections as proj
-from mpl_toolkits.mplot3d.axis3d import Axis
-from mpl_toolkits.mplot3d import Axes3D
 import matplotlib
 import matplotlib.pyplot as plt
+import matplotlib.projections as proj
+from matplotlib.colors import colorConverter
+from mpl_toolkits.mplot3d.axis3d import Axis
+from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
+from numpy.typing import ArrayLike
 import time
 from scipy.stats import gmean
-from numpy.typing import ArrayLike
 from typing import Literal, Optional
 
 

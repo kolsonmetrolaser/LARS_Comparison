@@ -6,9 +6,9 @@ Created on Tue Oct 15 12:08:17 2024
 """
 # External imports
 import numpy as np
+from numpy.typing import ArrayLike, NDArray
 import os.path as osp
 from typing import Literal
-from numpy.typing import ArrayLike, NDArray
 import pathlib
 
 # Internal imports
