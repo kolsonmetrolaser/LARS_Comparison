@@ -8,7 +8,6 @@ Created on Tue Oct 15 12:08:17 2024
 import tkinter as tk
 from tkinter import filedialog, DoubleVar, StringVar, Label, Entry, Button
 from tkinter import OptionMenu, IntVar, Variable, BooleanVar, font
-from time import time
 
 # Internal imports
 if __name__ == '__main__':
@@ -128,6 +127,8 @@ def run_app():
             settings['save_results']              = True if save_results_var.get() == 'True' else False  # noqa
             settings['save_tag']                  = save_tag_var.get() # noqa
             settings['save_folder']               = directory_var.get() if save_directory_var.get() == 'Same as LARS Data Directory' else save_directory_var.get() # noqa
+            # APP INTERACTION
+            settings['status_label']              = status_label # noqa
             # fmt: on
         except tk.TclError as e:
             if not suppress:
@@ -684,4 +685,5 @@ All pairs of subfolders will be compared.""",
 
 
 if __name__ == '__main__':
+    print(__name__)
     run_app()

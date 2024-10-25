@@ -10,6 +10,7 @@ from time import time
 import pickle
 import os
 from os import path as osp
+import tkinter as tk
 
 # Internal imports
 if __name__ == '__main__':

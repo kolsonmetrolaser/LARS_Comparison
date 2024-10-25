@@ -581,6 +581,11 @@ def analyze_each_pair_of_folders(folders: Iterable = [], **settings) -> tuple[li
         if 'PRINT_MODE' in settings and settings['PRINT_MODE'] in ['sparse', 'full']:
             print(f"""Analyzing    {osp.split(fpair[0])[1]}    and    {
                   osp.split(fpair[1])[1]}    (pair {i+1} of {len(folder_pairs)})""")
+        if 'status_label' in settings:
+            import tkinter
+            label_text = f'Analyzing pair {i+1} of {len(folder_pairs)}'
+            settings['status_label'].config(text=label_text, state=tkinter.NORMAL)
+            settings['status_label'].update()
         data_0 = data_dict[fpair[0]] if fpair[0] in data_dict.keys() else None
         data_1 = data_dict[fpair[1]] if fpair[1] in data_dict.keys() else None
         matching_analysis, datas = compare_LARS_measurements(
