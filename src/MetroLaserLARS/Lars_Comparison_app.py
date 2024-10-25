@@ -10,6 +10,7 @@ from tkinter import filedialog, DoubleVar, StringVar, Label, Entry, Button
 from tkinter import OptionMenu, IntVar, Variable, BooleanVar, font
 from MetroLaserLARS.LARS_Comparison import LARS_Comparison_from_app
 from infotext import infotext
+from time import time
 
 
 class ToolTip(object):
@@ -26,8 +27,8 @@ class ToolTip(object):
         if self.tipwindow or not self.text:
             return
         x, y, cx, cy = self.widget.bbox("insert")
-        x = x + self.widget.winfo_rootx() + 57
-        y = y + cy + self.widget.winfo_rooty() + 27
+        x = x + self.widget.winfo_rootx() + 30
+        y = y + cy + self.widget.winfo_rooty() + 30
         self.tipwindow = tw = tk.Toplevel(self.widget)
         tw.wm_overrideredirect(1)
         tw.wm_geometry("+%d+%d" % (x, y))
@@ -35,6 +36,19 @@ class ToolTip(object):
                       background="#ffffe0", relief=tk.SOLID, borderwidth=1,
                       font=("tahoma", "8", "normal"))
         label.pack(ipadx=10)
+        tw.update()
+        try:
+            x, y, cx, cy = tw.winfo_rootx(), tw.winfo_rooty(), tw.winfo_width(), tw.winfo_height()
+        except tk.TclError:
+            return
+        r = self.widget.winfo_toplevel()
+        rx, ry, rcx, rcy = r.winfo_rootx(), r.winfo_rooty(), r.winfo_width(), r.winfo_height()
+        # 20 px buffer from right and bottom edges
+        if (rx+rcx) - (x + cx) < 20:
+            x -= 20 - (rx+rcx) + (x + cx)
+        if (ry+rcy) - (y + cy) < 20:
+            y -= 20 - (ry+rcy) + (y + cy)
+        tw.wm_geometry("+%d+%d" % (x, y))
 
     def hidetip(self):
         tw = self.tipwindow
