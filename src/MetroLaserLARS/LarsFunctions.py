@@ -454,9 +454,9 @@ def compare_LARS_measurements(folders: Iterable = [], previously_analyzed_data: 
     save_folder = settings['save_folder']
     save_plots = settings['save_plots'] if 'save_plots' in settings else False
     show_plots = settings['show_plots'] if 'show_plots' in settings else False
-    print(f'show_plots: {show_plots}')
     plot = settings['plot'] if 'plot' in settings else False
     plot_detail = settings['plot_detail'] if 'plot' in settings else False
+    PRINT_MODE = settings['PRINT_MODE'] if 'PRINT_MODE' in settings else 'sparse'
 
     # collect peak positions, and the frequency, raw velocity, and smoothed velocity vectors from each folder
     positions = []
@@ -467,13 +467,15 @@ def compare_LARS_measurements(folders: Iterable = [], previously_analyzed_data: 
     datas = []
     for i, f in enumerate(folders):
         if previously_analyzed_data[i] is None:
-            print(f'Loading and analyzing data from {f}')
+            if PRINT_MODE in ['sparse', 'full']:
+                print(f'Loading and analyzing data from {f}')
             # (peaks, freq, vel, newvel, name), data = LARS_analysis(folder=f,combine=combine,frange=(10,60),plot=plot)
             (peaks, freq, vel, newvel, name), data = LARS_analysis(folder=f, **settings)
         else:
             if hasattr(previously_analyzed_data[i], 'analyzed_this_session') and\
                     previously_analyzed_data[i].analyzed_this_session:
-                print(f'Using previously analyzed data for {previously_analyzed_data[i].name}')
+                if PRINT_MODE in ['sparse', 'full']:
+                    print(f'Using previously analyzed data for {previously_analyzed_data[i].name}')
                 pad = previously_analyzed_data[i]
                 (peaks, freq, vel, newvel, name), data = (pad.peaks, pad.freq, pad.vel, pad.newvel, pad.name), pad
             else:

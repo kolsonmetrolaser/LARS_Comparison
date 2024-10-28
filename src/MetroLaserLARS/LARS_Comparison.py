@@ -24,23 +24,23 @@ else:
 np.set_printoptions(precision=3)
 
 
-def parts_match(pr):
-    # Y5 matches with nothing
-    if 'Y5' in pr['name']:
-        return False
-    # Ls and other Ys match each other
-    elif ('L' in pr['name'][0] or 'Y' in pr['name'][0]) and ('L' in pr['name'][1] or 'Y' in pr['name'][1]):
-        return True
-    # Others match if they share a letter and are both <=3 or both >=4
-    elif (pr['name'][0][0] == pr['name'][1][0]
-          and ((int(pr['name'][0][1]) <= 3 and int(pr['name'][1][1]) <= 3)
-               or (int(pr['name'][0][1]) >= 4 and int(pr['name'][1][1]) >= 4))):
-        return True
-    else:
-        return False
-
 # def parts_match(pr):
-#     return pr['name'][0][2:] == pr['name'][1][2:]
+#     # Y5 matches with nothing
+#     if 'Y5' in pr['name']:
+#         return False
+#     # Ls and other Ys match each other
+#     elif ('L' in pr['name'][0] or 'Y' in pr['name'][0]) and ('L' in pr['name'][1] or 'Y' in pr['name'][1]):
+#         return True
+#     # Others match if they share a letter and are both <=3 or both >=4
+#     elif (pr['name'][0][0] == pr['name'][1][0]
+#           and ((int(pr['name'][0][1]) <= 3 and int(pr['name'][1][1]) <= 3)
+#                or (int(pr['name'][0][1]) >= 4 and int(pr['name'][1][1]) >= 4))):
+#         return True
+#     else:
+#         return False
+
+def parts_match(pr):
+    return pr['name'][0][2:] == pr['name'][1][2:]
 
 
 def analyze_pair_results(pair_results, data_dict, settings):
@@ -50,6 +50,7 @@ def analyze_pair_results(pair_results, data_dict, settings):
     save_folder = settings['save_folder']
     save_plots = settings['save_plots'] if 'save_plots' in settings else False
     show_plots = settings['show_plots'] if 'show_plots' in settings else False
+    PRINT_MODE = settings['PRINT_MODE'] if 'PRINT_MODE' in settings else 'sparse'
 
     for pr in pair_results:
         pr['same_part'] = parts_match(pr)
@@ -57,8 +58,9 @@ def analyze_pair_results(pair_results, data_dict, settings):
     for pair_result in pair_results:
         m, ux, uy, q, s = len(pair_result['matched']), len(pair_result['unmatched'][0]), len(
             pair_result['unmatched'][1]), pair_result['quality'], pair_result['stretch']
-        print(f'{pair_result['name']} {m:3d} {ux:3d} {uy:3d}  {
-              pair_result['match_probability']:.3f} {q:6.3f} {s:7.5f} {pair_result['same_part']}')
+        if PRINT_MODE in ['sparse', 'full']:
+            print(f'{pair_result['name']} {m:3d} {ux:3d} {uy:3d}  {
+                pair_result['match_probability']:.3f} {q:6.3f} {s:7.5f} {pair_result['same_part']}')
 
     if save_results:
         save_path = 'pair_results'+save_tag+'.pkl' if 'save_folder' not in settings else\
@@ -141,9 +143,7 @@ def run_analysis(folders, settings):
 
 
 Done!
-
-
-All code finished running after a total of {time()-time0} s""")
+All code finished running after {time()-time0:.3f} s""")
     return
 
 

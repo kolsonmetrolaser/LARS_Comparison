@@ -437,6 +437,11 @@ All pairs of subfolders will be compared.""",
                                                  vardefault='max', options=['max', 'mean'],
                                                  infotext=infotext['combine'])
 
+    # grouped_folders
+    grouped_folders_var, _, _, _, _, _ = labeled_options(rootr, 'Use grouped folder structure:', padding=padding_setting,
+                                                         vartype=StringVar, vardefault=bool_options[1],
+                                                         infotext=infotext['grouped_folders'])
+
     # PLOTTING AND PRINTING
 
     # plot, plot_detail, plot_recursive_noise and plot_classification
@@ -685,5 +690,4 @@ All pairs of subfolders will be compared.""",
 
 
 if __name__ == '__main__':
-    print(__name__)
     run_app()

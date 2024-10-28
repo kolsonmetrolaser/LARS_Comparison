@@ -21,6 +21,30 @@ STUDY
 ├── data_dict.pkl
 ├── pair_results.pkl
 └── plots.png
+
+or, if "Use grouped folder structure" is set to True,
+STUDY
+├── GROUP1
+│   ├── PART1.1
+│   │   ├── measurement1.all
+│   │   ├── measurement2.all
+│   │   ├── ...
+│   ├── PART1.2
+│   │   ├── measurement1.all
+│   │   ├── ...
+│   ├── ...
+├── GROUP2
+│   ├── PART2.1
+│   │   ├── measurement1.all
+│   │   ├── ...
+│   ├── PART2.2
+│   │   ├── measurement1.all
+│   │   ├── ...
+│   ├── ...
+├── ...
+├── data_dict.pkl
+├── pair_results.pkl
+└── plots.png
 """
 
 pickled_data_path = """
@@ -270,6 +294,12 @@ Folder to save .pkl and plot files. By default, this is the same as the main
 "Directory" under "Load Data".
 """
 
+grouped_folders = """
+Recursively explore folders. Set to True when data is separated into
+multiple folder levels rather than each individual part being in a single
+folder.
+"""
+
 
 infotext = {
     # DATA
@@ -308,4 +338,5 @@ infotext = {
     'save_results': save_results,
     'save_tag': save_tag,
     'save_folder': save_folder,
+    'grouped_folders': grouped_folders,
 }
