@@ -13,7 +13,7 @@ from os import path as osp
 import tkinter as tk
 
 # Internal imports
-if __name__ == '__main__':
+if True:  # __name__ == '__main__':
     import plotfunctions as pf
     from LarsFunctions import analyze_each_pair_of_folders
 else:
@@ -39,8 +39,41 @@ np.set_printoptions(precision=3)
 #     else:
 #         return False
 
-def parts_match(pr):
-    return pr['name'][0][2:] == pr['name'][1][2:]
+# def parts_match(pr):
+#     return pr['name'][0][2:] == pr['name'][1][2:]
+
+
+def parts_match(pr, **settings):
+    name0, name1 = pr['names'][0], pr['names'][1]
+    folder0, folder1 = pr['folders'][0], pr['folders'][1]
+
+    part_matching_strategy = settings['part_matching_strategy'] if 'part_matching_strategy' in settings else ''
+    part_matching_text = settings['part_matching_text'] if 'part_matching_text' in settings else ''
+
+    if part_matching_strategy == 'folder':
+        # If the parts have the same parent folder
+        # part sets are parents and all analysis is done from the grandparent or higher
+        if osp.split(osp.split(folder0)[0])[1] == osp.split(osp.split(folder1)[0])[1]:
+            return True
+        else:
+            return False
+    elif part_matching_strategy == 'list' and part_matching_text != '':
+        groups = [line.split(', ') for line in part_matching_text.split('\n') if line != '']
+        for g in groups:
+            if name0 in g and name1 in g:
+                return True
+        return False
+    elif part_matching_strategy == 'custom' and part_matching_text != '':
+        salt = str(int(np.random.rand()*1e16))
+        custom_function_text = ''
+        custom_function_text = 'def part_matching_function_'+salt+'(name0, name1):\n'
+        for line in [ln for ln in part_matching_text.split('\n') if ln != '']:
+            custom_function_text += '    '+line+'\n'
+        custom_function_text += '    return result'
+        exec(custom_function_text)
+        return eval('part_matching_function_'+salt+'(name0, name1)')
+
+    return False
 
 
 def analyze_pair_results(pair_results, data_dict, settings):
@@ -53,13 +86,13 @@ def analyze_pair_results(pair_results, data_dict, settings):
     PRINT_MODE = settings['PRINT_MODE'] if 'PRINT_MODE' in settings else 'sparse'
 
     for pr in pair_results:
-        pr['same_part'] = parts_match(pr)
+        pr['same_part'] = parts_match(pr, **settings)
 
     for pair_result in pair_results:
         m, ux, uy, q, s = len(pair_result['matched']), len(pair_result['unmatched'][0]), len(
             pair_result['unmatched'][1]), pair_result['quality'], pair_result['stretch']
         if PRINT_MODE in ['sparse', 'full']:
-            print(f'{pair_result['name']} {m:3d} {ux:3d} {uy:3d}  {
+            print(f'{pair_result['names']} {m:3d} {ux:3d} {uy:3d}  {
                 pair_result['match_probability']:.3f} {q:6.3f} {s:7.5f} {pair_result['same_part']}')
 
     if save_results:

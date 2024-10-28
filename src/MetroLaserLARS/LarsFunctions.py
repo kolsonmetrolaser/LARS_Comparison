@@ -16,7 +16,7 @@ from itertools import combinations
 import pickle
 
 # Internal imports
-if __name__ == '__main__':
+if True:  # __name__ == '__main__':
     import LarsDataClass
     from LarsDataClass import LarsData
     import plotfunctions as pf
@@ -539,9 +539,10 @@ def compare_LARS_measurements(folders: Iterable = [], previously_analyzed_data: 
                          fname=osp.join(save_folder, fname) if save_plots else None,
                          show_plot_in_spyder=show_plots)
 
-    matching_analysis = {'stretch': best_stretch, 'quality': best_quality, 'name': names, 'matched': matched,
+    matching_analysis = {'stretch': best_stretch, 'quality': best_quality, 'names': names, 'matched': matched,
                          'unmatched': [unmatched_X, unmatched_Y],
-                         'match_probability': 2*len(matched)/(2*len(matched)+len(unmatched_X)+len(unmatched_Y))}
+                         'match_probability': 2*len(matched)/(2*len(matched)+len(unmatched_X)+len(unmatched_Y)),
+                         'folders': folders}
 
     return matching_analysis, datas
 

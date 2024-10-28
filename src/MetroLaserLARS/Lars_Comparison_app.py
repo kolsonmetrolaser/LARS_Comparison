@@ -6,8 +6,8 @@ Created on Tue Oct 15 12:08:17 2024
 """
 # External imports
 import tkinter as tk
-from tkinter import filedialog, DoubleVar, StringVar, Label, Entry, Button
-from tkinter import OptionMenu, IntVar, Variable, BooleanVar, font
+from tkinter import filedialog, DoubleVar, StringVar, Label, Entry, Button, Text
+from tkinter import OptionMenu, IntVar, Variable, BooleanVar, font, Toplevel
 
 # Internal imports
 if __name__ == '__main__':
@@ -86,6 +86,9 @@ def run_app():
             settings['frange']                    = (frange_min_var.get()/1000, frange_max_var.get()/1000) # noqa
             settings['slc_limits']                = (frange_min_var.get(), frange_max_var.get()) # noqa
             settings['combine']                   = combine_var.get() # noqa
+            settings['grouped_folders']           = True if grouped_folders_var.get() == 'True' else False # noqa
+            settings['part_matching_text']        = part_matching_text_var.get() # noqa
+            settings['part_matching_strategy']    = part_matching_strategy_var.get() # noqa
             # PLOTTING AND PRINTING
             settings['plot']                      = True if plot_var.get() == 'True' else False  # noqa
             settings['plot_detail']               = True if plot_detail_var.get() == 'True' else False  # noqa
@@ -344,14 +347,17 @@ def run_app():
         return var, frame, label1, entry, label2, infolabel
 
     def labeled_options(baseframe=root, label: str = '', postlabel: str = '', padding=padding_setting,
-                        vardefault=0, vartype=None, varframe=root, do_update_status=True,
+                        var=None, vardefault=None, vartype=None, varframe=root, do_update_status=True,
                         command=None, side=tk.TOP, options=bool_options, infobox=True,
                         infotext='Placeholder info text.'):
         optionmenu, infolabel = None, None
         frame = labeled_widget_frame(baseframe, padding, side)
         label1 = labeled_widget_label(frame, label)
-        if vartype is not None:
-            var = vartype(varframe, value=vardefault)
+        if vartype is not None or var is not None:
+            if var is not None and vardefault is not None:
+                var.set(vardefault)
+            if var is None:
+                var = vartype(varframe, value=vardefault)
             if do_update_status:
                 var.trace_add("write", update_status)
             optionmenu = OptionMenu(frame, var, *options, command=command)
@@ -394,6 +400,81 @@ def run_app():
                 infolabel = labeled_widget_label(frame, '(?)')
                 CreateToolTip(infolabel, infotext)
         return var, frame, label1, entry, button, infolabel
+
+    def part_matching_window(root, grouped_folders_var, part_matching_text_var):
+        def toggle_code_labels(*args):
+            if part_matching_strategy_var.get() == 'custom':
+                try:
+                    code_label_1.pack_forget()
+                    code_label_2.pack_forget()
+                    code_label_3.pack_forget()
+                    part_matching_text.pack_forget()
+                    frame_text.pack_forget()
+
+                    code_label_1.pack(anchor='w')
+                    frame_text.pack()
+                    code_label_2.pack(side=tk.LEFT)
+                    part_matching_text.pack(side=tk.LEFT)
+                    code_label_3.pack(anchor='w')
+                except tk.TclError:
+                    pass
+
+            else:
+                try:
+                    code_label_1.pack_forget()
+                    code_label_2.pack_forget()
+                    code_label_3.pack_forget()
+                    part_matching_text.pack_forget()
+                    frame_text.pack_forget()
+
+                    frame_text.pack()
+                    part_matching_text.pack(side=tk.LEFT)
+                except tk.TclError:
+                    pass
+            return
+
+        window = Toplevel()
+        window.grab_set()
+        window.title("Define Known Part Matching")
+        label1 = Label(window,
+                       text="""
+Define known part matching, either by entering a list of equivalent parts,
+or by creating a custom function.
+""")
+        label1.pack()
+        options = ['folder', 'list', 'custom'] if grouped_folders_var.get() == 'True' else ['list', 'custom']
+        _, _, _, _, _, _ = labeled_options(window, 'Definition type:',
+                                           var=part_matching_strategy_var,
+                                           options=options,
+                                           infobox=False)
+
+        frame_input = tk.Frame(window)
+        frame_input.pack()
+
+        code_label_1 = Label(frame_input, text='def part_matching_function(name0, name1):', font=("Courier New", 9))
+        code_label_1.pack(anchor="w")
+
+        frame_text = tk.Frame(frame_input)
+        frame_text.pack()
+
+        code_label_2 = Label(frame_text, text='    ', font=("Courier New", 9))
+        code_label_2.pack(side=tk.LEFT)
+
+        part_matching_text = Text(frame_text)
+        part_matching_text.insert("0.0", part_matching_text_var.get())
+        part_matching_text.pack(side=tk.LEFT)
+
+        code_label_3 = Label(frame_input, text='return result', font=("Courier New", 9))
+        code_label_3.pack(anchor="w")
+
+        part_matching_text_submit = Button(window, text='Save entered text', command=lambda: part_matching_text_var.set(part_matching_text.get("0.0", tk.END)))
+        part_matching_text_submit.pack()
+
+        fn = toggle_code_labels
+        part_matching_strategy_var.trace_add('write', fn)
+        toggle_code_labels()
+
+        return part_matching_text_var.get()
 
     # Start building App
 
@@ -441,6 +522,17 @@ All pairs of subfolders will be compared.""",
     grouped_folders_var, _, _, _, _, _ = labeled_options(rootr, 'Use grouped folder structure:', padding=padding_setting,
                                                          vartype=StringVar, vardefault=bool_options[1],
                                                          infotext=infotext['grouped_folders'])
+
+    # part_matching
+    frame_part_matching = tk.Frame(rootr)
+    frame_part_matching.pack(**padding_setting)
+
+    part_matching_text_var = StringVar(root, value='')
+    part_matching_strategy_var = StringVar(root, value='list')
+
+    part_matching_button = Button(rootr, text="Define Known Part Matching", bg='gray75',
+                                  command=lambda: part_matching_text_var.set(part_matching_window(root, grouped_folders_var, part_matching_text_var)))
+    part_matching_button.pack()
 
     # PLOTTING AND PRINTING
 
@@ -522,6 +614,7 @@ All pairs of subfolders will be compared.""",
         labeled_entry(rootl, 'Save filename: data_dict... and peak_results', postlabel='.pkl', padding=padding_setting,
                       vardefault='', vartype=StringVar,
                       infotext=infotext['save_tag'])
+    save_tag_var.trace_add("write", update_save_tag_label)
 
     save_tag_dummy_label = Label(frame_save_tag, text=" "*42, font=("Courier New", 9))
 
