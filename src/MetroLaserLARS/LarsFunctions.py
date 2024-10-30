@@ -401,6 +401,69 @@ def LARS_analysis(folder: str = '', previously_loaded_data: Literal[None, LarsDa
     return analysis, data_to_analyze
 
 
+def same_fit_settings(settings):
+    pickled_data_path = settings['pickled_data_path'] if 'pickled_data_path' in settings else None
+    directory = settings['directory']
+    plot_detail = settings['plot_detail'] if 'plot_detail' in settings else False
+    save_data = settings['save_data'] if 'save_data' in settings else False
+    save_results = settings['save_results'] if 'save_results' in settings else False
+    plot_recursive_noise = settings['plot_recursive_noise'] if 'plot_recursive_noise' in settings else False
+    recursive_noise_reduction = settings['recursive_noise_reduction'] if 'recursive_noise_reduction' in settings else False
+
+    skip_fitting = True
+
+    if pickled_data_path:
+        settings_path = osp.join(osp.split(pickled_data_path)[0], 'settings.pkl')
+        pr_path = osp.join(osp.split(pickled_data_path)[0],
+                           osp.split(pickled_data_path)[1].replace('data_dict', 'pair_results'))
+        if osp.isfile(settings_path) and osp.isfile(pr_path):
+            try:
+                with open(settings_path, 'rb') as f:
+                    settings_saved = pickle.load(f)
+            except:
+                skip_fitting = False
+
+            settings_to_compare = settings.copy()
+            settings_to_compare.pop('status_label', None)
+            diff_keys = [key for key in set(settings_to_compare.keys()).union(settings_saved.keys())
+                         if settings.get(key) != settings_saved.get(key)]
+            skip_fitting = skip_fitting and not (
+                'directory' in diff_keys
+                or 'frange' in diff_keys
+                or 'combine' in diff_keys
+                or 'grouped_folders' in diff_keys
+                or 'plot_detail' in diff_keys
+                or ('plot_recursive_noise' in diff_keys and recursive_noise_reduction)
+                or ('plot' in diff_keys and plot_detail)
+                or ('plot' in diff_keys and plot_recursive_noise)
+                or ('show_plots' in diff_keys and plot_detail)
+                or ('show_plots' in diff_keys and plot_recursive_noise and recursive_noise_reduction)
+                or ('save_plots' in diff_keys and plot_detail)
+                or ('save_plots' in diff_keys and plot_recursive_noise and recursive_noise_reduction)
+                or ('peak_plot_width' in diff_keys and plot_detail)
+                or ('peak_plot_width' in diff_keys and plot_recursive_noise and recursive_noise_reduction)
+                or 'PRINT_MODE' in diff_keys
+                or 'baseline_smoothness' in diff_keys
+                or 'baseline_polyorder' in diff_keys
+                or 'baseline_itermax' in diff_keys
+                or 'sgf_applications' in diff_keys
+                or 'sgf_windowsize' in diff_keys
+                or 'sgf_polyorder' in diff_keys
+                or 'peak_height_min' in diff_keys
+                or 'peak_prominence_min' in diff_keys
+                or 'peak_ph_ratio_min' in diff_keys
+                or 'recursive_noise_reduction' in diff_keys
+                or ('max_noise_reduction_iter' in diff_keys and recursive_noise_reduction)
+                or ('regularization_ratio' in diff_keys and recursive_noise_reduction)
+                or (save_data and 'save_data' in diff_keys)
+                or (save_results and 'save_results' in diff_keys)
+                or 'save_tag' in diff_keys
+                or 'save_folder' in diff_keys)
+    else:
+        skip_fitting = False
+    return skip_fitting
+
+
 def compare_LARS_measurements(folders: Iterable = [], previously_analyzed_data: tuple = (None, None), **settings)\
         -> tuple[dict, list[LarsData]]:
     """
@@ -472,8 +535,8 @@ def compare_LARS_measurements(folders: Iterable = [], previously_analyzed_data: 
             # (peaks, freq, vel, newvel, name), data = LARS_analysis(folder=f,combine=combine,frange=(10,60),plot=plot)
             (peaks, freq, vel, newvel, name), data = LARS_analysis(folder=f, **settings)
         else:
-            if hasattr(previously_analyzed_data[i], 'analyzed_this_session') and\
-                    previously_analyzed_data[i].analyzed_this_session:
+            if (hasattr(previously_analyzed_data[i], 'analyzed_this_session')
+                    and previously_analyzed_data[i].analyzed_this_session) or same_fit_settings(settings):
                 if PRINT_MODE in ['sparse', 'full']:
                     print(f'Using previously analyzed data for {previously_analyzed_data[i].name}')
                 pad = previously_analyzed_data[i]

@@ -10,7 +10,6 @@ from time import time
 import pickle
 import os
 from os import path as osp
-import tkinter as tk
 
 # Internal imports
 if __name__ == '__main__':
@@ -154,8 +153,7 @@ def analyze_pair_results(pair_results, data_dict, settings):
                      show_plot_in_spyder=show_plots)
 
 
-def run_analysis(folders, settings):
-    time0 = time()
+def same_fit_and_matching_settings(settings):
     pickled_data_path = settings['pickled_data_path'] if 'pickled_data_path' in settings else None
     directory = settings['directory']
     plot_detail = settings['plot_detail'] if 'plot_detail' in settings else False
@@ -164,7 +162,8 @@ def run_analysis(folders, settings):
     plot_recursive_noise = settings['plot_recursive_noise'] if 'plot_recursive_noise' in settings else False
     recursive_noise_reduction = settings['recursive_noise_reduction'] if 'recursive_noise_reduction' in settings else False
 
-    skip_fitting_andor_matching = True
+    skip_fitting_and_matching = True
+    pair_results, data_dict = None, None
 
     if pickled_data_path:
         settings_path = osp.join(osp.split(pickled_data_path)[0], 'settings.pkl')
@@ -175,13 +174,13 @@ def run_analysis(folders, settings):
                 with open(settings_path, 'rb') as f:
                     settings_saved = pickle.load(f)
             except:
-                skip_fitting_andor_matching = False
+                skip_fitting_and_matching = False
 
             settings_to_compare = settings.copy()
             settings_to_compare.pop('status_label', None)
             diff_keys = [key for key in set(settings_to_compare.keys()).union(settings_saved.keys())
                          if settings.get(key) != settings_saved.get(key)]
-            skip_fitting_andor_matching = skip_fitting_andor_matching and not (
+            skip_fitting_and_matching = skip_fitting_and_matching and not (
                 'directory' in diff_keys
                 or 'frange' in diff_keys
                 or 'combine' in diff_keys
@@ -220,30 +219,52 @@ def run_analysis(folders, settings):
                 or (save_data and 'save_data' in diff_keys)
                 or (save_results and 'save_results' in diff_keys)
                 or 'save_tag' in diff_keys
-                or 'save_folder' in diff_keys
-                or 'save_settings' in diff_keys)
+                or 'save_folder' in diff_keys)
 
-            if skip_fitting_andor_matching:
+            if skip_fitting_and_matching:
                 try:
                     with open(pr_path, 'rb') as f:
                         pair_results = pickle.load(f)
                 except:
-                    skip_fitting_andor_matching = False
-            if skip_fitting_andor_matching:
+                    skip_fitting_and_matching = False
+            if skip_fitting_and_matching:
                 try:
                     with open(pickled_data_path, 'rb') as f:
                         data_dict = pickle.load(f)
                 except:
-                    skip_fitting_andor_matching = False
+                    skip_fitting_and_matching = False
     else:
-        skip_fitting_andor_matching = False
+        skip_fitting_and_matching = False
+    return skip_fitting_and_matching, pair_results, data_dict
 
-    if not skip_fitting_andor_matching:
+
+def run_analysis(folders, settings):
+    time0 = time()
+
+    skip_fit_and_match, pair_results, data_dict = same_fit_and_matching_settings(settings)
+
+    if not skip_fit_and_match:
         pair_results, data_dict = analyze_each_pair_of_folders(folders, **settings)
     else:
         print('skipped peak fitting and matching')
 
     analyze_pair_results(pair_results, data_dict, settings)
+
+    save_settings = settings['save_settings'] if 'save_settings' in settings else False
+    save_folder = settings['save_folder']
+    save_tag = settings['save_tag']
+    PRINT_MODE = settings['PRINT_MODE'] if 'PRINT_MODE' in settings else 'sparse'
+
+    if save_settings:
+        if PRINT_MODE in ['sparse', 'full']:
+            print('pickling settings...')
+        save_path = 'pair_results'+save_tag+'.pkl' if 'save_folder' not in settings else\
+            osp.join(save_folder, 'settings'+save_tag+'.pkl')
+        with open(save_path, 'wb') as outp:
+            settings_to_save = settings.copy()
+            settings_to_save.pop('status_label', None)
+            pickle.dump(settings_to_save, outp, pickle.HIGHEST_PROTOCOL)
+
     print(f"""
 
 
@@ -269,24 +290,11 @@ def get_subfolders(folder, grouped_folders=False):
 
 def LARS_Comparison_from_app(settings):
     grouped_folders = settings['grouped_folders'] if 'grouped_folders' in settings else False
-    save_settings = settings['save_settings'] if 'save_settings' in settings else False
-    save_folder = settings['save_folder']
-    save_tag = settings['save_tag']
-    PRINT_MODE = settings['PRINT_MODE'] if 'PRINT_MODE' in settings else 'sparse'
-
-    if save_settings:
-        if PRINT_MODE in ['sparse', 'full']:
-            print('pickling settings...')
-        save_path = 'pair_results'+save_tag+'.pkl' if 'save_folder' not in settings else\
-            osp.join(save_folder, 'settings'+save_tag+'.pkl')
-        with open(save_path, 'wb') as outp:
-            settings_to_save = settings.copy()
-            settings_to_save.pop('status_label', None)
-            pickle.dump(settings_to_save, outp, pickle.HIGHEST_PROTOCOL)
 
     folders = get_subfolders(settings['directory'], grouped_folders)
 
     run_analysis(folders, settings)
+
     return
 
 
