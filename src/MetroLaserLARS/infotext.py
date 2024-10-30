@@ -278,6 +278,7 @@ save_data = """
 If True, saves the raw data to a .pkl file. Selecting the saved file in
 "Pickled Data" speeds up future calculations that use the same data, for example
 when calculations with different settings are being compared.
+Will also save settings.pkl to speed up future calculations with similar settings.
 """
 
 save_results = """
@@ -292,6 +293,11 @@ An optional addition to the .pkl files to avoid overwriting files.
 save_folder = """
 Folder to save .pkl and plot files. By default, this is the same as the main
 "Directory" under "Load Data".
+"""
+
+save_settings = """
+Saving settings can make future analysis faster if peak fitting and/or
+peak matching can be skipped.
 """
 
 grouped_folders = """
@@ -338,5 +344,6 @@ infotext = {
     'save_results': save_results,
     'save_tag': save_tag,
     'save_folder': save_folder,
+    'save_settings': save_settings,
     'grouped_folders': grouped_folders,
 }

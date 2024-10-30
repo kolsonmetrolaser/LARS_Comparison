@@ -130,6 +130,7 @@ def run_app():
             settings['save_results']              = True if save_results_var.get() == 'True' else False  # noqa
             settings['save_tag']                  = save_tag_var.get() # noqa
             settings['save_folder']               = directory_var.get() if save_directory_var.get() == 'Same as LARS Data Directory' else save_directory_var.get() # noqa
+            settings['save_settings']             = settings['save_data'] # True if save_settings_var.get() == 'True' else False # noqa
             # APP INTERACTION
             settings['status_label']              = status_label # noqa
             # fmt: on
@@ -659,6 +660,11 @@ All pairs of subfolders will be compared.""",
     save_directory_var, _, _, _, _, _ = labeled_file_select(rootl, subheading='Enter path or select a folder to save results, data, and/or plots:',
                                                             selection='dir', vardefault='Same as LARS Data Directory',
                                                             infotext=infotext['save_folder'])
+
+    # save_settings
+    # save_settings_var, _, _, _, _, _ = labeled_options(rootl, 'Save settings to .pkl file:', padding=padding_setting,
+    #                                                    vartype=StringVar, vardefault=bool_options[0], command=hide_save_tag,
+    #                                                    infotext=infotext['save_settings'])
 
     # PEAK FITTING
     frame_peak_fit = tk.Frame(rootr)

@@ -24,25 +24,6 @@ else:
 np.set_printoptions(precision=3)
 
 
-# def parts_match(pr):
-#     # Y5 matches with nothing
-#     if 'Y5' in pr['name']:
-#         return False
-#     # Ls and other Ys match each other
-#     elif ('L' in pr['name'][0] or 'Y' in pr['name'][0]) and ('L' in pr['name'][1] or 'Y' in pr['name'][1]):
-#         return True
-#     # Others match if they share a letter and are both <=3 or both >=4
-#     elif (pr['name'][0][0] == pr['name'][1][0]
-#           and ((int(pr['name'][0][1]) <= 3 and int(pr['name'][1][1]) <= 3)
-#                or (int(pr['name'][0][1]) >= 4 and int(pr['name'][1][1]) >= 4))):
-#         return True
-#     else:
-#         return False
-
-# def parts_match(pr):
-#     return pr['name'][0][2:] == pr['name'][1][2:]
-
-
 def parts_match(pr, **settings):
     name0, name1 = pr['names'][0], pr['names'][1]
     folder0, folder1 = pr['folders'][0], pr['folders'][1]
@@ -97,11 +78,15 @@ def analyze_pair_results(pair_results, data_dict, settings):
                 pair_result['match_probability']:.3f} {q:6.3f} {s:7.5f} {pair_result['same_part']}')
 
     if save_results:
+        if PRINT_MODE in ['sparse', 'full']:
+            print('pickling results...')
         save_path = 'pair_results'+save_tag+'.pkl' if 'save_folder' not in settings else\
             osp.join(save_folder, 'pair_results'+save_tag+'.pkl')
         with open(save_path, 'wb') as outp:
             pickle.dump(pair_results, outp, pickle.HIGHEST_PROTOCOL)
     if save_data:
+        if PRINT_MODE in ['sparse', 'full']:
+            print('pickling data...')
         save_path = 'data_dict'+save_tag+'.pkl' if 'save_folder' not in settings else\
             osp.join(save_folder, 'data_dict'+save_tag+'.pkl')
         with open(save_path, 'wb') as outp:
@@ -171,7 +156,93 @@ def analyze_pair_results(pair_results, data_dict, settings):
 
 def run_analysis(folders, settings):
     time0 = time()
-    pair_results, data_dict = analyze_each_pair_of_folders(folders, **settings)
+    pickled_data_path = settings['pickled_data_path'] if 'pickled_data_path' in settings else None
+    directory = settings['directory']
+    plot_detail = settings['plot_detail'] if 'plot_detail' in settings else False
+    save_data = settings['save_data'] if 'save_data' in settings else False
+    save_results = settings['save_results'] if 'save_results' in settings else False
+    plot_recursive_noise = settings['plot_recursive_noise'] if 'plot_recursive_noise' in settings else False
+    recursive_noise_reduction = settings['recursive_noise_reduction'] if 'recursive_noise_reduction' in settings else False
+
+    skip_fitting_andor_matching = True
+
+    if pickled_data_path:
+        settings_path = osp.join(osp.split(pickled_data_path)[0], 'settings.pkl')
+        pr_path = osp.join(osp.split(pickled_data_path)[0],
+                           osp.split(pickled_data_path)[1].replace('data_dict', 'pair_results'))
+        if osp.isfile(settings_path) and osp.isfile(pr_path):
+            try:
+                with open(settings_path, 'rb') as f:
+                    settings_saved = pickle.load(f)
+            except:
+                skip_fitting_andor_matching = False
+
+            settings_to_compare = settings.copy()
+            settings_to_compare.pop('status_label', None)
+            diff_keys = [key for key in set(settings_to_compare.keys()).union(settings_saved.keys())
+                         if settings.get(key) != settings_saved.get(key)]
+            skip_fitting_andor_matching = skip_fitting_andor_matching and not (
+                'directory' in diff_keys
+                or 'frange' in diff_keys
+                or 'combine' in diff_keys
+                or 'grouped_folders' in diff_keys
+                or 'plot_detail' in diff_keys
+                or ('plot_recursive_noise' in diff_keys and recursive_noise_reduction)
+                or ('plot' in diff_keys and plot_detail)
+                or ('plot' in diff_keys and plot_recursive_noise)
+                or ('show_plots' in diff_keys and plot_detail)
+                or ('show_plots' in diff_keys and plot_recursive_noise and recursive_noise_reduction)
+                or ('save_plots' in diff_keys and plot_detail)
+                or ('save_plots' in diff_keys and plot_recursive_noise and recursive_noise_reduction)
+                or ('peak_plot_width' in diff_keys and plot_detail)
+                or ('peak_plot_width' in diff_keys and plot_recursive_noise and recursive_noise_reduction)
+                or 'PRINT_MODE' in diff_keys
+                or 'baseline_smoothness' in diff_keys
+                or 'baseline_polyorder' in diff_keys
+                or 'baseline_itermax' in diff_keys
+                or 'sgf_applications' in diff_keys
+                or 'sgf_windowsize' in diff_keys
+                or 'sgf_polyorder' in diff_keys
+                or 'peak_height_min' in diff_keys
+                or 'peak_prominence_min' in diff_keys
+                or 'peak_ph_ratio_min' in diff_keys
+                or 'recursive_noise_reduction' in diff_keys
+                or ('max_noise_reduction_iter' in diff_keys and recursive_noise_reduction)
+                or ('regularization_ratio' in diff_keys and recursive_noise_reduction)
+                or 'max_stretch' in diff_keys
+                or 'num_stretches' in diff_keys
+                or 'stretching_iterations' in diff_keys
+                or 'stretch_iteration_factor' in diff_keys
+                or 'peak_match_window' in diff_keys
+                or 'matching_penalty_order' in diff_keys
+                or 'nw_normalized' in diff_keys
+                or 'num_stretches' in diff_keys
+                or (save_data and 'save_data' in diff_keys)
+                or (save_results and 'save_results' in diff_keys)
+                or 'save_tag' in diff_keys
+                or 'save_folder' in diff_keys
+                or 'save_settings' in diff_keys)
+
+            if skip_fitting_andor_matching:
+                try:
+                    with open(pr_path, 'rb') as f:
+                        pair_results = pickle.load(f)
+                except:
+                    skip_fitting_andor_matching = False
+            if skip_fitting_andor_matching:
+                try:
+                    with open(pickled_data_path, 'rb') as f:
+                        data_dict = pickle.load(f)
+                except:
+                    skip_fitting_andor_matching = False
+    else:
+        skip_fitting_andor_matching = False
+
+    if not skip_fitting_andor_matching:
+        pair_results, data_dict = analyze_each_pair_of_folders(folders, **settings)
+    else:
+        print('skipped peak fitting and matching')
+
     analyze_pair_results(pair_results, data_dict, settings)
     print(f"""
 
@@ -198,7 +269,23 @@ def get_subfolders(folder, grouped_folders=False):
 
 def LARS_Comparison_from_app(settings):
     grouped_folders = settings['grouped_folders'] if 'grouped_folders' in settings else False
+    save_settings = settings['save_settings'] if 'save_settings' in settings else False
+    save_folder = settings['save_folder']
+    save_tag = settings['save_tag']
+    PRINT_MODE = settings['PRINT_MODE'] if 'PRINT_MODE' in settings else 'sparse'
+
+    if save_settings:
+        if PRINT_MODE in ['sparse', 'full']:
+            print('pickling settings...')
+        save_path = 'pair_results'+save_tag+'.pkl' if 'save_folder' not in settings else\
+            osp.join(save_folder, 'settings'+save_tag+'.pkl')
+        with open(save_path, 'wb') as outp:
+            settings_to_save = settings.copy()
+            settings_to_save.pop('status_label', None)
+            pickle.dump(settings_to_save, outp, pickle.HIGHEST_PROTOCOL)
+
     folders = get_subfolders(settings['directory'], grouped_folders)
+
     run_analysis(folders, settings)
     return
 
