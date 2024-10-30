@@ -515,7 +515,7 @@ def compare_LARS_measurements(folders: Iterable = [], previously_analyzed_data: 
         xlims = [[frange[0], frange[1]]] +\
             [[min(frange[0]+(i-1)*peak_plot_width, frange[1]-peak_plot_width),
               min(frange[0]+(i)*peak_plot_width, frange[1])]
-             for i in range(np.ceil((frange[1]-frange[0])/peak_plot_width))]
+             for i in range(int(np.ceil((frange[1]-frange[0])/peak_plot_width)))]
 
         # ([10, 60], [10, 10+50/3], [10+50/3, 10+100/3], [10+100/3, 10+150/3])
         # for xlim in xlims:

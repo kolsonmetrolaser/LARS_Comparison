@@ -255,6 +255,9 @@ def run_app():
     # Create the main window
     root = tk.Tk()
     root.state('zoomed')
+    bgc = 'gray65'
+    root.config(bg=bgc)
+    root.option_add("*Background", bgc)
 
     menu_bar = tk.Menu(root)
     menu_bar.config(bg='lightblue', fg='black')
@@ -361,7 +364,7 @@ def run_app():
             if do_update_status:
                 var.trace_add("write", update_status)
             optionmenu = OptionMenu(frame, var, *options, command=command)
-            optionmenu.config(bg='gray75')
+            optionmenu.config(bg='gray75', highlightthickness=0)
             optionmenu.pack(side=tk.LEFT)
         label2 = labeled_widget_label(frame, postlabel)
         if infobox:
@@ -405,6 +408,17 @@ def run_app():
         def toggle_code_labels(*args):
             if part_matching_strategy_var.get() == 'custom':
                 try:
+                    code_label_1.config(text="""Define a custom Python function given the names of the folders which contain .all files.
+name0 and name1 are strings and should be treated symmetrically; there is no guarantee
+a particular folder will be associated with one. The function must define the variable
+result, which must evaluate to True when the parts match and False when they do not.
+
+For example, if parts match if and only if the first letter of their folder name matches,
+enter the following below:
+
+result = name0[0] == name1[0]
+
+def part_matching_function(name0, name1):""", font=("Courier New", 9))
                     code_label_1.pack_forget()
                     code_label_2.pack_forget()
                     code_label_3.pack_forget()
@@ -418,7 +432,26 @@ def run_app():
                     code_label_3.pack(anchor='w')
                 except tk.TclError:
                     pass
+            elif part_matching_strategy_var.get() == 'list':
+                try:
+                    code_label_1.config(text="""Enter matching parts separated by a comma and space, and each part group on a new line.
+The lists should contain only the names of the folders which contain .all files.
 
+For example:
+    
+Group1PartA, Group1PartB, Group1PartC
+Group2PartA, Group2PartB""", font=("Courier New", 9), justify='left')
+                    code_label_1.pack_forget()
+                    code_label_2.pack_forget()
+                    code_label_3.pack_forget()
+                    part_matching_text.pack_forget()
+                    frame_text.pack_forget()
+
+                    code_label_1.pack(anchor='w')
+                    frame_text.pack()
+                    part_matching_text.pack(side=tk.LEFT)
+                except tk.TclError:
+                    pass
             else:
                 try:
                     code_label_1.pack_forget()
@@ -438,9 +471,9 @@ def run_app():
         window.title("Define Known Part Matching")
         label1 = Label(window,
                        text="""
-Define known part matching, either by entering a list of equivalent parts,
-or by creating a custom function.
-""")
+Define known part matching by entering a list of equivalent parts,
+by creating a custom function, or by the folder structure (if "Use
+grouped folder structure" is set to True).""")
         label1.pack()
         options = ['folder', 'list', 'custom'] if grouped_folders_var.get() == 'True' else ['list', 'custom']
         _, _, _, _, _, _ = labeled_options(window, 'Definition type:',
@@ -552,24 +585,28 @@ All pairs of subfolders will be compared.""",
     frame_plot_menus.pack(side=tk.BOTTOM)
 
     plot_var = StringVar(root, value=bool_options[1])
-    plot_var.trace_add("write", update_status)
-    plot_menu = OptionMenu(frame_plot_menus, plot_var, *bool_options)
-    plot_menu.config(bg='gray75')
-    plot_menu.grid(row=0, column=0)
     plot_detail_var = StringVar(root, value=bool_options[1])
-    plot_detail_var.trace_add("write", update_status)
-    plot_detail_menu = OptionMenu(frame_plot_menus, plot_detail_var, *bool_options)
-    plot_detail_menu.config(bg='gray75')
-    plot_detail_menu.grid(row=0, column=1)
     plot_recursive_noise_var = StringVar(root, value=bool_options[1])
-    plot_recursive_noise_var.trace_add("write", update_status)
-    plot_recursive_noise_menu = OptionMenu(frame_plot_menus, plot_recursive_noise_var, *bool_options)
-    plot_recursive_noise_menu.config(bg='gray75')
-    plot_recursive_noise_menu.grid(row=1, column=0)
     plot_classification_var = StringVar(root, value=bool_options[1])
+
+    plot_var.trace_add("write", update_status)
+    plot_detail_var.trace_add("write", update_status)
+    plot_recursive_noise_var.trace_add("write", update_status)
     plot_classification_var.trace_add("write", update_status)
+
+    plot_menu = OptionMenu(frame_plot_menus, plot_var, *bool_options)
+    plot_detail_menu = OptionMenu(frame_plot_menus, plot_detail_var, *bool_options)
+    plot_recursive_noise_menu = OptionMenu(frame_plot_menus, plot_recursive_noise_var, *bool_options)
     plot_classification_menu = OptionMenu(frame_plot_menus, plot_classification_var, *bool_options)
-    plot_classification_menu.config(bg='gray75')
+
+    plot_menu.config(bg='gray75', highlightthickness=0)
+    plot_detail_menu.config(bg='gray75', highlightthickness=0)
+    plot_recursive_noise_menu.config(bg='gray75', highlightthickness=0)
+    plot_classification_menu.config(bg='gray75', highlightthickness=0)
+
+    plot_menu.grid(row=0, column=0)
+    plot_detail_menu.grid(row=0, column=1)
+    plot_recursive_noise_menu.grid(row=1, column=0)
     plot_classification_menu.grid(row=1, column=1)
 
     # peak_plot_width

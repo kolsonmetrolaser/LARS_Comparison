@@ -49,8 +49,9 @@ def parts_match(pr, **settings):
 
     part_matching_strategy = settings['part_matching_strategy'] if 'part_matching_strategy' in settings else ''
     part_matching_text = settings['part_matching_text'] if 'part_matching_text' in settings else ''
+    grouped_folders = settings['grouped_folders'] if 'grouped_folders' in settings else False
 
-    if part_matching_strategy == 'folder':
+    if part_matching_strategy == 'folder' and grouped_folders:
         # If the parts have the same parent folder
         # part sets are parents and all analysis is done from the grandparent or higher
         if osp.split(osp.split(folder0)[0])[1] == osp.split(osp.split(folder1)[0])[1]:
@@ -180,17 +181,24 @@ All code finished running after {time()-time0:.3f} s""")
     return
 
 
-def get_subfolders(folder):
+def get_subfolders(folder, grouped_folders=False):
     subfolders = []
     for item in os.listdir(folder):
         item_path = osp.join(folder, item)
         if osp.isdir(item_path):
-            subfolders.append(item_path)
+            if grouped_folders:
+                for item2 in os.listdir(item_path):
+                    item_path = osp.join(folder, item, item2)
+                    if osp.isdir(item_path):
+                        subfolders.append(item_path)
+            else:
+                subfolders.append(item_path)
     return subfolders
 
 
 def LARS_Comparison_from_app(settings):
-    folders = get_subfolders(settings['directory'])
+    grouped_folders = settings['grouped_folders'] if 'grouped_folders' in settings else False
+    folders = get_subfolders(settings['directory'], grouped_folders)
     run_analysis(folders, settings)
     return
 
