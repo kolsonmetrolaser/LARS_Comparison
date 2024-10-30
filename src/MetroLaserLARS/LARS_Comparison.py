@@ -13,7 +13,7 @@ from os import path as osp
 import tkinter as tk
 
 # Internal imports
-if True:  # __name__ == '__main__':
+if __name__ == '__main__':
     import plotfunctions as pf
     from LarsFunctions import analyze_each_pair_of_folders
 else:

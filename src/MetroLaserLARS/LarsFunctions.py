@@ -16,7 +16,7 @@ from itertools import combinations
 import pickle
 
 # Internal imports
-if True:  # __name__ == '__main__':
+if __name__ == '__main__':
     import LarsDataClass
     from LarsDataClass import LarsData
     import plotfunctions as pf
