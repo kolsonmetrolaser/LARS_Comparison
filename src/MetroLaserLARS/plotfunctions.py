@@ -446,6 +446,9 @@ def line_plot(x: ArrayLike, y: ArrayLike, legend=None, x_lim: tuple[float, float
               v_line_pos: Optional[ArrayLike] = None, v_line_color='k', vlinewidth: float = 6,
               y_norm: Literal[None, 'global', 'each'] = None):
 
+    x = x.copy()
+    y = y.copy()
+
     if y_norm is not None:
         if y_norm == 'global':
             globalmax = np.nanmax(np.abs(y))
