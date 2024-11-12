@@ -266,6 +266,11 @@ def run_app():
 
             save_tag_dummy_label.pack()
 
+    def onFrameConfigure(canvas):
+        '''Reset the scroll region to encompass the inner frame'''
+        canvas.configure(scrollregion=canvas.bbox("all"))
+        frame_canvas.columnconfigure(1, minsize=canvas.winfo_width())
+
     # Create the main window
     root = tk.Tk()
     root.state('zoomed')
@@ -273,7 +278,15 @@ def run_app():
     root.config(bg=bgc)
     root.option_add("*Background", bgc)
 
-    menu_bar = tk.Menu(root)
+    canvas = tk.Canvas(root, background='#ff0000')
+    frame_canvas = tk.Frame(canvas, background='#00ff00')
+    # scrollbar = tk.Scrollbar(root, orient='vertical', command=canvas.yview)
+    # scrollbar.pack(side='right', fill='y')
+    canvas.pack(side='top', fill='both', expand=True)
+    canvas.create_window((4, 4), window=frame_canvas)
+    frame_canvas.bind("<Configure>", lambda event, canvas=canvas: onFrameConfigure(canvas))
+
+    menu_bar = tk.Menu(frame_canvas)
     menu_bar.config(bg='lightblue', fg='black')
     # file_menu = tk.Menu(menu_bar)
     file_menu = tk.Menu(menu_bar, tearoff=0, bg="lightblue", fg="black")
@@ -286,11 +299,11 @@ def run_app():
 
     root.title("LARS Comparison Settings")
 
-    roottop = tk.Frame(root)
+    roottop = tk.Frame(frame_canvas)
     roottop.pack(side=tk.TOP)
-    rootsettings = tk.Frame(root)
+    rootsettings = tk.Frame(frame_canvas)
     rootsettings.pack(side=tk.TOP)
-    rootsubmit = tk.Frame(root)
+    rootsubmit = tk.Frame(frame_canvas)
     rootsubmit.pack(side=tk.BOTTOM)
 
     rootl = tk.Frame(rootsettings)
@@ -618,7 +631,7 @@ All pairs of subfolders will be compared.""",
     frame_submit = tk.Frame(rootsubmit)
     frame_submit.pack(**padding_heading, side=tk.BOTTOM)
 
-    submit_Button = tk.Button(root, text="Run Code", bg='firebrick4', fg='white', width=20, height=2, command=submit, font=(default_font_name, 20, "bold"))
+    submit_Button = tk.Button(frame_canvas, text="Run Code", bg='firebrick4', fg='white', width=20, height=2, command=submit, font=(default_font_name, 20, "bold"))
     submit_Button.pack(**padding_heading)
 
     frame_status = tk.Frame(rootsubmit)
@@ -629,7 +642,7 @@ All pairs of subfolders will be compared.""",
     status_label = tk.Label(frame_status, text='No directory selected.', bg='firebrick4', fg='white', font=(default_font_name, 12))
     status_label.pack(**padding_setting, side=tk.RIGHT)
 
-    submit_Button = tk.Button(root, text="View Plots", command=open_plot_window)
+    submit_Button = tk.Button(frame_canvas, text="View Plots", command=open_plot_window)
     submit_Button.pack(**padding_heading)
 
     # Start the main loop
