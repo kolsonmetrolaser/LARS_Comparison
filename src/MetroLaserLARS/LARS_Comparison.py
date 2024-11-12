@@ -65,6 +65,9 @@ def analyze_pair_results(pair_results, data_dict, settings):
     save_plots = settings['save_plots'] if 'save_plots' in settings else False
     show_plots = settings['show_plots'] if 'show_plots' in settings else False
     PRINT_MODE = settings['PRINT_MODE'] if 'PRINT_MODE' in settings else 'sparse'
+    plot = settings['plot'] if 'plot' in settings else False
+    plot_classification = settings['plot_classification'] if 'plot_classification' in settings else False
+    slc_limits = settings['slc_limits'] if 'slc_limits' in settings else (10000, 60000)
 
     for pr in pair_results:
         pr['same_part'] = parts_match(pr, **settings)
@@ -131,7 +134,7 @@ def analyze_pair_results(pair_results, data_dict, settings):
         accuracy[i] = (pred_match_correct+pred_nomatch_correct)/(pred_match_correct+pred_nomatch_correct
                                                                  + pred_match_wrong+pred_nomatch_wrong)
 
-    if 'plot_classification' in settings and settings['plot_classification']:
+    if plot and plot_classification:
         pf.line_plot(mpthresh, [match_recall, nomatch_recall, match_precision, nomatch_precision, accuracy],
                      legend=['match recall', 'nomatch recall', 'match precision', 'nomatch precision', 'accuracy'],
                      x_label='Matching Probability Threshold', legend_location=(0.02, 0.4), line_width=6, cmap='list',
@@ -151,6 +154,25 @@ def analyze_pair_results(pair_results, data_dict, settings):
                      x_lim=[mpthresh[0], mpthresh[-1]],
                      fname=osp.join(save_folder, 'classification_comparison'+save_tag) if save_plots else None,
                      show_plot_in_spyder=show_plots)
+    if plot:
+        vels = []
+        freqs = []
+        names = []
+        for k in data_dict:
+            ld = data_dict[k]
+            vels.append(ld.newvel)
+            slc = np.logical_and(ld.freq > slc_limits[0], ld.freq < slc_limits[1])
+            freqs.append(ld.freq[slc]/1000)
+            names.append(ld.name)
+        for i, vel in enumerate(vels):
+            vels[i] = .95*vel/np.max(vel)+i
+        fname = 'all_spectra'
+        pf.line_plot(freqs[::-1], vels[::-1], line_width=4, y_lim=(-.05, len(vels)),
+                     x_lim=(slc_limits[0]/1000, slc_limits[1]/1000),
+                     legend=names[::-1], legend_location='best', title='All spectra',
+                     fname=osp.join(save_folder, fname) if save_plots else None,
+                     fig_size=(12, 5*len(vels)), show_plot_in_spyder=show_plots,
+                     x_label='Frequency (kHz)', y_label='Intensity (arb.)', y_ticks=[])
 
 
 def same_fit_and_matching_settings(settings):

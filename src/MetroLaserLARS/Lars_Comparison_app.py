@@ -8,6 +8,8 @@ Created on Tue Oct 15 12:08:17 2024
 import tkinter as tk
 from tkinter import filedialog, DoubleVar, StringVar, Label, Entry, Button, Text
 from tkinter import OptionMenu, IntVar, Variable, BooleanVar, font, Toplevel
+import pickle
+from numpy import log10
 
 # Internal imports
 if __name__ == '__main__':
@@ -81,6 +83,8 @@ def run_app():
             # fmt: off
             # DATA
             settings['directory']                 = directory_var.get() # noqa
+            settings['data_format']               = data_format_var.get() # noqa
+            settings['new_data_format']           = new_data_format_var.get() # noqa
             settings['pickled_data_path']         = pickled_data_path_var.get() # noqa
             # DATA DEFINITIONS
             settings['frange']                    = (frange_min_var.get()/1000, frange_max_var.get()/1000) # noqa
@@ -143,6 +147,72 @@ def run_app():
 
         return settings
 
+    def set_settings(settings, suppress=False):
+        try:
+            # fmt: off
+            # DATA
+            directory_var.set(                 settings['directory'] if 'directory' in settings else '') # noqa
+            data_format_var.set(               settings['data_format'] if 'data_format' in settings else 'auto') # noqa
+            new_data_format_var.set(           settings['new_data_format'] if 'new_data_format' in settings else 'none') # noqa
+            pickled_data_path_var.set(         settings['pickled_data_path'] if 'pickled_data_path' in settings else '') # noqa
+            # DATA DEFINITIONS
+            frange_min_var.set(                settings['slc_limits'][0] if 'slc_limits' in settings else 10000) # noqa
+            frange_max_var.set(                settings['slc_limits'][1] if 'slc_limits' in settings else 60000) # noqa
+            combine_var.set(                   settings['combine'] if 'combine' in settings else 'max') # noqa
+            grouped_folders_var.set(           ('True' if settings['grouped_folders'] else 'False') if 'grouped_folders' in settings else 'False') # noqa
+            part_matching_text_var.set(        settings['part_matching_text'] if 'part_matching_text' in settings else '') # noqa
+            part_matching_strategy_var.set(    settings['part_matching_strategy'] if 'part_matching_strategy' in settings else 'list') # noqa
+            # PLOTTING AND PRINTING
+            plot_var.set(                      ('True' if settings['plot'] else 'False') if 'plot' in settings else 'False') # noqa
+            plot_detail_var.set(               ('True' if settings['plot_detail'] else 'False') if 'plot_detail' in settings else 'False') # noqa
+            plot_recursive_noise_var.set(      ('True' if settings['plot_recursive_noise'] else 'False') if 'plot_recursive_noise' in settings else 'False') # noqa
+            plot_classification_var.set(       ('True' if settings['plot_classification'] else 'False') if 'plot_classification' in settings else 'False') # noqa
+            show_plots_var.set(                ('True' if settings['show_plots'] else 'False') if 'show_plots' in settings else 'False') # noqa
+            save_plots_var.set(                ('True' if settings['save_plots'] else 'False') if 'save_plots' in settings else 'False') # noqa
+            peak_plot_width_var.set(           settings['peak_plot_width'] if 'peak_plot_width' in settings else 20) # noqa
+            PRINT_MODE_var.set(                settings['PRINT_MODE'] if 'PRINT_MODE' in settings else 'sparse') # noqa
+            # PEAK FITTING
+            # baseline removal
+            baseline_smoothness_var.set(       log10(settings['baseline_smoothness']) if 'baseline_smoothness' in settings else 12) # noqa
+            baseline_polyorder_var.set(        settings['baseline_polyorder'] if 'baseline_polyorder' in settings else 2) # noqa
+            baseline_itermax_var.set(          settings['baseline_itermax'] if 'baseline_itermax' in settings else 10) # noqa
+            # smoothing
+            sgf_applications_var.set(          settings['sgf_applications'] if 'sgf_applications' in settings else 2) # noqa
+            sgf_windowsize_var.set(            settings['sgf_windowsize'] if 'sgf_windowsize' in settings else 101) # noqa
+            sgf_polyorder_var.set(             settings['sgf_polyorder'] if 'sgf_polyorder' in settings else 0) # noqa
+            # peak finding
+            peak_height_min_var.set(           settings['peak_height_min'] if 'peak_height_min' in settings else 0.2) # noqa
+            peak_prominence_min_var.set(       settings['peak_prominence_min'] if 'peak_prominence_min' in settings else 0.2) # noqa
+            peak_ph_ratio_min_var.set(         settings['peak_ph_ratio_min'] if 'peak_ph_ratio_min' in settings else 0.5) # noqa
+            # noise reduction
+            recursive_noise_reduction_var.set( ('True' if settings['recursive_noise_reduction'] else 'False') if 'recursive_noise_reduction' in settings else 'True') # noqa
+            max_noise_reduction_iter_var.set(  settings['max_noise_reduction_iter'] if 'max_noise_reduction_iter' in settings else 10) # noqa
+            regularization_ratio_var.set(      settings['regularization_ratio'] if 'regularization_ratio' in settings else 0.5) # noqa
+            # PEAK MATCHING
+            # stretching
+            max_stretch_var.set(               settings['max_stretch'] if 'max_stretch' in settings else 0.02) # noqa
+            num_stretches_var.set(             settings['num_stretches'] if 'num_stretches' in settings else 1000) # noqa
+            stretching_iterations_var.set(     settings['stretching_iterations'] if 'stretching_iterations' in settings else 10) # noqa
+            stretch_iteration_factor_var.set(  settings['stretch_iteration_factor'] if 'stretch_iteration_factor' in settings else 5) # noqa
+            # matching
+            peak_match_window_var.set(         settings['peak_match_window'] if 'peak_match_window' in settings else 150) # noqa
+            matching_penalty_order_var.set(    settings['matching_penalty_order'] if 'matching_penalty_order' in settings else 1) # noqa
+            nw_normalized_var.set(             ('True' if settings['nw_normalized'] else 'False') if 'nw_normalized' in settings else 'False') # noqa
+            # SAVING
+            save_data_var.set(                 ('True' if settings['save_data'] else 'False') if 'save_data' in settings else 'False') # noqa
+            save_results_var.set(              ('True' if settings['save_results'] else 'False') if 'save_results' in settings else 'True') # noqa
+            save_tag_var.set(                  settings['save_tag'] if 'save_tag' in settings else '') # noqa
+            save_directory_var.set(            'Same as LARS Data Directory' if ('save_folder' in settings and 'directory' in settings and settings['save_folder'] == settings['directory']) else (settings['save_folder'] if 'save_folder' in settings else 'Same as LARS Data Directory')) # noqa
+            # fmt: on
+        except tk.TclError as e:
+            if not suppress:
+                raise e
+            return settings
+        except Exception as e:
+            raise e
+
+        return settings
+
     def submit():
         if status_var.get() in ['nodir', 'running']:
             return
@@ -157,18 +227,21 @@ def run_app():
         running_var.set(False)
         update_status()
 
+    def import_settings(*args, **kwargs):
+        path = filedialog.askopenfilename(**kwargs, title='Choose settings to import',
+                                          filetypes=(('Settings Files', '*settings*.pkl'), ('All Files', '*')))
+        if path:
+            with open(path, 'rb') as f:
+                settings_import = pickle.load(f)
+                set_settings(settings_import)
+        return
+
     # def select_directory(entry, **kwargs):
     def select_directory(entry):
         directory = filedialog.askdirectory(title="Select a Directory")
         if directory:
             entry.delete(0, tk.END)  # Clear the directory_entry box
             entry.insert(0, directory)  # Insert the selected directory
-
-    # def select_save_directory():
-    #     save_directory = filedialog.askdirectory(title="Select a Directory")
-    #     if save_directory:
-    #         save_directory_entry.delete(0, tk.END)  # Clear the save_directory_entry box
-    #         save_directory_entry.insert(0, save_directory)  # Insert the selected save_directory
 
     def select_file(entry, **kwargs):
         path = filedialog.askopenfilename(**kwargs)
@@ -439,7 +512,7 @@ def part_matching_function(name0, name1):""", font=("Courier New", 9))
 The lists should contain only the names of the folders which contain .all files.
 
 For example:
-    
+
 Group1PartA, Group1PartB, Group1PartC
 Group2PartA, Group2PartB""", font=("Courier New", 9), justify='left')
                     code_label_1.pack_forget()
@@ -522,12 +595,28 @@ All pairs of subfolders will be compared.""",
                                                        label='Enter path to LARS data or select a folder:',
                                                        selection='dir',
                                                        infotext=infotext['directory'])
+    frame_data_format = tk.Frame(rootload)
+    frame_data_format.pack(side=tk.TOP)
+    # data_format
+    data_format_var, _, _, _, _, _ = labeled_options(frame_data_format, 'Data format to load:',
+                                                     padding=padding_setting, vartype=StringVar,
+                                                     vardefault='auto', options=['auto', '.all', '.csv', '.tdms', '.npz'],
+                                                     infotext=infotext['data_format'], side=tk.LEFT)
+    # new_data_format
+    new_data_format_var, _, _, _, _, _ = labeled_options(frame_data_format, 'Save data to different format (does not work with .all):',
+                                                         padding=padding_setting, vartype=StringVar,
+                                                         vardefault='none', options=['none', '.csv', '.npz', 'both'],
+                                                         infotext=infotext['new_data_format'])
+
     # pickled_data_path
 
     pickled_data_path_var, _, _, _, _, _ = labeled_file_select(rootload, headingtxt='Pickled Data',
                                                                subheading='Load data from previous analysis.',
                                                                label='Enter path to pickled data or select a file:',
-                                                               infotext=infotext['pickled_data_path'])
+                                                               infotext=infotext['pickled_data_path'], side=tk.LEFT)
+    submit_button = Button(roottop, text="Import Settings", command=import_settings)
+    submit_button.pack(**padding_setting)
+
     heading('Settings', frame=roottop, side=tk.BOTTOM)
 
     # DATA DEFINITIONS

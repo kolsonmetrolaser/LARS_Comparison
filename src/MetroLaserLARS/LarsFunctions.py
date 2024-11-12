@@ -345,6 +345,24 @@ def analyze_data(data: LarsData, **settings) -> tuple[dict, NDArray, NDArray, ND
     return peaks, freqs, vels, newvels, name
 
 
+def Load_LARS_data(folder: str = '', **settings):
+    data_format = settings['data_format'] if 'data_format' in settings else 'auto'
+
+    result = []
+    if data_format == 'auto':
+        possible_formats = ['.npz', '.tdms', '.all', '.csv']
+        for subdir, dirs, files in os.walk(folder):
+            for file in [f for f in files if any([ext in f for ext in possible_formats])]:
+                format_exists = [osp.isfile(osp.splitext(osp.join(subdir, file))[0]+fmt) for fmt in possible_formats]
+                file = osp.splitext(file)[0] + [fmt for fmt, fmt_ex in zip(possible_formats, format_exists) if fmt_ex][0]
+                result.append(LarsData.from_file(osp.join(subdir, file), **settings))
+    else:
+        for subdir, dirs, files in os.walk(folder):
+            for file in [f for f in files if data_format in f]:
+                result.append(LarsData.from_file(osp.join(subdir, file, **settings)))
+    return result
+
+
 def LARS_analysis(folder: str = '', previously_loaded_data: Literal[None, LarsData] = None, **settings)\
         -> tuple[tuple[ArrayLike, ArrayLike, ArrayLike, ArrayLike, ArrayLike], LarsData]:
     """
@@ -378,10 +396,7 @@ def LARS_analysis(folder: str = '', previously_loaded_data: Literal[None, LarsDa
 
     if previously_loaded_data is None:
         # Load data
-        alldata = []
-        for subdir, dirs, files in os.walk(folder):
-            for file in [f for f in files if '.all' in f]:
-                alldata.append(LarsData.from_file(osp.join(subdir, file)))
+        alldata = Load_LARS_data(folder, **settings)
 
         # Analyze data
         combine = settings['combine'] if 'combine' in settings else 'max'
@@ -532,7 +547,6 @@ def compare_LARS_measurements(folders: Iterable = [], previously_analyzed_data: 
         if previously_analyzed_data[i] is None:
             if PRINT_MODE in ['sparse', 'full']:
                 print(f'Loading and analyzing data from {f}')
-            # (peaks, freq, vel, newvel, name), data = LARS_analysis(folder=f,combine=combine,frange=(10,60),plot=plot)
             (peaks, freq, vel, newvel, name), data = LARS_analysis(folder=f, **settings)
         else:
             if (hasattr(previously_analyzed_data[i], 'analyzed_this_session')

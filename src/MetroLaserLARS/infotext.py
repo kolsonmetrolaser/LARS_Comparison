@@ -11,11 +11,11 @@ Saved data, results, and plots will be created in Study.
 
 STUDY
 ├── PART1
-│   ├── measurement1.all
-│   ├── measurement2.all
+│   ├── measurement1
+│   ├── measurement2
 │   ├── ...
 ├── PART2
-│   ├── measurement1.all
+│   ├── measurement1
 │   ├── ...
 ├── ...
 ├── data_dict.pkl
@@ -26,25 +26,38 @@ or, if "Use grouped folder structure" is set to True,
 STUDY
 ├── GROUP1
 │   ├── PART1.1
-│   │   ├── measurement1.all
-│   │   ├── measurement2.all
+│   │   ├── measurement1
+│   │   ├── measurement2
 │   │   ├── ...
 │   ├── PART1.2
-│   │   ├── measurement1.all
+│   │   ├── measurement1
 │   │   ├── ...
 │   ├── ...
 ├── GROUP2
 │   ├── PART2.1
-│   │   ├── measurement1.all
+│   │   ├── measurement1
 │   │   ├── ...
 │   ├── PART2.2
-│   │   ├── measurement1.all
+│   │   ├── measurement1
 │   │   ├── ...
 │   ├── ...
 ├── ...
 ├── data_dict.pkl
 ├── pair_results.pkl
 └── plots.png
+"""
+
+data_format = """
+Choose a data format to load. "auto" will choose the fastest
+available format while assuming that files with the same name
+refer to the same measurement (e.g., p1.tdms and p1.npz are
+assumed to be identical, and thus the slower one will be skipped).
+"""
+
+new_data_format = """
+Choose a data format to save a copy of the raw data to. Files
+will be saved in the same location as the original.
+"both" will save copies in each other format.
 """
 
 pickled_data_path = """
@@ -310,6 +323,8 @@ folder.
 infotext = {
     # DATA
     'directory': directory,
+    'data_format': data_format,
+    'new_data_format': new_data_format,
     'pickled_data_path': pickled_data_path,
     'frange': frange,
     'combine': combine,

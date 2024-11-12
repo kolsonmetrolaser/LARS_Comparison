@@ -7,6 +7,8 @@ Created on Tue Oct 15 12:08:17 2024
 # External imports
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
+import pandas as pd
+import pytdms
 import os.path as osp
 from typing import Literal
 import pathlib
@@ -51,7 +53,7 @@ class LarsData:
         return False
 
     @classmethod
-    def from_file(cls, path: str, permanent_path: Literal[None, str] = None):
+    def from_file(cls, path: str, permanent_path: Literal[None, str] = None, **settings):
         """
         Loads LARS data from `path`. Expects files with 5 columns, corresponding to:
             0: time
@@ -76,10 +78,69 @@ class LarsData:
             LarsData class object with data from `path`.
 
         """
+
+        new_data_format = settings['new_data_format'] if 'new_data_format' in settings else 'none'
         permanent_path = path if permanent_path is None else permanent_path
-        data = np.loadtxt(path)
-        return cls(name=osp.basename(permanent_path), path=permanent_path, time=data[:, 0], pztV=data[:, 1],
-                   ldvV=data[:, 2], freq=data[:, 3], vel=data[:, 4])
+
+        nn = {'f': 'Frequency (Hz)', 'a': 'FT Amplitude (um/s)', 'v': 'LDV Amplitude (um/s)',
+              'p': 'PZT Amplitude (V)', 'R': 'Sample Rate (Hz)', 'T': 'Sampling Duration (s)', 't': 'Time (s)'}
+
+        path_no_ext, ext = osp.splitext(path)
+        if ext == '.npz':
+            data = dict(np.load(path))
+        elif ext == '.tdms':
+            data = {}
+            _, rawdata = pytdms.read(path)
+            for k, v in rawdata.items():
+                k = k.split(b"'")[1].decode()+' '+k.split(b"'")[3].decode() if k.split(b"'")[3] != b"Untitled" else k.split(b"'")[1].decode()
+                v = np.array(v)  # if len(v) > 1 else v[0]
+                if nn['v'] in k:
+                    if nn['v'] not in data:
+                        data[nn['v']] = v
+                    else:
+                        data[nn['v']] = np.vstack((data[nn['v']], v))
+                else:
+                    data[k] = v
+        elif ext == '.all':
+            data = np.loadtxt(path)
+            return cls(name=osp.basename(permanent_path), path=permanent_path, time=data[:, 0], pztV=data[:, 1],
+                       ldvV=data[:, 2], freq=data[:, 3], vel=data[:, 4])
+        elif ext == '.csv':
+            df = pd.read_csv(path)
+            data = dict(zip(df.columns.values, df.to_numpy().T))
+            for k, v in list(data.items()):
+                data[k] = v[~np.isnan(v)]
+                if nn['v'] in k:
+                    if nn['v'] not in data:
+                        data[nn['v']] = data.pop(k)
+                    else:
+                        data[nn['v']] = np.vstack((data[nn['v']], data.pop(k)))
+
+        else:
+            raise f"""Tried to load LARS data form an {ext} file, which is an invalid file type.
+Only load .npz, .tdms, .all, or .csv files. Full path: {permanent_path}"""
+        if ext != '.all':
+            if new_data_format in ['.npz', 'both']:
+                np.savez_compressed(path_no_ext+'.npz', **data)
+            if new_data_format in ['.csv', 'both']:
+                dataout = data.copy()
+                pop = False
+                for k, v in list(dataout.items()):
+                    if nn['v'] in k and data[nn['v']].ndim > 1:
+                        pop = True
+                        for i, row in enumerate(v):
+                            dataout[nn['v']+' '+str(i)] = row
+                if pop:
+                    dataout.pop(nn['v'])
+                df = pd.DataFrame.from_dict(dataout, orient='index').transpose()
+                df.to_csv(path_no_ext+'.csv', index=False)
+
+            if data[nn['v']].ndim > 1:
+                ldvV = np.mean(data[nn['v']], axis=0)
+            else:
+                ldvV = data[nn['v']]
+            return cls(name=osp.basename(permanent_path), path=permanent_path, time=data[nn['t']], pztV=data[nn['p']],
+                       ldvV=ldvV, freq=data[nn['f']], vel=data[nn['a']])
 
     @classmethod
     def from_subdata(cls, c):
