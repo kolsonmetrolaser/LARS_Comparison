@@ -572,7 +572,7 @@ def line_plot(x: ArrayLike, y: ArrayLike, legend=None, x_lim: tuple[float, float
     # try:
     #     from settings import CLUSTERMODE as _CLUSTERMODE
     # except ModuleNotFoundError:
-    _CLUSTERMODE = False
+    _CLUSTERMODE = True
     if fname is not None:
         if save_folder is None:
             if not _CLUSTERMODE:
@@ -587,7 +587,7 @@ def line_plot(x: ArrayLike, y: ArrayLike, legend=None, x_lim: tuple[float, float
             plt.savefig(fname+'.png', dpi=150, bbox_inches='tight')
             os.chdir(cwd)
 
-    if show_plot_in_spyder and not _CLUSTERMODE:
+    if show_plot_in_spyder:
         plt.show()
 
     plt.close(fig)
