@@ -5,6 +5,14 @@ Created on Tue Nov 12 15:16:34 2024
 @author: KOlson
 """
 import tkinter as tk
+import numpy as np
+from matplotlib.backend_bases import key_press_handler
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+from matplotlib.figure import Figure
+if True:  # __name__ == '__main__':
+    from plotfunctions import line_plot
+else:
+    pass
 
 if True:  # __name__ == '__main__':
     from app_helpers import labeled_options
@@ -12,107 +20,51 @@ else:
     pass
 
 
-def open_plot_window(root, grouped_folders_var, part_matching_text_var, part_matching_strategy_var, **common_kwargs):
-    def toggle_code_labels(*args):
-        if part_matching_strategy_var.get() == 'custom':
-            try:
-                code_label_1.config(text="""Define a custom Python function given the names of the folders which contain .all files.
-name0 and name1 are strings and should be treated symmetrically; there is no guarantee
-a particular folder will be associated with one. The function must define the variable
-result, which must evaluate to True when the parts match and False when they do not.
-
-For example, if parts match if and only if the first letter of their folder name matches,
-enter the following below:
-
-result = name0[0] == name1[0]
-
-def part_matching_function(name0, name1):""", font=("Courier New", 9))
-                code_label_1.pack_forget()
-                code_label_2.pack_forget()
-                code_label_3.pack_forget()
-                part_matching_text.pack_forget()
-                frame_text.pack_forget()
-
-                code_label_1.pack(anchor='w')
-                frame_text.pack()
-                code_label_2.pack(side=tk.LEFT)
-                part_matching_text.pack(side=tk.LEFT)
-                code_label_3.pack(anchor='w')
-            except tk.TclError:
-                pass
-        elif part_matching_strategy_var.get() == 'list':
-            try:
-                code_label_1.config(text="""Enter matching parts separated by a comma and space, and each part group on a new line.
-The lists should contain only the names of the folders which contain .all files.
-
-For example:
-
-Group1PartA, Group1PartB, Group1PartC
-Group2PartA, Group2PartB""", font=("Courier New", 9), justify='left')
-                code_label_1.pack_forget()
-                code_label_2.pack_forget()
-                code_label_3.pack_forget()
-                part_matching_text.pack_forget()
-                frame_text.pack_forget()
-
-                code_label_1.pack(anchor='w')
-                frame_text.pack()
-                part_matching_text.pack(side=tk.LEFT)
-            except tk.TclError:
-                pass
-        else:
-            try:
-                code_label_1.pack_forget()
-                code_label_2.pack_forget()
-                code_label_3.pack_forget()
-                part_matching_text.pack_forget()
-                frame_text.pack_forget()
-
-                frame_text.pack()
-                part_matching_text.pack(side=tk.LEFT)
-            except tk.TclError:
-                pass
-        return
+def open_plot_window(root, data_dict_var, pair_results_var, **common_kwargs):
 
     window = tk.Toplevel()
     window.grab_set()
-    window.title("Define Known Part Matching")
-    label1 = tk.Label(window,
-                      text="""
-Define known part matching by entering a list of equivalent parts,
-by creating a custom function, or by the folder structure (if "Use
-grouped folder structure" is set to True).""")
-    label1.pack()
-    options = ['folder', 'list', 'custom'] if grouped_folders_var.get() == 'True' else ['list', 'custom']
-    _, _, _, _, _, _ = labeled_options(window, 'Definition type:',
-                                       var=part_matching_strategy_var,
-                                       options=options,
-                                       infobox=False, **common_kwargs)
+    window.title("Plots")
 
-    frame_input = tk.Frame(window)
-    frame_input.pack()
+    data_dict, pair_results = data_dict_var.get(), pair_results_var.get()
 
-    code_label_1 = tk.Label(frame_input, text='def part_matching_function(name0, name1):', font=("Courier New", 9))
-    code_label_1.pack(anchor="w")
+    t = np.arange(0, 3, .01)
+    fig, [line] = line_plot(t, 2*np.sin(2*np.pi*t))
 
-    frame_text = tk.Frame(frame_input)
-    frame_text.pack()
+    canvas = FigureCanvasTkAgg(fig, master=window)
+    canvas.draw()
 
-    code_label_2 = tk.Label(frame_text, text='    ', font=("Courier New", 9))
-    code_label_2.pack(side=tk.LEFT)
+    toolbar = NavigationToolbar2Tk(canvas, window, pack_toolbar=False)
+    toolbar.update()
 
-    part_matching_text = tk.Text(frame_text)
-    part_matching_text.insert("0.0", part_matching_text_var.get())
-    part_matching_text.pack(side=tk.LEFT)
+    canvas.mpl_connect(
+        "key_press_event", lambda event: print(f"you pressed {event.key}"))
+    canvas.mpl_connect("key_press_event", key_press_handler)
 
-    code_label_3 = tk.Label(frame_input, text='return result', font=("Courier New", 9))
-    code_label_3.pack(anchor="w")
+    button_quit = tk.Button(master=window, text="Quit", command=window.destroy)
 
-    part_matching_text_submit = tk.Button(window, text='Save entered text', command=lambda: part_matching_text_var.set(part_matching_text.get("0.0", tk.END)))
-    part_matching_text_submit.pack()
+    def update_plot_contents(*args):
+        # retrieve frequency
+        f = float(data_selection_var.get())
 
-    fn = toggle_code_labels
-    part_matching_strategy_var.trace_add('write', fn)
-    toggle_code_labels()
+        # update data
+        y = 2 * np.sin(2 * np.pi * f * t)
+        line.set_data(t, y)
+        # fig = line_plot(t, y)
 
-    return part_matching_text_var.get()
+        # required to update canvas and attached toolbar!
+        canvas.draw()
+
+    frame_options = tk.Frame(window)
+
+    options = [i+1 for i in range(5)]
+    data_selection_var = tk.StringVar(window, value=options[0])
+    data_selection_menu = tk.OptionMenu(frame_options, data_selection_var, *options, command=update_plot_contents)
+    data_selection_menu.pack(side=tk.LEFT)
+
+    button_quit.pack(side=tk.BOTTOM)
+    frame_options.pack(side=tk.BOTTOM)
+    toolbar.pack(side=tk.BOTTOM, fill=tk.X)
+    canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
+    return

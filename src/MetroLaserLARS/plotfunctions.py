@@ -522,17 +522,17 @@ def line_plot(x: ArrayLike, y: ArrayLike, legend=None, x_lim: tuple[float, float
         if any(isinstance(el, list) for el in x) or isinstance(x, list):
             for idx, (plotx, ploty) in enumerate(zip(x, y)):
                 if cmap is not None:
-                    ax.plot(plotx, ploty, style, color=colors[idx])
+                    line_out = ax.plot(plotx, ploty, style, color=colors[idx])
                 else:
-                    ax.plot(plotx, ploty, style)
+                    line_out = ax.plot(plotx, ploty, style)
         else:
             for idx, ploty in enumerate(y):
                 if cmap is not None:
-                    ax.plot(x, ploty, style, color=colors[idx])
+                    line_out = ax.plot(x, ploty, style, color=colors[idx])
                 else:
-                    ax.plot(x, ploty, style)
+                    line_out = ax.plot(x, ploty, style)
     else:
-        ax.plot(x, y, style)  # linestyle='solid')
+        line_out = ax.plot(x, y, style)  # linestyle='solid')
 
     if y_format is not None:
         ax.yaxis.set_major_formatter(y_format)
@@ -591,7 +591,7 @@ def line_plot(x: ArrayLike, y: ArrayLike, legend=None, x_lim: tuple[float, float
         plt.show()
 
     plt.close(fig)
-    return
+    return fig, line_out
 
 
 def radial_plot(x, y, legend=None, x_lim=None, y_lim=None, fig_size=(12, 9),

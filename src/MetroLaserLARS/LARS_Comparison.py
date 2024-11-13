@@ -292,7 +292,7 @@ def run_analysis(folders, settings):
 
 Done!
 All code finished running after {time()-time0:.3f} s""")
-    return
+    return data_dict, pair_results
 
 
 def get_subfolders(folder, grouped_folders=False):
@@ -315,7 +315,7 @@ def LARS_Comparison_from_app(settings):
 
     folders = get_subfolders(settings['directory'], grouped_folders)
 
-    run_analysis(folders, settings)
+    data_dict, pair_results = run_analysis(folders, settings)
 
     return
 

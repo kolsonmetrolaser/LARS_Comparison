@@ -221,7 +221,7 @@ def run_app():
         running_var.set(True)
         update_status()
 
-        LARS_Comparison_from_app(settings)
+        data_dict, pair_results = LARS_Comparison_from_app(settings)
 
         prev_settings_var.set(settings)
         running_var.set(False)
@@ -266,10 +266,39 @@ def run_app():
 
             save_tag_dummy_label.pack()
 
-    def onFrameConfigure(canvas):
-        '''Reset the scroll region to encompass the inner frame'''
+    def handle_resize(event):
+        canvas = event.widget
+        canvas_frame = canvas.nametowidget(canvas.itemcget("frame_canvas", "window"))
+        min_width = canvas_frame.winfo_reqwidth()
+        min_height = canvas_frame.winfo_reqheight()
+        if min_width < event.width:
+            canvas.itemconfigure("frame_canvas", width=event.width)
+            # print(f'set width to {event.width}, now {frame_canvas.winfo_width()}')
+        if min_height < event.height:
+            # frame_canvas.configure(height=event.height)
+            canvas.itemconfigure("frame_canvas", height=event.height)
+            # print(f'set height to {event.width}, now {frame_canvas.winfo_width()}')
+
         canvas.configure(scrollregion=canvas.bbox("all"))
-        frame_canvas.columnconfigure(1, minsize=canvas.winfo_width())
+
+    # def onFrameConfigure(canvas):
+    #     '''Reset the scroll region to encompass the inner frame'''
+    #     canvas.configure(scrollregion=canvas.bbox("all"))
+    #     frame_canvas.columnconfigure(1, minsize=canvas.winfo_width())
+
+    # root = tk.Tk()
+
+    # canvas = tk.Canvas(root, background="blue")
+    # frame = tk.Frame(canvas, background="red")
+
+    # canvas.pack(expand=True, fill="both")
+    # canvas.create_window((4, 4), window=frame, anchor="nw", tags="frame")
+
+    # scrollbar = tk.Scrollbar(canvas, orient="vertical",
+    #                          command=canvas.yview)
+    # scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+    # canvas.bind("<Configure>", handle_resize)
 
     # Create the main window
     root = tk.Tk()
@@ -278,15 +307,22 @@ def run_app():
     root.config(bg=bgc)
     root.option_add("*Background", bgc)
 
-    canvas = tk.Canvas(root, background='#ff0000')
-    frame_canvas = tk.Frame(canvas, background='#00ff00')
-    # scrollbar = tk.Scrollbar(root, orient='vertical', command=canvas.yview)
-    # scrollbar.pack(side='right', fill='y')
-    canvas.pack(side='top', fill='both', expand=True)
-    canvas.create_window((4, 4), window=frame_canvas)
-    frame_canvas.bind("<Configure>", lambda event, canvas=canvas: onFrameConfigure(canvas))
+    canvas = tk.Canvas(root, background="blue")
+    frame_canvas = tk.Frame(canvas, background="red")
 
-    menu_bar = tk.Menu(frame_canvas)
+    canvas.pack(expand=True, fill="both")
+    canvas.create_window((4, 4), window=frame_canvas, anchor="nw", tags="frame_canvas")
+
+    yscrollbar = tk.Scrollbar(canvas, orient="vertical",
+                              command=canvas.yview)
+    yscrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+    xscrollbar = tk.Scrollbar(canvas, orient="horizontal",
+                              command=canvas.xview)
+    xscrollbar.pack(side=tk.BOTTOM, fill=tk.X)
+
+    canvas.bind("<Configure>", handle_resize)
+
+    menu_bar = tk.Menu(root)
     menu_bar.config(bg='lightblue', fg='black')
     # file_menu = tk.Menu(menu_bar)
     file_menu = tk.Menu(menu_bar, tearoff=0, bg="lightblue", fg="black")
@@ -316,6 +352,7 @@ def run_app():
     prev_settings_var = tk.Variable(root, value={})
     status_var = tk.StringVar(root, value='nodir')
     default_font_name = tk.font.nametofont('TkTextFont').actual()['family']
+    data_dict_var, pair_results_var = tk.Variable(root, value={}), tk.Variable(root, value={})
 
     common_kwargs = {'update_status': update_status, 'varframe': root}
 
@@ -642,7 +679,7 @@ All pairs of subfolders will be compared.""",
     status_label = tk.Label(frame_status, text='No directory selected.', bg='firebrick4', fg='white', font=(default_font_name, 12))
     status_label.pack(**padding_setting, side=tk.RIGHT)
 
-    submit_Button = tk.Button(frame_canvas, text="View Plots", command=open_plot_window)
+    submit_Button = tk.Button(frame_canvas, text="View Plots", command=lambda: open_plot_window(root, data_dict_var, pair_results_var))
     submit_Button.pack(**padding_heading)
 
     # Start the main loop
