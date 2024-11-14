@@ -448,20 +448,20 @@ def line_plot(x: ArrayLike, y: ArrayLike, legend=None, x_lim: tuple[float, float
 
     x = x.copy()
     y = y.copy()
-    
+
     if isinstance(x, list) and isinstance(y, list):
-        for xel, yel in zip(x,y):
+        for i, (xel, yel) in enumerate(zip(x, y)):
             idxs = (np.where(xel >= x_slice[0])[0][0] if np.where(xel >= x_slice[0])[0].size > 0 else 0,
                     np.where(xel > x_slice[1])[0][0] if np.where(xel > x_slice[1])[0].size > 0 else len(xel))
-            xel = xel[slice(*idxs)]
-            yel = yel[slice(*idxs)]
+            x[i] = xel[slice(*idxs)]
+            y[i] = yel[slice(*idxs)]
     else:
         idxs = (np.where(x >= x_slice[0])[0][0] if np.where(x >= x_slice[0])[0].size > 0 else 0,
                 np.where(x > x_slice[1])[0][0] if np.where(x > x_slice[1])[0].size > 0 else len(x))
         x = x[slice(*idxs)]
         if isinstance(y, list):
-            for yel in y:
-                yel = yel[slice(*idxs)]
+            for i, yel in enumerate(y):
+                y[i] = yel[slice(*idxs)]
         else:
             y = y[slice(*idxs)]
 

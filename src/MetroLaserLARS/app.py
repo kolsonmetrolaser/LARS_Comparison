@@ -246,7 +246,8 @@ def run_app():
 
     def update_save_tag_label(*args):
         # Update the label text with the selected option
-        txt = "Save filename: data_dict... and peak_results" if save_tag_var.get() == '' else 'Save filename: data_dict_... and peak_results_'
+        txt = "Save filename: data_dict... and peak_results" if save_tag_var.get(
+        ) == '' else 'Save filename: data_dict_... and peak_results_'
         save_tag_label.config(text=txt)
 
     def hide_save_tag(*args):
@@ -429,7 +430,8 @@ All pairs of subfolders will be compared.""",
     frame_plot_label = tk.Frame(frame_plot)
     frame_plot_label.pack(side=tk.TOP)
 
-    plot_label = tk.Label(frame_plot_label, text="Create plots (with fitting details)\n(of recursive noise iterations) (of classification):")
+    plot_label = tk.Label(
+        frame_plot_label, text="Create plots (with fitting details)\n(of recursive noise iterations) (of classification):")
     plot_label.pack(side=tk.BOTTOM)
 
     frame_plot_menus = tk.Frame(frame_plot)
@@ -655,24 +657,26 @@ All pairs of subfolders will be compared.""",
     frame_submit = tk.Frame(rootsubmit)
     frame_submit.pack(**padding_heading, side=tk.BOTTOM)
 
-    submit_Button = tk.Button(frame_canvas, text="Run Code", bg='firebrick4', fg='white', width=20, height=2, command=submit, font=(default_font_name, 20, "bold"))
+    submit_Button = tk.Button(frame_canvas, text="Run Code", bg='firebrick4', fg='white',
+                              width=20, height=2, command=submit, font=(default_font_name, 20, "bold"))
     submit_Button.pack(**padding_heading)
 
     frame_status = tk.Frame(rootsubmit)
     frame_status.pack(side=tk.BOTTOM)
 
-    status_label0 = tk.Label(frame_status, text='Status:', font=(default_font_name, 12))
-    status_label0.pack(**padding_setting, side=tk.LEFT)
-    status_label = tk.Label(frame_status, text='No directory selected.', bg='firebrick4', fg='white', font=(default_font_name, 12))
-    status_label.pack(**padding_setting, side=tk.RIGHT)
-
-    plot_Button = tk.Button(frame_canvas, text="View Plots",
+    plot_Button = tk.Button(frame_status, text="View Plots",
                             command=lambda: open_plot_window(root, data_dict_var,
                                                              pair_results_var,
                                                              frange_min_var,
                                                              frange_max_var),
                             bg=buttoncolor)
-    plot_Button.pack(**padding_heading)
+    plot_Button.pack(**padding_heading, side=tk.LEFT)
+
+    status_label0 = tk.Label(frame_status, text='Status:', font=(default_font_name, 12))
+    status_label0.pack(**padding_setting, side=tk.LEFT)
+    status_label = tk.Label(frame_status, text='No directory selected.',
+                            bg='firebrick4', fg='white', font=(default_font_name, 12))
+    status_label.pack(**padding_setting, side=tk.RIGHT)
 
     # Start the main loop
     root.mainloop()
