@@ -6,11 +6,6 @@ Created on Tue Nov 12 13:58:07 2024
 """
 import tkinter as tk
 
-if __name__ == '__main__':
-    pass
-else:
-    pass
-
 bool_options = ['True', 'False']
 padding_heading = {'pady': 10, 'padx': 10}
 padding_setting = {'pady': 4, 'padx': 4}

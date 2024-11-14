@@ -13,20 +13,19 @@ from numpy import log10
 if __name__ == '__main__':
     from infotext import infotext
     from LARS_Comparison import LARS_Comparison_from_app
-    import app_helpers
     from app_helpers import heading, labeled_options, labeled_file_select, labeled_entry
     from app_helpers import padding_none, padding_setting, padding_option, padding_heading
     from app_helpers import bool_options, CustomVar
     from app_window_part_matching import open_part_matching_window
     from app_window_plot import open_plot_window
 else:
-    pass
-    # from MetroLaserLARS.infotext import infotext
-    # from MetroLaserLARS.LARS_Comparison import LARS_Comparison_from_app
-    # import MetroLaserLARS.app_helpers as app_helpers
-    # from MetroLaserLARS.app_helpers import heading, labeled_options, labeled_file_select, labeled_entry
-    # from MetroLaserLARS.app_helpers import padding_none, padding_setting, padding_option, padding_heading
-    # from MetroLaserLARS.app_helpers import bool_options
+    from MetroLaserLARS.infotext import infotext
+    from MetroLaserLARS.LARS_Comparison import LARS_Comparison_from_app
+    from MetroLaserLARS.app_helpers import heading, labeled_options, labeled_file_select, labeled_entry
+    from MetroLaserLARS.app_helpers import padding_none, padding_setting, padding_option, padding_heading
+    from MetroLaserLARS.app_helpers import bool_options, CustomVar
+    from MetroLaserLARS.app_window_part_matching import open_part_matching_window
+    from MetroLaserLARS.app_window_plot import open_plot_window
 
 
 def run_app():

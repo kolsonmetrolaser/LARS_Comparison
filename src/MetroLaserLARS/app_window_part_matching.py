@@ -6,10 +6,10 @@ Created on Tue Nov 12 15:08:28 2024
 """
 import tkinter as tk
 
-if True:  # __name__ == '__main__':
+if __name__ == '__main__':
     from app_helpers import labeled_options
 else:
-    pass
+    from MetroLaserLARS.app_helpers import labeled_options
 
 
 def open_part_matching_window(root, grouped_folders_var, part_matching_text_var, part_matching_strategy_var, **common_kwargs):

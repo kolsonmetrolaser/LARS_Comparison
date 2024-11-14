@@ -8,16 +8,10 @@ import tkinter as tk
 import numpy as np
 from matplotlib.backend_bases import key_press_handler
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
-from matplotlib.figure import Figure
-if True:  # __name__ == '__main__':
+if __name__ == '__main__':
     from plotfunctions import line_plot
 else:
-    pass
-
-if True:  # __name__ == '__main__':
-    from app_helpers import labeled_options, CustomVar
-else:
-    pass
+    from MetroLaserLARS.plotfunctions import line_plot
 
 
 def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, frange_max_var, **common_kwargs):
