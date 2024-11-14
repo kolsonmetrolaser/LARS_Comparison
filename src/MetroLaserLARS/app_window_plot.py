@@ -79,9 +79,9 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
     def update_data_selection2():
         data2_options = data_options.copy()
         data2_options.remove(data_selection_var.get())
-        data2_options.trace_remove("write", lambda *args: update_plot_contents(canvas, name_to_key, **common_kwargs))
+        data2_options_var.trace_remove("write", lambda *args: update_plot_contents(canvas, name_to_key, **common_kwargs))
         data2_options_var.set(data2_options)
-        data2_options.trace_add("write", lambda *args: update_plot_contents(canvas, name_to_key, **common_kwargs))
+        data2_options_var.trace_add("write", lambda *args: update_plot_contents(canvas, name_to_key, **common_kwargs))
         current_selection = data_selection2_var.get()
         data_selection2_menu.set_menu(current_selection if current_selection in data2_options else data2_options[0],
                                       *data2_options)
