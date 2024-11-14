@@ -122,14 +122,16 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
             f0, f1 = common_kwargs['x_lim']
             x = x[np.logical_and(x > f0, x < f1)]
             x2 = x2[np.logical_and(x2 > f0, x2 < f1)]
-            
+
             if n == pr['names'][0]:
                 x2 *= s
+                unmatched = pr['unmatched']
             else:
                 x *= s
+                unmatched = pr['unmatched'][::-1]
 
             _ = line_plot([x, x2], [y, y2],
-                          v_line_pos=[[el2*1000 for el2 in el] for el in [pr['matched'], *pr['unmatched']]],
+                          v_line_pos=[[el2*1000 for el2 in el] for el in [pr['matched'], *unmatched]],
                           v_line_color=['k', 'C0', 'C1'], v_line_width=[4, 2, 2],
                           y_norm='each', title='Stretched peak matches raw', **kwargs)
 
