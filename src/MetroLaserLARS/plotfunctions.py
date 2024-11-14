@@ -443,11 +443,27 @@ def line_plot(x: ArrayLike, y: ArrayLike, legend=None, x_lim: tuple[float, float
               axis_line_width: float = 4, plot_scale: float = 1, show_plot_in_spyder: bool = True,
               save_folder: Optional[str] = None, font_settings: dict = {'weight': 'bold', 'size': 22}, y_format=None,
               x_ticks: Optional[ArrayLike] = None, y_ticks: Optional[ArrayLike] = None,
-              v_line_pos: Optional[ArrayLike] = None, v_line_color='k', vlinewidth: float = 6,
-              y_norm: Literal[None, 'global', 'each'] = None):
+              v_line_pos: Optional[ArrayLike] = None, v_line_color='k', v_line_width: float = 6,
+              y_norm: Literal[None, 'global', 'each'] = None, fig=None, x_slice: tuple[float, float] = (-np.inf, np.inf)):
 
     x = x.copy()
     y = y.copy()
+    
+    if isinstance(x, list) and isinstance(y, list):
+        for xel, yel in zip(x,y):
+            idxs = (np.where(xel >= x_slice[0])[0][0] if np.where(xel >= x_slice[0])[0].size > 0 else 0,
+                    np.where(xel > x_slice[1])[0][0] if np.where(xel > x_slice[1])[0].size > 0 else len(xel))
+            xel = xel[slice(*idxs)]
+            yel = yel[slice(*idxs)]
+    else:
+        idxs = (np.where(x >= x_slice[0])[0][0] if np.where(x >= x_slice[0])[0].size > 0 else 0,
+                np.where(x > x_slice[1])[0][0] if np.where(x > x_slice[1])[0].size > 0 else len(x))
+        x = x[slice(*idxs)]
+        if isinstance(y, list):
+            for yel in y:
+                yel = yel[slice(*idxs)]
+        else:
+            y = y[slice(*idxs)]
 
     if y_norm is not None:
         if y_norm == 'global':
@@ -466,7 +482,10 @@ def line_plot(x: ArrayLike, y: ArrayLike, legend=None, x_lim: tuple[float, float
 
     matplotlib.rc('font', **font_settings)
 
-    fig = plt.figure()
+    if fig is None:
+        fig = plt.figure()
+    else:
+        fig.clear()
     fig.set_size_inches(fig_size[0], fig_size[1])
     ax = fig.gca()
     ax.set_xlabel(x_label, fontweight="bold")
@@ -492,26 +511,46 @@ def line_plot(x: ArrayLike, y: ArrayLike, legend=None, x_lim: tuple[float, float
             for i in range(len(y)):
                 colors.append(colormap((i+1)/(len(y)+1)))
 
+    # if v_line_pos is not None:
+    #     if can_iter(v_line_pos):  # multiple vlines?
+    #         if can_iter(v_line_pos[0]):  # multiple sets of vlines?
+    #             if can_iter(v_line_color) and not isinstance(v_line_color, str):  # multiple colors?
+    #                 for vlps, vlc, vlw in zip(v_line_pos, v_line_color, v_line_width):
+    #                     for vlp in vlps:
+    #                         plt.axvline(x=vlp, color=vlc, linewidth=vlw)
+    #             else:  # one color
+    #                 for vlps in v_line_pos:
+    #                     for vlp in vlps:
+    #                         plt.axvline(x=vlp, color=v_line_color, linewidth=v_line_width)
+    #         else:  # one set of vlines
+    #             if can_iter(v_line_color) and not isinstance(v_line_color, str):  # multiple colors?
+    #                 for vlp, vlc in zip(v_line_pos, v_line_color):
+    #                     plt.axvline(x=vlp, color=vlc, linewidth=v_line_width)
+    #             else:  # one color
+    #                 for vlp in v_line_pos:
+    #                     plt.axvline(x=vlp, color=v_line_color, linewidth=v_line_width)
+    #     else:  # one vline
+    #         plt.axvline(x=v_line_pos, color=v_line_color, linewidth=v_line_width)
     if v_line_pos is not None:
         if can_iter(v_line_pos):  # multiple vlines?
             if can_iter(v_line_pos[0]):  # multiple sets of vlines?
                 if can_iter(v_line_color) and not isinstance(v_line_color, str):  # multiple colors?
-                    for vlps, vlc, vlw in zip(v_line_pos, v_line_color, vlinewidth):
+                    for vlps, vlc, vlw in zip(v_line_pos, v_line_color, v_line_width):
                         for vlp in vlps:
-                            plt.axvline(x=vlp, color=vlc, linewidth=vlw)
+                            ax.axvline(x=vlp, color=vlc, linewidth=vlw)
                 else:  # one color
                     for vlps in v_line_pos:
                         for vlp in vlps:
-                            plt.axvline(x=vlp, color=v_line_color, linewidth=vlinewidth)
+                            ax.axvline(x=vlp, color=v_line_color, linewidth=v_line_width)
             else:  # one set of vlines
                 if can_iter(v_line_color) and not isinstance(v_line_color, str):  # multiple colors?
                     for vlp, vlc in zip(v_line_pos, v_line_color):
-                        plt.axvline(x=vlp, color=vlc, linewidth=vlinewidth)
+                        ax.axvline(x=vlp, color=vlc, linewidth=v_line_width)
                 else:  # one color
                     for vlp in v_line_pos:
-                        plt.axvline(x=vlp, color=v_line_color, linewidth=vlinewidth)
+                        ax.axvline(x=vlp, color=v_line_color, linewidth=v_line_width)
         else:  # one vline
-            plt.axvline(x=v_line_pos, color=v_line_color, linewidth=vlinewidth)
+            ax.axvline(x=v_line_pos, color=v_line_color, linewidth=v_line_width)
 
     vlinelist = []
     for axes in fig.axes:
@@ -560,12 +599,12 @@ def line_plot(x: ArrayLike, y: ArrayLike, legend=None, x_lim: tuple[float, float
         leg.get_frame().set_edgecolor('black')
 
     if x_lim is not None:
-        plt.xlim(x_lim)
+        ax.set_xlim(x_lim[0], x_lim[1])
     if y_lim is not None:
-        plt.ylim(y_lim)
+        ax.set_ylim(y_lim[0], y_lim[1])
 
     if title is not None:
-        plt.title(title)
+        ax.set_title(title)
 
     plt.draw()
 

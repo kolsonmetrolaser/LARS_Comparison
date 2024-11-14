@@ -155,7 +155,7 @@ def detailed_plots(folder, name, peaks, freqs, vels, vels_baseline_removed, vels
 
     save_tag = f"_{iteration}"+save_tag if iteration is not None else save_tag
 
-    kwargs = {'x_label': 'Frequency (kHz)', 'vlinewidth': 1}
+    kwargs = {'x_label': 'Frequency (kHz)', 'v_line_width': 1}
     pf.line_plot(freqs/1000, [vels], style='.', x_lim=xlim,
                  title=f'{folder}{name} raw data', y_lim=[-2, 200], **kwargs, y_label='Amplitude (μm/s)',
                  fname=osp.join(save_folder, f'{folder}{name} raw data'+save_tag) if save_plots else None,
@@ -328,7 +328,7 @@ def analyze_data(data: LarsData, **settings) -> tuple[dict, NDArray, NDArray, ND
                             * 1000, peaks['positions'] < frange[1]*1000)]/1000, peak_plot_width)
 
         pf.line_plot(freqs/1000, [vels, newvels], style='.', x_lim=frange, v_line_pos=peaks['positions']/1000,
-                     vlinewidth=1, title=f'{folder}{name} peak fit', y_norm='each',
+                     v_line_width=1, title=f'{folder}{name} peak fit', y_norm='each',
                      fname=osp.join(save_folder, f'{folder}{name} peak fit'+save_tag) if save_plots else None,
                      show_plot_in_spyder=show_plots)
         for pgnum, pg in enumerate(peak_groups):
@@ -338,7 +338,7 @@ def analyze_data(data: LarsData, **settings) -> tuple[dict, NDArray, NDArray, ND
             else:
                 xl = [pg-peak_plot_width/2, pg+peak_plot_width/2]
             pf.line_plot(freqs/1000, [vels, newvels], style='.', x_lim=xl, v_line_pos=peaks['positions']/1000,
-                         vlinewidth=1, title=f'{folder}{name} peak fit', y_norm='each',
+                         v_line_width=1, title=f'{folder}{name} peak fit', y_norm='each',
                          fname=osp.join(save_folder, f'{folder}{name} peak fit_{pgnum+1}'+save_tag) if save_plots else None,
                          show_plot_in_spyder=show_plots)
 
@@ -598,21 +598,21 @@ def compare_LARS_measurements(folders: Iterable = [], previously_analyzed_data: 
         # for xlim in xlims:
         #     pf.line_plot([freqs[0]/1000, freqs[1]/1000], [newvels[0], newvels[1]], style='.',
         #                  x_lim=xlim, v_line_pos=[positions[0]/1000, positions[1]/1000],
-        #                  v_line_color=['C0', 'C1'], vlinewidth=[2, 2], y_norm='each', title='Unstretched peak fits')
+        #                  v_line_color=['C0', 'C1'], v_line_width=[2, 2], y_norm='each', title='Unstretched peak fits')
         # for xlim in xlims:
         #     pf.line_plot([freqs[0]/1000, freqs[1]/1000*best_stretch], [newvels[0], newvels[1]], style='.',
         #                  x_lim=xlim, v_line_pos=[positions[0]/1000, positions[1]/1000*best_stretch],
-        #                  v_line_color=['C0', 'C1'], vlinewidth=[2, 2], y_norm='each', title='Stretched peak fits')
+        #                  v_line_color=['C0', 'C1'], v_line_width=[2, 2], y_norm='each', title='Stretched peak fits')
         # for xlim in xlims:
         #     pf.line_plot([freqs[0]/1000, freqs[1]/1000*best_stretch], [newvels[0], newvels[1]], style='.',
         #                  x_lim=xlim, v_line_pos=[matched, unmatched_X, unmatched_Y], v_line_color=['k', 'C0', 'C1'],
-        #                  vlinewidth=[4, 2, 2], y_norm='each', title='Stretched peak matches filtered')
+        #                  v_line_width=[4, 2, 2], y_norm='each', title='Stretched peak matches filtered')
         for plotnum, xlim in enumerate(xlims):
             fname = f'{names[0]} and {names[1]} Stretched peak matches raw_{plotnum+1}'+save_tag if plotnum != 0 else\
                 f'{names[0]} and {names[1]} Stretched peak matches raw'
             pf.line_plot([freqs[0]/1000, freqs[1]/1000*best_stretch], [vels[0], vels[1]], style='.', x_lim=xlim,
                          v_line_pos=[matched, unmatched_X, unmatched_Y], v_line_color=['k', 'C0', 'C1'],
-                         vlinewidth=[4, 2, 2], y_norm='each', title='Stretched peak matches raw',
+                         v_line_width=[4, 2, 2], y_norm='each', title='Stretched peak matches raw',
                          fname=osp.join(save_folder, fname) if save_plots else None,
                          show_plot_in_spyder=show_plots)
 

@@ -20,6 +20,20 @@ kwargs_pickle = {'title': "Select a data_dict[...].pkl file",
                  'filetypes': [("Pickled Data Dictionaries", "data_dict*.pkl"), ("All Files", "*.*")]}
 
 
+class CustomVar(tk.Variable):
+    def __init__(self):
+        super().__init__()
+        self.current = None
+
+    def set(self, value: object):
+        self.current = value
+        super().set(value)
+
+    def get(self):
+        super().get()
+        return self.current
+
+
 class ToolTip(object):
 
     def __init__(self, widget):

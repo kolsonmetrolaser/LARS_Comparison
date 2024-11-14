@@ -16,7 +16,7 @@ if __name__ == '__main__':
     import app_helpers
     from app_helpers import heading, labeled_options, labeled_file_select, labeled_entry
     from app_helpers import padding_none, padding_setting, padding_option, padding_heading
-    from app_helpers import bool_options
+    from app_helpers import bool_options, CustomVar
     from app_window_part_matching import open_part_matching_window
     from app_window_plot import open_plot_window
 else:
@@ -222,6 +222,8 @@ def run_app():
         update_status()
 
         data_dict, pair_results = LARS_Comparison_from_app(settings)
+        data_dict_var.set(data_dict)
+        pair_results_var.set(pair_results)
 
         prev_settings_var.set(settings)
         running_var.set(False)
@@ -271,34 +273,10 @@ def run_app():
         canvas_frame = canvas.nametowidget(canvas.itemcget("frame_canvas", "window"))
         min_width = canvas_frame.winfo_reqwidth()
         min_height = canvas_frame.winfo_reqheight()
-        if min_width < event.width:
-            canvas.itemconfigure("frame_canvas", width=event.width)
-            # print(f'set width to {event.width}, now {frame_canvas.winfo_width()}')
-        if min_height < event.height:
-            # frame_canvas.configure(height=event.height)
-            canvas.itemconfigure("frame_canvas", height=event.height)
-            # print(f'set height to {event.width}, now {frame_canvas.winfo_width()}')
+        canvas.itemconfigure("frame_canvas", width=max(event.width, min_width))
+        canvas.itemconfigure("frame_canvas", height=max(event.height, min_height))
 
         canvas.configure(scrollregion=canvas.bbox("all"))
-
-    # def onFrameConfigure(canvas):
-    #     '''Reset the scroll region to encompass the inner frame'''
-    #     canvas.configure(scrollregion=canvas.bbox("all"))
-    #     frame_canvas.columnconfigure(1, minsize=canvas.winfo_width())
-
-    # root = tk.Tk()
-
-    # canvas = tk.Canvas(root, background="blue")
-    # frame = tk.Frame(canvas, background="red")
-
-    # canvas.pack(expand=True, fill="both")
-    # canvas.create_window((4, 4), window=frame, anchor="nw", tags="frame")
-
-    # scrollbar = tk.Scrollbar(canvas, orient="vertical",
-    #                          command=canvas.yview)
-    # scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-
-    # canvas.bind("<Configure>", handle_resize)
 
     # Create the main window
     root = tk.Tk()
@@ -307,11 +285,11 @@ def run_app():
     root.config(bg=bgc)
     root.option_add("*Background", bgc)
 
-    canvas = tk.Canvas(root, background="blue")
-    frame_canvas = tk.Frame(canvas, background="red")
+    canvas = tk.Canvas(root, background="red")
+    frame_canvas = tk.Frame(canvas, background="blue")
 
     canvas.pack(expand=True, fill="both")
-    canvas.create_window((4, 4), window=frame_canvas, anchor="nw", tags="frame_canvas")
+    canvas.create_window((4, 4), window=frame_canvas, anchor="n", tags="frame_canvas")
 
     yscrollbar = tk.Scrollbar(canvas, orient="vertical",
                               command=canvas.yview)
@@ -321,6 +299,13 @@ def run_app():
     xscrollbar.pack(side=tk.BOTTOM, fill=tk.X)
 
     canvas.bind("<Configure>", handle_resize)
+
+    # canvas.bind_all("<MouseWheel>", lambda event: canvas.yview_scroll(int(-1*(event.delta/120)), "units"))
+    frame_canvas.bind('<Enter>',
+                      lambda event: canvas.bind_all("<MouseWheel>",
+                                                    lambda event: canvas.yview_scroll(int(-1*(event.delta/120)), "units")))
+    frame_canvas.bind('<Leave>',
+                      lambda event: canvas.unbind_all("<MouseWheel>"))
 
     menu_bar = tk.Menu(root)
     menu_bar.config(bg='lightblue', fg='black')
@@ -352,7 +337,9 @@ def run_app():
     prev_settings_var = tk.Variable(root, value={})
     status_var = tk.StringVar(root, value='nodir')
     default_font_name = tk.font.nametofont('TkTextFont').actual()['family']
-    data_dict_var, pair_results_var = tk.Variable(root, value={}), tk.Variable(root, value={})
+    data_dict_var, pair_results_var = CustomVar(), CustomVar()
+    data_dict_var.set({})
+    pair_results_var.set({})
 
     common_kwargs = {'update_status': update_status, 'varframe': root}
 
@@ -571,12 +558,12 @@ All pairs of subfolders will be compared.""",
     heading("Noise Reduction", lvl=2, frame=frame_peak_fitr, padding=False)
 
     # peak_height_min
-    peak_height_min_var, _, _, _, _, _ = labeled_entry(frame_peak_fitl, 'Peak height minimum: noise *:',
+    peak_height_min_var, _, _, _, _, _ = labeled_entry(frame_peak_fitl, 'Peak height minimum: noise *',
                                                        padding=padding_setting, vardefault=0.2, vartype=tk.DoubleVar,
                                                        infotext=infotext['peak_height_min'], **common_kwargs)
 
     # peak_prominence_min
-    peak_prominence_min_var, _, _, _, _, _ = labeled_entry(frame_peak_fitl, 'Peak prominence minimum: noise *:',
+    peak_prominence_min_var, _, _, _, _, _ = labeled_entry(frame_peak_fitl, 'Peak prominence minimum: noise *',
                                                            padding=padding_setting, vardefault=0.2, vartype=tk.DoubleVar,
                                                            infotext=infotext['peak_prominence_min'], **common_kwargs)
 
@@ -679,8 +666,11 @@ All pairs of subfolders will be compared.""",
     status_label = tk.Label(frame_status, text='No directory selected.', bg='firebrick4', fg='white', font=(default_font_name, 12))
     status_label.pack(**padding_setting, side=tk.RIGHT)
 
-    submit_Button = tk.Button(frame_canvas, text="View Plots", command=lambda: open_plot_window(root, data_dict_var, pair_results_var))
-    submit_Button.pack(**padding_heading)
+    plot_Button = tk.Button(frame_canvas, text="View Plots", command=lambda: open_plot_window(root, data_dict_var,
+                                                                                              pair_results_var,
+                                                                                              frange_min_var,
+                                                                                              frange_max_var))
+    plot_Button.pack(**padding_heading)
 
     # Start the main loop
     root.mainloop()
