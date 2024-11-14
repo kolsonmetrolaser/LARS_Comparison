@@ -137,6 +137,7 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
 
         # required to update canvas and attached toolbar!
         canvas.draw()
+        toolbar.update()
 
     frame_options = tk.Frame(window)
 
