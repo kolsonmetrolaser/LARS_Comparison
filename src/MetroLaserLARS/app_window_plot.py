@@ -8,9 +8,10 @@ import tkinter as tk
 import numpy as np
 from matplotlib.backend_bases import key_press_handler
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
-if __name__ == '__main__':
+
+try:
     from plotfunctions import line_plot
-else:
+except ModuleNotFoundError:
     from MetroLaserLARS.plotfunctions import line_plot
 
 
@@ -56,11 +57,11 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
 
     canvas.mpl_connect("key_press_event", my_key_press_handler)
 
-    def update_plot_contents(canvas, *args, **common_kwargs):
-        k = data_selection_var.get()
-        if k not in data_dict:
+    def update_plot_contents(canvas, name_to_key, *args, **common_kwargs):
+        n = data_selection_var.get()
+        if n not in name_to_key:
             return
-        data = data_dict[k]
+        data = data_dict[name_to_key[n]]
         t = plot_type_var.get()
         if t == 'Raw Data':
             x, y = data.freq, data.vel
@@ -77,8 +78,16 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
     frame_options = tk.Frame(window)
 
     plot_type_options = ['Raw Data', 'Peak Fits']
-    data_options = list(data_dict.keys())
-    data_options = data_options if data_options else ['']
+    data_keys = list(data_dict.keys())
+    if data_keys:
+        name_to_key = {}
+        data_options = []
+        for k in data_keys:
+            data_options.append(data_dict[k].name)
+            name_to_key[data_dict[k].name] = k
+    else:
+        name_to_key = {'': ''}
+        data_options = ['']
     plot_type_var = tk.StringVar(window, value=plot_type_options[0])
     data_selection_var = tk.StringVar(window, value=data_options[0])
     plot_type_label = tk.Label(frame_options, text="Plot type:")
@@ -86,8 +95,8 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
     data_selection_label = tk.Label(frame_options, text="Data to Plot")
     data_selection_menu = tk.OptionMenu(frame_options, data_selection_var, *data_options)
 
-    plot_type_var.trace_add("write", lambda *args: update_plot_contents(canvas, **common_kwargs))
-    data_selection_var.trace_add("write", lambda *args: update_plot_contents(canvas, **common_kwargs))
+    plot_type_var.trace_add("write", lambda *args: update_plot_contents(canvas, name_to_key, **common_kwargs))
+    data_selection_var.trace_add("write", lambda *args: update_plot_contents(canvas, name_to_key, **common_kwargs))
 
     plot_type_label.pack(side=tk.LEFT)
     plot_type_menu.pack(side=tk.LEFT)

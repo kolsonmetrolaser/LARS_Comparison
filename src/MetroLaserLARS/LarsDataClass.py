@@ -14,10 +14,9 @@ from typing import Literal
 import pathlib
 
 # Internal imports
-
-if __name__ == '__main__':
+try:
     from helpers import are_equal
-else:
+except ModuleNotFoundError:
     from MetroLaserLARS.helpers import are_equal
 
 

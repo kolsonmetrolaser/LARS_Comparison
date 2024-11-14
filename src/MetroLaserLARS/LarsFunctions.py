@@ -16,14 +16,14 @@ from itertools import combinations
 import pickle
 
 # Internal imports
-if __name__ == '__main__':
+try:
     import LarsDataClass
     from LarsDataClass import LarsData
     import plotfunctions as pf
     from filters import airpls, sgf
     from helpers import group
     from needlemanwunsch import find_matches
-else:
+except ModuleNotFoundError:
     from MetroLaserLARS import LarsDataClass
     from MetroLaserLARS.LarsDataClass import LarsData
     import MetroLaserLARS.plotfunctions as pf

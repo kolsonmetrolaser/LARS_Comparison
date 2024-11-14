@@ -12,13 +12,12 @@ import os
 from os import path as osp
 
 # Internal imports
-if __name__ == '__main__':
+try:
     import plotfunctions as pf
     from LarsFunctions import analyze_each_pair_of_folders
-else:
+except ModuleNotFoundError:
     import MetroLaserLARS.plotfunctions as pf
     from MetroLaserLARS.LarsFunctions import analyze_each_pair_of_folders
-
 
 np.set_printoptions(precision=3)
 

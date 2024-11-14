@@ -10,7 +10,7 @@ import pickle
 from numpy import log10
 
 # Internal imports
-if __name__ == '__main__':
+try:
     from infotext import infotext
     from LARS_Comparison import LARS_Comparison_from_app
     from app_helpers import heading, labeled_options, labeled_file_select, labeled_entry
@@ -18,7 +18,7 @@ if __name__ == '__main__':
     from app_helpers import bool_options, CustomVar
     from app_window_part_matching import open_part_matching_window
     from app_window_plot import open_plot_window
-else:
+except ModuleNotFoundError:
     from MetroLaserLARS.infotext import infotext
     from MetroLaserLARS.LARS_Comparison import LARS_Comparison_from_app
     from MetroLaserLARS.app_helpers import heading, labeled_options, labeled_file_select, labeled_entry
@@ -281,11 +281,12 @@ def run_app():
     root = tk.Tk()
     root.state('zoomed')
     bgc = 'gray65'
+    buttoncolor = 'gray75'
     root.config(bg=bgc)
     root.option_add("*Background", bgc)
 
-    canvas = tk.Canvas(root, background="red")
-    frame_canvas = tk.Frame(canvas, background="blue")
+    canvas = tk.Canvas(root, background=bgc)
+    frame_canvas = tk.Frame(canvas, background=bgc)
 
     canvas.pack(expand=True, fill="both")
     canvas.create_window((4, 4), window=frame_canvas, anchor="n", tags="frame_canvas")
@@ -374,8 +375,8 @@ All pairs of subfolders will be compared.""",
                                                                label='Enter path to pickled data or select a file:',
                                                                infotext=infotext['pickled_data_path'], side=tk.LEFT,
                                                                **common_kwargs)
-    submit_Button = tk.Button(roottop, text="Import Settings", command=import_settings)
-    submit_Button.pack(**padding_setting)
+    import_settings_Button = tk.Button(roottop, text="Import Settings", command=import_settings, bg=buttoncolor)
+    import_settings_Button.pack(**padding_setting)
 
     heading('Settings', frame=roottop, side=tk.BOTTOM)
 
@@ -665,10 +666,12 @@ All pairs of subfolders will be compared.""",
     status_label = tk.Label(frame_status, text='No directory selected.', bg='firebrick4', fg='white', font=(default_font_name, 12))
     status_label.pack(**padding_setting, side=tk.RIGHT)
 
-    plot_Button = tk.Button(frame_canvas, text="View Plots", command=lambda: open_plot_window(root, data_dict_var,
-                                                                                              pair_results_var,
-                                                                                              frange_min_var,
-                                                                                              frange_max_var))
+    plot_Button = tk.Button(frame_canvas, text="View Plots",
+                            command=lambda: open_plot_window(root, data_dict_var,
+                                                             pair_results_var,
+                                                             frange_min_var,
+                                                             frange_max_var),
+                            bg=buttoncolor)
     plot_Button.pack(**padding_heading)
 
     # Start the main loop

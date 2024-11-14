@@ -6,9 +6,9 @@ Created on Tue Nov 12 15:08:28 2024
 """
 import tkinter as tk
 
-if __name__ == '__main__':
+try:
     from app_helpers import labeled_options
-else:
+except ModuleNotFoundError:
     from MetroLaserLARS.app_helpers import labeled_options
 
 
