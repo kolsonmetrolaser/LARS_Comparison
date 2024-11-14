@@ -136,8 +136,19 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
                           y_norm='each', title='Stretched peak matches raw', **kwargs)
 
         # required to update canvas and attached toolbar!
+        print("""updating canvas...
+              
+              
+              
+              
+              """)
         canvas.draw()
-        toolbar.update()
+        print("""updated canvas...
+              
+              
+              
+              
+              """)
 
     frame_options = tk.Frame(window)
 
