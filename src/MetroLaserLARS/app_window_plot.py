@@ -119,14 +119,14 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
             x, y = data.freq.copy(), data.newvel.copy()
             x2, y2 = data2.freq.copy(), data2.newvel.copy()
 
+            f0, f1 = common_kwargs['x_lim']
+            x = x[np.logical_and(x > f0, x < f1)]
+            x2 = x2[np.logical_and(x2 > f0, x2 < f1)]
+            
             if n == pr['names'][0]:
                 x2 *= s
             else:
                 x *= s
-
-            f0, f1 = common_kwargs['x_lim']
-            x = x[np.logical_and(x > f0, x < f1)]
-            x2 = x2[np.logical_and(x2 > f0, x2 < f1)]
 
             _ = line_plot([x, x2], [y, y2],
                           v_line_pos=[[el2*1000 for el2 in el] for el in [pr['matched'], *pr['unmatched']]],
