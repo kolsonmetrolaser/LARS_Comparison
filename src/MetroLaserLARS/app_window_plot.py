@@ -26,7 +26,6 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
 
     f0, f1 = frange_min_var.get(), frange_max_var.get()
     common_kwargs['x_lim'] = (f0, f1)
-    common_kwargs['v_line_width'] = 2
     common_kwargs['line_width'] = 4
     common_kwargs['show_plot_in_spyder'] = False
     common_kwargs['font_settings'] = {'weight': 'bold', 'size': 16}
@@ -98,29 +97,48 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
 
         # Get Data
         data = data_dict[name_to_key[n]]
-        if t in ['Compare Raw']:
+        if t in ['Compare Raw', 'Matched Peaks']:
             data2 = data_dict[name_to_key[n2]]
 
         # Make Plots
         if t == 'Raw Data':
-            x, y = data.freq, data.vel
+            x, y = data.freq.copy(), data.vel.copy()
             _ = line_plot(x, y, title='Raw Data', **kwargs)
         elif t == 'Peak Fits':
-            x, y, p = data.freq, data.newvel, data.peaks['positions']
+            x, y, p = data.freq.copy(), data.newvel.copy(), data.peaks['positions']
             f0, f1 = common_kwargs['x_lim']
             x = x[np.logical_and(x > f0, x < f1)]
-            _ = line_plot(x, y, v_line_pos=p, title='Peak Fits', **kwargs)
+            _ = line_plot(x, y, v_line_pos=p, v_line_width=2, title='Peak Fits', **kwargs)
         elif t == 'Compare Raw':
-            x, y, n = data.freq, data.vel, data.name
-            x2, y2, n2 = data2.freq, data2.vel, data2.name
+            x, y = data.freq.copy(), data.vel.copy()
+            x2, y2 = data2.freq.copy(), data2.vel.copy()
             _ = line_plot([x, x2], [y, y2], legend=[n, n2], title='Peak Fits', **kwargs)
+        elif t == 'Matched Peaks':
+            pr = [pair for pair in pair_results if n in pair['names'] and n2 in pair['names']][0]
+            s = pr['stretch']
+            x, y = data.freq.copy(), data.newvel.copy()
+            x2, y2 = data2.freq.copy(), data2.newvel.copy()
+
+            if n == pr['names'][0]:
+                x2 *= s
+            else:
+                x *= s
+
+            f0, f1 = common_kwargs['x_lim']
+            x = x[np.logical_and(x > f0, x < f1)]
+            x2 = x2[np.logical_and(x2 > f0, x2 < f1)]
+
+            _ = line_plot([x, x2], [y, y2],
+                          v_line_pos=[[el2*1000 for el2 in el] for el in [pr['matched'], *pr['unmatched']]],
+                          v_line_color=['k', 'C0', 'C1'], v_line_width=[4, 2, 2],
+                          y_norm='each', title='Stretched peak matches raw', **kwargs)
 
         # required to update canvas and attached toolbar!
         canvas.draw()
 
     frame_options = tk.Frame(window)
 
-    plot_type_options = ['Raw Data', 'Peak Fits', 'Compare Raw']
+    plot_type_options = ['Raw Data', 'Peak Fits', 'Compare Raw', 'Matched Peaks']
     data_keys = list(data_dict.keys())
     if data_keys:
         name_to_key = {}
