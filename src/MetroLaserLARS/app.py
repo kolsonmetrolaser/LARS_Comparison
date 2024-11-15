@@ -303,6 +303,9 @@ def run_app():
                               command=canvas.xview)
     xscrollbar.pack(side=tk.BOTTOM, fill=tk.X)
 
+    canvas.config(xscrollcommand=xscrollbar.set)
+    canvas.config(yscrollcommand=yscrollbar.set)
+
     canvas.bind("<Configure>", handle_resize)
 
     # canvas.bind_all("<MouseWheel>", lambda event: canvas.yview_scroll(int(-1*(event.delta/120)), "units"))
