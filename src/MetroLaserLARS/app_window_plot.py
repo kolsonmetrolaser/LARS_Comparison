@@ -81,6 +81,8 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
                                       *data2_options)
 
     def update_plot_contents(canvas, name_to_key, *args, **common_kwargs):
+        canvas.figure.clear()
+        
         update_data_selection2()
 
         kwargs = common_kwargs
@@ -136,7 +138,7 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
                           y_norm='each', title='Stretched peak matches raw', **kwargs)
 
         # required to update canvas and attached toolbar!
-        canvas.draw()
+        canvas.draw_idle()
 
     frame_options = tk.Frame(window)
 
