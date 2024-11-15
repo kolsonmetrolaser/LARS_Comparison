@@ -47,8 +47,8 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
     canvas = FigureCanvasTkAgg(fig, master=window)
     canvas.draw()
 
-    toolbar = NavigationToolbar2Tk(canvas, window, pack_toolbar=False)
-    toolbar.update()
+    # toolbar = NavigationToolbar2Tk(canvas, window, pack_toolbar=False)
+    # toolbar.update()
 
     def my_key_press_handler(event):
         data2_options = data2_options_var.get()
@@ -191,7 +191,7 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
     data_selection2_menu.pack(side=tk.LEFT)
 
     frame_options.pack(side=tk.BOTTOM)
-    toolbar.pack(side=tk.BOTTOM, fill=tk.X)
+    # toolbar.pack(side=tk.BOTTOM, fill=tk.X)
     canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
     return
