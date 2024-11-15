@@ -75,8 +75,7 @@ def analyze_pair_results(pair_results, data_dict, settings):
         m, ux, uy, q, s = len(pair_result['matched']), len(pair_result['unmatched'][0]), len(
             pair_result['unmatched'][1]), pair_result['quality'], pair_result['stretch']
         if PRINT_MODE in ['sparse', 'full']:
-            print(f'{pair_result['names']} {m:3d} {ux:3d} {uy:3d}  {
-                pair_result['match_probability']:.3f} {q:6.3f} {s:7.5f} {pair_result['same_part']}')
+            print(f'{pair_result['names']} {m:3d} {ux:3d} {uy:3d}  {pair_result['match_probability']:.3f} {q:6.3f} {s:7.5f} {pair_result['same_part']}')
 
     if save_results:
         if PRINT_MODE in ['sparse', 'full']:
@@ -176,7 +175,6 @@ def analyze_pair_results(pair_results, data_dict, settings):
 
 def same_fit_and_matching_settings(settings):
     pickled_data_path = settings['pickled_data_path'] if 'pickled_data_path' in settings else None
-    directory = settings['directory']
     plot_detail = settings['plot_detail'] if 'plot_detail' in settings else False
     save_data = settings['save_data'] if 'save_data' in settings else False
     save_results = settings['save_results'] if 'save_results' in settings else False

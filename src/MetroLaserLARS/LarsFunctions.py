@@ -423,7 +423,6 @@ def LARS_analysis(folder: str = '', previously_loaded_data: Literal[None, LarsDa
 
 def same_fit_settings(settings):
     pickled_data_path = settings['pickled_data_path'] if 'pickled_data_path' in settings else None
-    directory = settings['directory']
     plot_detail = settings['plot_detail'] if 'plot_detail' in settings else False
     save_data = settings['save_data'] if 'save_data' in settings else False
     save_results = settings['save_results'] if 'save_results' in settings else False
