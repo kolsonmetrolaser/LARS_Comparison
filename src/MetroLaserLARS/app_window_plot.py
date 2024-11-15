@@ -52,9 +52,7 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
 
     def my_key_press_handler(event):
         data2_options = data2_options_var.get()
-        print('----------- key pressed ----------')
         if event.key == 'right' or event._guiEvent.keycode == 97:
-            print('----------- key handling ----------')
             plot_type_var.set(plot_type_options[min(plot_type_options.index(
                 plot_type_var.get())+1, len(plot_type_options)-1)])
         elif event.key == 'left' or event._guiEvent.keycode == 100:
@@ -71,17 +69,13 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
             data_selection2_var.set(data2_options[max(data2_options.index(data_selection2_var.get())-1, 0)])
         else:
             key_press_handler(event)
-        print('----------- key handling done ----------')
-        
 
     canvas.mpl_connect("key_press_event", my_key_press_handler)
 
     def update_data_selection2():
         data2_options = data_options.copy()
         data2_options.remove(data_selection_var.get())
-        data2_options_var.trace_remove("write", lambda *args: update_plot_contents(canvas, name_to_key, **common_kwargs))
         data2_options_var.set(data2_options)
-        data2_options_var.trace_add("write", lambda *args: update_plot_contents(canvas, name_to_key, **common_kwargs))
         current_selection = data_selection2_var.get()
         data_selection2_menu.set_menu(current_selection if current_selection in data2_options else data2_options[0],
                                       *data2_options)
@@ -142,7 +136,6 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
                           y_norm='each', title='Stretched peak matches raw', **kwargs)
 
         # required to update canvas and attached toolbar!
-        print('----------- updating canvas ----------')
         canvas.draw()
 
     frame_options = tk.Frame(window)
@@ -176,9 +169,19 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
     data_selection2_menu = ttk.OptionMenu(frame_options, data_selection2_var,
                                           data2_options[0], *data2_options)
 
-    plot_type_var.trace_add("write", lambda *args: update_plot_contents(canvas, name_to_key, **common_kwargs))
-    data_selection_var.trace_add("write", lambda *args: update_plot_contents(canvas, name_to_key, **common_kwargs))
-    data_selection2_var.trace_add("write", lambda *args: update_plot_contents(canvas, name_to_key, **common_kwargs))
+    def update_plot_contents_wrapper(*args):
+        data_selection2_var.trace_remove("write", data_selection2_var_traceid_var.get())
+        update_plot_contents(canvas, name_to_key, **common_kwargs)
+        traceid = data_selection2_var.trace_add("write", update_plot_contents_wrapper)
+        data_selection2_var_traceid_var.set(traceid)
+        return
+
+    data_selection2_var_traceid_var = tk.StringVar()
+    plot_type_var.trace_add("write", update_plot_contents_wrapper)
+    data_selection_var.trace_add("write", update_plot_contents_wrapper)
+    # data_selection2_var.trace_add("write", lambda *args: update_plot_contents(canvas, name_to_key, **common_kwargs))
+    traceid = data_selection2_var.trace_add("write", update_plot_contents_wrapper)
+    data_selection2_var_traceid_var.set(traceid)
 
     plot_type_label.pack(side=tk.LEFT)
     plot_type_menu.pack(side=tk.LEFT)
