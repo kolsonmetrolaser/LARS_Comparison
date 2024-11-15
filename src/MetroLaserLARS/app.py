@@ -279,8 +279,12 @@ def run_app():
         canvas.configure(scrollregion=canvas.bbox("all"))
 
     # Create the main window
+    def _quit():
+        root.quit()
+        root.destroy()
     root = tk.Tk()
-    root.state('zoomed')
+    root.protocol("WM_DELETE_WINDOW", _quit)
+    root.geometry("1500x1000")
     bgc = 'gray65'
     buttoncolor = 'gray75'
     root.config(bg=bgc)
