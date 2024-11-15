@@ -168,8 +168,7 @@ def detailed_plots(folder, name, peaks, freqs, vels, vels_baseline_removed, vels
         pf.line_plot(freqs/1000, [vels_peaks_removed, vels-vels_baseline_removed], style='.', x_lim=xlim,
                      title=f'{folder}{name} peaks removed and baseline', y_lim=[-2, 70],
                      **kwargs, y_label='Amplitude (μm/s)',
-                     fname=osp.join(save_folder, f'{folder}{
-                                    name} peaks removed and baseline'+save_tag) if save_plots else None,
+                     fname=osp.join(save_folder, f'{folder}{name} peaks removed and baseline'+save_tag) if save_plots else None,
                      show_plot_in_spyder=show_plots)
     pf.line_plot(freqs/1000, [vels_baseline_removed], style='.', x_lim=xlim,
                  title=f'{folder}{name} baseline removed', y_lim=[-2, 200], **kwargs, y_label='Amplitude (μm/s)',
