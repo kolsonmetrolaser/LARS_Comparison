@@ -341,8 +341,7 @@ def analyze_data(data: LarsData, **settings) -> tuple[dict, NDArray, NDArray, ND
                 xl = [pg-peak_plot_width/2, pg+peak_plot_width/2]
             pf.line_plot(freqs/1000, [vels, newvels], style='.', x_lim=xl, v_line_pos=peaks['positions']/1000,
                          v_line_width=1, title=f'{folder}{name} peak fit', y_norm='each',
-                         fname=osp.join(save_folder, f'{folder}{name} peak fit_{
-                                        pgnum+1}'+save_tag) if save_plots else None,
+                         fname=osp.join(save_folder, f'{folder}{name} peak fit_{pgnum+1}'+save_tag) if save_plots else None,
                          show_plot_in_spyder=show_plots)
 
     return peaks, freqs, vels, newvels, name
@@ -666,8 +665,7 @@ def analyze_each_pair_of_folders(folders: Iterable = [], **settings) -> tuple[li
     folder_pairs = list(combinations(folders, 2))
     for i, fpair in enumerate(folder_pairs):
         if 'PRINT_MODE' in settings and settings['PRINT_MODE'] in ['sparse', 'full']:
-            print(f"""Analyzing    {osp.split(fpair[0])[1]}    and    {
-                  osp.split(fpair[1])[1]}    (pair {i+1} of {len(folder_pairs)})""")
+            print(f"Analyzing    {osp.split(fpair[0])[1]}    and    {osp.split(fpair[1])[1]}    (pair {i+1} of {len(folder_pairs)})")
         if 'status_label' in settings:
             import tkinter
             label_text = f'Analyzing pair {i+1} of {len(folder_pairs)}'
