@@ -299,7 +299,8 @@ def analyze_data(data: LarsData, **settings) -> tuple[dict, NDArray, NDArray, ND
         peaks_updated = fit_peaks(freqs, vels_filtered, **settings)
 
         if 'PRINT_MODE' in settings and settings['PRINT_MODE'] == 'full':
-            print(f'{peaks['count']} peaks to {peaks_updated['count']} peaks')
+            pc, puc = peaks['count'], peaks_updated['count']
+            print(f'{pc} peaks to {puc} peaks')
 
         recursive_noise_iterations += 1
         if recursive_noise_iterations >= max_noise_reduction_iter:
