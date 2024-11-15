@@ -20,7 +20,7 @@ except ModuleNotFoundError:
 
 def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, frange_max_var, **common_kwargs):
 
-    window = tk.Toplevel()
+    window = tk.Toplevel(root)
     window.grab_set()
     window.title("Plots")
 

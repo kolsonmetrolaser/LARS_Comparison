@@ -74,7 +74,7 @@ Group2PartA, Group2PartB""", font=("Courier New", 9), justify='left')
                 pass
         return
 
-    window = tk.Toplevel()
+    window = tk.Toplevel(root)
     window.grab_set()
     window.title("Define Known Part Matching")
     label1 = tk.Label(window,
