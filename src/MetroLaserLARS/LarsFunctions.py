@@ -650,10 +650,12 @@ def analyze_each_pair_of_folders(folders: Iterable = [], **settings) -> tuple[li
     if len(folders) < 2:
         return False
 
+    pickled_data_path = settings['pickled_data_path'] if 'pickled_data_path' in settings else ''
+
     results = []
-    if 'pickled_data_path' in settings and settings['pickled_data_path'] != '':
+    if pickled_data_path:
         try:
-            print(f'Loading data from {settings['pickled_data_path']}')
+            print(f'Loading data from {settings["pickled_data_path"]}')
             with open(settings['pickled_data_path'], 'rb') as inp:
                 data_dict = pickle.load(inp)
         except:
