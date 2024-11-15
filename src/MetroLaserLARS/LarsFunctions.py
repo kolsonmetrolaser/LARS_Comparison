@@ -577,8 +577,7 @@ def compare_LARS_measurements(folders: Iterable = [], previously_analyzed_data: 
 
     # print results
     if 'PRINT_MODE' in settings and settings['PRINT_MODE'] == 'full':
-        print(f'Best matches found with quality {best_quality:.5f} at stretch {
-              best_stretch:.5f} ± {search_space_delta:.5f}')
+        print(f'Best matches found with quality {best_quality:.5f} at stretch {best_stretch:.5f} ± {search_space_delta:.5f}')
         for x, y in zip(bestrx, bestry):
             print(f'{x:7.1f}  {best_stretch*y:7.1f}')
     unmatched_X = [x/1000 for x, y in zip(bestrx, bestry) if y == -1]
