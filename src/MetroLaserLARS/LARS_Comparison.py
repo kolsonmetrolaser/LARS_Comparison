@@ -75,7 +75,8 @@ def analyze_pair_results(pair_results, data_dict, settings):
         m, ux, uy, q, s = len(pair_result['matched']), len(pair_result['unmatched'][0]), len(
             pair_result['unmatched'][1]), pair_result['quality'], pair_result['stretch']
         if PRINT_MODE in ['sparse', 'full']:
-            print(f'{pair_result['names']} {m:3d} {ux:3d} {uy:3d}  {pair_result['match_probability']:.3f} {q:6.3f} {s:7.5f} {pair_result['same_part']}')
+            prnames, prmp, prsp = pair_result['names'], pair_result['match_probability'], pair_result['same_part']
+            print(f'{prnames} {m:3d} {ux:3d} {uy:3d}  {prmp:.3f} {q:6.3f} {s:7.5f} {prsp}')
 
     if save_results:
         if PRINT_MODE in ['sparse', 'full']:
