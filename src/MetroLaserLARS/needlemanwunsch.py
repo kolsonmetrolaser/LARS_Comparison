@@ -91,11 +91,9 @@ def needleman_wunsch(x: NDArray, y: NDArray, penalty_order: float = 1, gap: floa
     result = rx[::-1], ry[::-1], F[-1, -1]
     return result
 
-# About the same with or without njit (better for stretching_iterations~>30)
-
 
 @njit(parallel=True)
-def find_matches_inner(x, y, ssmin, ssmax, ssdelta, penalty_order, gap, nw_normalized):
+def find_matches_inner_parallel(x, y, ssmin, ssmax, ssdelta, penalty_order, gap, nw_normalized):
     n = int((ssmax-ssmin)/ssdelta)
     qs = np.zeros(n)
     for i in prange(n):
@@ -104,8 +102,17 @@ def find_matches_inner(x, y, ssmin, ssmax, ssdelta, penalty_order, gap, nw_norma
     return qs
 
 
+def find_matches_inner_serial(x, y, ssmin, ssmax, ssdelta, penalty_order, gap, nw_normalized):
+    n = int((ssmax-ssmin)/ssdelta)
+    qs = np.zeros(n)
+    for i in range(n):
+        _, _, qs[i] = needleman_wunsch(x, (ssmin+ssdelta*i)*y,
+                                       penalty_order=penalty_order, gap=gap, nw_normalized=nw_normalized)
+    return qs
+
+
 def find_matches(x: NDArray, y: NDArray, max_stretch: float = 0.02, num_stretches: int = 1000,
-                 penalty_order: float = 1, gap: float = 1, nw_normalized: bool = False):
+                 penalty_order: float = 1, gap: float = 1, nw_normalized: bool = False, **kwargs):
     """
     Finds matches between reference peaks and measured peaks, allowing stretching of the measured peaks.
     Tests many stretches, determines the best overall matching quality, and reports the matches and
@@ -152,9 +159,13 @@ def find_matches(x: NDArray, y: NDArray, max_stretch: float = 0.02, num_stretche
     search_space_delta = 0
     search_space = np.linspace(1-max_stretch, 1+max_stretch, num_stretches)
     search_space_delta = 2*max_stretch/(num_stretches-1)
-    # This is actually better than vectorizing the problem and doing many matches at once (numba magic)
-    qs = find_matches_inner(x, y, search_space[0], search_space[-1], search_space_delta,
-                            penalty_order, gap, nw_normalized)
+    # parallel better for ~10_000 stretches or more
+    if num_stretches > 10_000:
+        qs = find_matches_inner_parallel(x, y, search_space[0], search_space[-1], search_space_delta,
+                                         penalty_order, gap, nw_normalized)
+    else:
+        qs = find_matches_inner_serial(x, y, search_space[0], search_space[-1], search_space_delta,
+                                       penalty_order, gap, nw_normalized)
     best_stretch = search_space[np.where(qs == np.max(qs))[0][0]]
     bestrx, bestry, bestq = needleman_wunsch(x, best_stretch*y, penalty_order=penalty_order, gap=gap, nw_normalized=nw_normalized)
     return bestrx, bestry, bestq, best_stretch, search_space_delta
@@ -164,17 +175,12 @@ if __name__ == '__main__':
     # TESTING
 
     max_stretch = .02  # Maximum allowed stretching factor. The second folder is allowed to stretch at most by a factor of (1±`max_stretching_factor`)
-    num_stretches = 100_000  # Number of different stretching factors to check each iteration
-    stretching_iterations = 1  # How many iterations deep to check stretching factors.
-    stretch_iteration_factor = 1
+    num_stretches = 10000  # Number of different stretching factors to check each iteration
     max_mismatch = 150*2/(60000+10000)  # .005
     penalty_order = 1
-# asetalks;ejt
     time0 = time()
     x = np.array([13721.5, 14171, 15149, 16384, 16655, 16950.5, 17458, 18085, 18834, 20258, 20596, 22462.5, 23114.5, 23899.5, 24966, 25426, 27982, 28221.5, 28348.5, 28652, 29847.5, 31144, 31509, 31629, 32453.5, 32613.5, 33936, 34093.5, 34512.5, 34849.5, 35718.5, 36055, 36272, 36558, 37313.5, 37724, 38125, 39618.5, 40320, 43337.5, 46304.5, 46704, 47498.5, 48644, 48807, 49003.5, 49450.5, 49702, 50224, 50642, 52103.5, 53225.5, 53802, 54307, 54601, 55286, 55503.5, 55812, 56052, 56329, 57515, 57833.5, 58248.5, 58741.5, 59014, 59511])
     y = np.array([13733.5, 14158, 15149, 16741.5, 18055, 18850, 20284, 20602.5, 22480, 23094.5, 23858.5, 24981, 25435, 27989, 28227, 28669.5, 29842, 31140.5, 31530, 31633.5, 32463.5, 33925, 34114.5, 34512.5, 34903, 35733, 35864, 36096, 36284.5, 36549, 37307.5, 37751.5, 38161.5, 39646.5, 40366, 43139, 43377, 46313.5, 46733.5, 47523, 48677, 48820, 49026, 49471.5, 49713.5, 50225.5, 50674.5, 52117, 53249.5, 53837, 54318.5, 54622.5, 55507, 56098, 56354.5, 57577.5, 57834.5, 58269.5, 58780, 59064, 59580.5])
-    # x = np.array([13700, 23800, 33900, 44000, 54100, 64200])
-    # y = np.array([13749, 23850, 33951, 44099, 54200, 64301])
 
     time0 = time()
     kwargs_find_matches = {'max_stretch': max_stretch, 'num_stretches': num_stretches,
