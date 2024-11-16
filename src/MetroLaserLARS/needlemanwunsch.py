@@ -164,7 +164,7 @@ if __name__ == '__main__':
     # TESTING
 
     max_stretch = .02  # Maximum allowed stretching factor. The second folder is allowed to stretch at most by a factor of (1±`max_stretching_factor`)
-    num_stretches = 10_000  # Number of different stretching factors to check each iteration
+    num_stretches = 100_000  # Number of different stretching factors to check each iteration
     stretching_iterations = 1  # How many iterations deep to check stretching factors.
     stretch_iteration_factor = 1
     max_mismatch = 150*2/(60000+10000)  # .005
