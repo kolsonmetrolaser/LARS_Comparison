@@ -104,9 +104,7 @@ def find_matches_inner(x, y, ssmin, ssmax, ssdelta, penalty_order, gap, nw_norma
     return qs
 
 
-@njit
 def find_matches(x: NDArray, y: NDArray, max_stretch: float = 0.02, num_stretches: int = 1000,
-                 stretching_iterations: int = 5, stretch_iteration_factor: float = 5,
                  penalty_order: float = 1, gap: float = 1, nw_normalized: bool = False):
     """
     Finds matches between reference peaks and measured peaks, allowing stretching of the measured peaks.
@@ -152,32 +150,23 @@ def find_matches(x: NDArray, y: NDArray, max_stretch: float = 0.02, num_stretche
     bestq = -100000000
     best_stretch = 1
     search_space_delta = 0
-    for stretching_iteration in range(stretching_iterations):
-        if stretching_iteration == 0:
-            search_space = np.linspace(1-max_stretch, 1+max_stretch, num_stretches)
-            search_space_delta = 2*max_stretch/(num_stretches-1)
-        else:
-            search_space = np.linspace(best_stretch-(num_stretches/stretch_iteration_factor/2)*search_space_delta,
-                                       best_stretch+(num_stretches/stretch_iteration_factor/2)*search_space_delta,
-                                       num_stretches+2)
-            search_space_delta = 2*(num_stretches/stretch_iteration_factor/2)*search_space_delta/(num_stretches+1)
-            search_space = search_space[1:-1]
-        # This is actually better than vectorizing the problem and doing many matches at once (numba magic)
-        qs = find_matches_inner(x, y, search_space[0], search_space[-1], search_space_delta,
-                                penalty_order, gap, nw_normalized)
-        best_stretch = search_space[np.where(qs == np.max(qs))[0][0]]
-        bestrx, bestry, bestq = needleman_wunsch(x, best_stretch*y, penalty_order=penalty_order, gap=gap, nw_normalized=nw_normalized)
+    search_space = np.linspace(1-max_stretch, 1+max_stretch, num_stretches)
+    search_space_delta = 2*max_stretch/(num_stretches-1)
+    # This is actually better than vectorizing the problem and doing many matches at once (numba magic)
+    qs = find_matches_inner(x, y, search_space[0], search_space[-1], search_space_delta,
+                            penalty_order, gap, nw_normalized)
+    best_stretch = search_space[np.where(qs == np.max(qs))[0][0]]
+    bestrx, bestry, bestq = needleman_wunsch(x, best_stretch*y, penalty_order=penalty_order, gap=gap, nw_normalized=nw_normalized)
     return bestrx, bestry, bestq, best_stretch, search_space_delta
 
 
 if __name__ == '__main__':
     # TESTING
 
-    from time import time
     max_stretch = .02  # Maximum allowed stretching factor. The second folder is allowed to stretch at most by a factor of (1±`max_stretching_factor`)
-    num_stretches = 10000  # Number of different stretching factors to check each iteration
-    stretching_iterations = 5  # How many iterations deep to check stretching factors.
-    stretch_iteration_factor = 5
+    num_stretches = 10_000  # Number of different stretching factors to check each iteration
+    stretching_iterations = 1  # How many iterations deep to check stretching factors.
+    stretch_iteration_factor = 1
     max_mismatch = 150*2/(60000+10000)  # .005
     penalty_order = 1
 # asetalks;ejt
@@ -189,8 +178,7 @@ if __name__ == '__main__':
 
     time0 = time()
     kwargs_find_matches = {'max_stretch': max_stretch, 'num_stretches': num_stretches,
-                           'stretching_iterations': stretching_iterations,
-                           'stretch_iteration_factor': stretch_iteration_factor, 'penalty_order': penalty_order,
+                           'penalty_order': penalty_order,
                            'gap': max_mismatch/2, 'nw_normalized': True}
     bestrx, bestry, bestq, best_stretch, best_stretch_error = find_matches(x, y, **kwargs_find_matches)
     print(f'Done after {time()-time0} s')
