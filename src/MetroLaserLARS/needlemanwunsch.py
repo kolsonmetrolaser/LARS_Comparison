@@ -8,13 +8,12 @@ Created on Thu Oct 10 08:58:36 2024
 # External imports
 import numpy as np
 from numpy.typing import NDArray
-from numba import njit
+from numba import njit, prange
 from time import time
 
 
 @njit
-def needleman_wunsch(x: NDArray, y: NDArray, penalty_order: float = 1, gap: float = 1, insert: float = -1,
-                     nw_normalized: bool = False):
+def needleman_wunsch(x: NDArray, y: NDArray, penalty_order: float = 1, gap: float = 1, nw_normalized: bool = False):
     """
     Uses an adapted Needleman-Wunsch algorithm to calculate matches between two arrays of numbers.
 
@@ -33,16 +32,14 @@ def needleman_wunsch(x: NDArray, y: NDArray, penalty_order: float = 1, gap: floa
     gap : float, optional
         The penalty for not matching is `gap**penalty_order`. `gap` corresponds the maximum allowed difference
         between matched values. The default is 1.
-    insert : float, optional
-        Value to be inserted into x and y where non-matches occur. The default is -1.
     normalized: bool, optional
         Whether the distance used to calculate the penalty should be normalized. The default is false.
     Returns
     -------
     NDArray
-        Array made up of `x`, with `insert` inserted where there is no match with `y`.
+        Array made up of `x`, with -1 inserted where there is no match with `y`.
     NDArray
-        Array made up of `y`, with `insert` inserted where there is no match with `x`.
+        Array made up of `y`, with -1 inserted where there is no match with `x`.
     float
         The quality of the fit, equal to the sum of penalties for matches and non-matches.
 
@@ -74,8 +71,8 @@ def needleman_wunsch(x: NDArray, y: NDArray, penalty_order: float = 1, gap: floa
     # Trace through optimal alignment
     i = nx
     j = ny
-    rx = insert*np.ones(nx+ny)
-    ry = insert*np.ones(nx+ny)
+    rx = -np.ones(nx+ny)
+    ry = -np.ones(nx+ny)
     ri = 0
     while i > 0 or j > 0:
         if P[i, j] in [2, 5, 6, 9]:
@@ -97,10 +94,20 @@ def needleman_wunsch(x: NDArray, y: NDArray, penalty_order: float = 1, gap: floa
 # About the same with or without njit (better for stretching_iterations~>30)
 
 
+@njit(parallel=True)
+def find_matches_inner(x, y, ssmin, ssmax, ssdelta, penalty_order, gap, nw_normalized):
+    n = int((ssmax-ssmin)/ssdelta)
+    qs = np.zeros(n)
+    for i in prange(n):
+        _, _, qs[i] = needleman_wunsch(x, (ssmin+ssdelta*i)*y,
+                                       penalty_order=penalty_order, gap=gap, nw_normalized=nw_normalized)
+    return qs
+
+
 @njit
 def find_matches(x: NDArray, y: NDArray, max_stretch: float = 0.02, num_stretches: int = 1000,
                  stretching_iterations: int = 5, stretch_iteration_factor: float = 5,
-                 penalty_order: float = 1, gap: float = 1, insert: float = -1, nw_normalized: bool = False):
+                 penalty_order: float = 1, gap: float = 1, nw_normalized: bool = False):
     """
     Finds matches between reference peaks and measured peaks, allowing stretching of the measured peaks.
     Tests many stretches, determines the best overall matching quality, and reports the matches and
@@ -143,8 +150,6 @@ def find_matches(x: NDArray, y: NDArray, max_stretch: float = 0.02, num_stretche
 
     """
     bestq = -100000000
-    bestrx, bestry, bestq = needleman_wunsch(x, y, penalty_order=penalty_order, gap=gap, insert=insert,
-                                             nw_normalized=nw_normalized)
     best_stretch = 1
     search_space_delta = 0
     for stretching_iteration in range(stretching_iterations):
@@ -158,12 +163,10 @@ def find_matches(x: NDArray, y: NDArray, max_stretch: float = 0.02, num_stretche
             search_space_delta = 2*(num_stretches/stretch_iteration_factor/2)*search_space_delta/(num_stretches+1)
             search_space = search_space[1:-1]
         # This is actually better than vectorizing the problem and doing many matches at once (numba magic)
-        for i, s in enumerate(search_space):
-            rx, ry, q = needleman_wunsch(x, s*y, penalty_order=penalty_order, gap=gap, insert=insert,
-                                         nw_normalized=nw_normalized)
-            bestq = q if q > bestq else bestq
-            best_stretch = s if q == bestq else best_stretch
-            bestrx, bestry = (rx, ry) if q == bestq else (bestrx, bestry)
+        qs = find_matches_inner(x, y, search_space[0], search_space[-1], search_space_delta,
+                                penalty_order, gap, nw_normalized)
+        best_stretch = search_space[np.where(qs == np.max(qs))[0][0]]
+        bestrx, bestry, bestq = needleman_wunsch(x, best_stretch*y, penalty_order=penalty_order, gap=gap, nw_normalized=nw_normalized)
     return bestrx, bestry, bestq, best_stretch, search_space_delta
 
 
@@ -172,12 +175,12 @@ if __name__ == '__main__':
 
     from time import time
     max_stretch = .02  # Maximum allowed stretching factor. The second folder is allowed to stretch at most by a factor of (1±`max_stretching_factor`)
-    num_stretches = 1000  # Number of different stretching factors to check each iteration
+    num_stretches = 10000  # Number of different stretching factors to check each iteration
     stretching_iterations = 5  # How many iterations deep to check stretching factors.
     stretch_iteration_factor = 5
     max_mismatch = 150*2/(60000+10000)  # .005
     penalty_order = 1
-
+# asetalks;ejt
     time0 = time()
     x = np.array([13721.5, 14171, 15149, 16384, 16655, 16950.5, 17458, 18085, 18834, 20258, 20596, 22462.5, 23114.5, 23899.5, 24966, 25426, 27982, 28221.5, 28348.5, 28652, 29847.5, 31144, 31509, 31629, 32453.5, 32613.5, 33936, 34093.5, 34512.5, 34849.5, 35718.5, 36055, 36272, 36558, 37313.5, 37724, 38125, 39618.5, 40320, 43337.5, 46304.5, 46704, 47498.5, 48644, 48807, 49003.5, 49450.5, 49702, 50224, 50642, 52103.5, 53225.5, 53802, 54307, 54601, 55286, 55503.5, 55812, 56052, 56329, 57515, 57833.5, 58248.5, 58741.5, 59014, 59511])
     y = np.array([13733.5, 14158, 15149, 16741.5, 18055, 18850, 20284, 20602.5, 22480, 23094.5, 23858.5, 24981, 25435, 27989, 28227, 28669.5, 29842, 31140.5, 31530, 31633.5, 32463.5, 33925, 34114.5, 34512.5, 34903, 35733, 35864, 36096, 36284.5, 36549, 37307.5, 37751.5, 38161.5, 39646.5, 40366, 43139, 43377, 46313.5, 46733.5, 47523, 48677, 48820, 49026, 49471.5, 49713.5, 50225.5, 50674.5, 52117, 53249.5, 53837, 54318.5, 54622.5, 55507, 56098, 56354.5, 57577.5, 57834.5, 58269.5, 58780, 59064, 59580.5])
@@ -192,7 +195,7 @@ if __name__ == '__main__':
     bestrx, bestry, bestq, best_stretch, best_stretch_error = find_matches(x, y, **kwargs_find_matches)
     print(f'Done after {time()-time0} s')
 
-    # print(f'Best Quality: {bestq:.2f} at stretch {best_stretch:.6f} p/m {best_stretch_error}')
+    print(f'Best Quality: {bestq:.2f} at stretch {best_stretch:.6f} p/m {best_stretch_error}')
     # print(f'unmatched: {np.sum(bestrx == -1)+np.sum(bestry == -1)}')
     # for x, y in zip(bestrx, bestry):
     #     print(f'{x:7.1f}  {best_stretch*y:7.1f}')
