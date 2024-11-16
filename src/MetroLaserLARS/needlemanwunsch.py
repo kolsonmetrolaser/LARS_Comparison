@@ -192,7 +192,7 @@ if __name__ == '__main__':
     bestrx, bestry, bestq, best_stretch, best_stretch_error = find_matches(x, y, **kwargs_find_matches)
     print(f'Done after {time()-time0} s')
 
-    # print(f'Best Quality: {bestq:.2f} at stretch {best_stretch:.6f} p/m {best_stretch_error}')
+    print(f'Best Quality: {bestq:.2f} at stretch {best_stretch:.6f} p/m {best_stretch_error}')
     # print(f'unmatched: {np.sum(bestrx == -1)+np.sum(bestry == -1)}')
     # for x, y in zip(bestrx, bestry):
     #     print(f'{x:7.1f}  {best_stretch*y:7.1f}')
