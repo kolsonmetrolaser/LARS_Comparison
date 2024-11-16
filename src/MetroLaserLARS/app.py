@@ -322,7 +322,7 @@ def run_app():
     file_menu.add_command(label="New", command=lambda: print("New File"))
     file_menu.add_command(label="Open", command=lambda: print("Open File"))
     file_menu.add_separator()
-    file_menu.add_command(label="Exit", command=lambda: root.destroy())
+    file_menu.add_command(label="Exit", command=_quit)
     menu_bar.add_cascade(label="File", menu=file_menu)
     root.config(menu=menu_bar)
 

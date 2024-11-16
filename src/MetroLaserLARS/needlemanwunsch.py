@@ -9,6 +9,7 @@ Created on Thu Oct 10 08:58:36 2024
 import numpy as np
 from numpy.typing import NDArray
 from numba import njit
+from time import time
 
 
 @njit
@@ -90,7 +91,8 @@ def needleman_wunsch(x: NDArray, y: NDArray, penalty_order: float = 1, gap: floa
             j -= 1
         ri += 1
     rx, ry = rx[:ri], ry[:ri]
-    return rx[::-1], ry[::-1], F[-1, -1]
+    result = rx[::-1], ry[::-1], F[-1, -1]
+    return result
 
 # About the same with or without njit (better for stretching_iterations~>30)
 
@@ -155,7 +157,7 @@ def find_matches(x: NDArray, y: NDArray, max_stretch: float = 0.02, num_stretche
                                        num_stretches+2)
             search_space_delta = 2*(num_stretches/stretch_iteration_factor/2)*search_space_delta/(num_stretches+1)
             search_space = search_space[1:-1]
-        # print(f'Analyzing {len(graphs)} possible match sets for stretches {search_space[0]:.5f} to {search_space[-1]:.5f} in increments of {search_space_delta:.5f}...')
+        # This is actually better than vectorizing the problem and doing many matches at once (numba magic)
         for i, s in enumerate(search_space):
             rx, ry, q = needleman_wunsch(x, s*y, penalty_order=penalty_order, gap=gap, insert=insert,
                                          nw_normalized=nw_normalized)
@@ -190,7 +192,7 @@ if __name__ == '__main__':
     bestrx, bestry, bestq, best_stretch, best_stretch_error = find_matches(x, y, **kwargs_find_matches)
     print(f'Done after {time()-time0} s')
 
-    print(f'Best Quality: {bestq:.2f} at stretch {best_stretch:.6f} p/m {best_stretch_error}')
-    print(f'unmatched: {np.sum(bestrx == -1)+np.sum(bestry == -1)}')
-    for x, y in zip(bestrx, bestry):
-        print(f'{x:7.1f}  {best_stretch*y:7.1f}')
+    # print(f'Best Quality: {bestq:.2f} at stretch {best_stretch:.6f} p/m {best_stretch_error}')
+    # print(f'unmatched: {np.sum(bestrx == -1)+np.sum(bestry == -1)}')
+    # for x, y in zip(bestrx, bestry):
+    #     print(f'{x:7.1f}  {best_stretch*y:7.1f}')
