@@ -681,6 +681,7 @@ All pairs of subfolders will be compared.""",
                                                              frange_max_var),
                             bg=button_color)
     plot_Button.pack(**padding_heading, side=tk.LEFT)
+    plot_Button.bind("")
 
     status_label0 = tk.Label(frame_status, text='Status:', font=(default_font_name, 12))
     status_label0.pack(**padding_setting, side=tk.LEFT)
