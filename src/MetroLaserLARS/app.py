@@ -15,8 +15,9 @@ try:
     from LARS_Comparison import LARS_Comparison_from_app
     from app_helpers import heading, labeled_options, labeled_file_select, labeled_entry
     from app_helpers import padding_none, padding_setting, padding_option, padding_heading
-    from app_helpers import bool_options, CustomVar, button_color
+    from app_helpers import bool_options, CustomVar, make_button
     from app_helpers import button_color, active_bg, active_fg
+    from app_helpers import background_color as bgc
     from app_window_part_matching import open_part_matching_window
     from app_window_plot import open_plot_window
 except ModuleNotFoundError:
@@ -24,8 +25,9 @@ except ModuleNotFoundError:
     from MetroLaserLARS.LARS_Comparison import LARS_Comparison_from_app
     from MetroLaserLARS.app_helpers import heading, labeled_options, labeled_file_select, labeled_entry
     from MetroLaserLARS.app_helpers import padding_none, padding_setting, padding_option, padding_heading
-    from MetroLaserLARS.app_helpers import bool_options, CustomVar
+    from MetroLaserLARS.app_helpers import bool_options, CustomVar, make_button
     from MetroLaserLARS.app_helpers import button_color, active_bg, active_fg
+    from MetroLaserLARS.app_helpers import background_color as bgc
     from MetroLaserLARS.app_window_part_matching import open_part_matching_window
     from MetroLaserLARS.app_window_plot import open_plot_window
 
@@ -287,7 +289,6 @@ def run_app():
     root = tk.Tk()
     root.protocol("WM_DELETE_WINDOW", _quit)
     root.geometry("1500x1000")
-    bgc = 'white'
     root.config(bg=bgc)
     root.option_add("*Background", bgc)
 
@@ -386,8 +387,7 @@ All pairs of subfolders will be compared.""",
                                                                label='Enter path to pickled data or select a file:',
                                                                infotext=infotext['pickled_data_path'], side=tk.LEFT,
                                                                **common_kwargs)
-    import_settings_Button = tk.Button(roottop, text="Import Settings", command=import_settings, bg=button_color)
-    import_settings_Button.pack(**padding_setting)
+    import_settings_Button = make_button(roottop, text="Import Settings", command=import_settings, side=tk.TOP)
 
     heading('Settings', frame=roottop, side=tk.BOTTOM)
 
@@ -425,9 +425,16 @@ All pairs of subfolders will be compared.""",
     part_matching_text_var = tk.StringVar(root, value='')
     part_matching_strategy_var = tk.StringVar(root, value='list')
 
-    part_matching_Button = tk.Button(rootr, text="Define Known Part Matching", bg=button_color,
-                                     command=lambda: part_matching_text_var.set(open_part_matching_window(root, grouped_folders_var, part_matching_text_var, part_matching_strategy_var, **common_kwargs)))
-    part_matching_Button.pack()
+    part_matching_Button = make_button(rootr, text="Define Known Part Matching",
+                                       command=lambda: part_matching_text_var.set(
+                                           open_part_matching_window(
+                                               root,
+                                               grouped_folders_var,
+                                               part_matching_text_var,
+                                               part_matching_strategy_var,
+                                               **common_kwargs)
+                                       ), side=tk.TOP
+                                       )
 
     # PLOTTING AND PRINTING
 
@@ -663,7 +670,6 @@ All pairs of subfolders will be compared.""",
     dummy_label = tk.Label(frame_dummy, text="")
     dummy_label.pack(side=tk.LEFT)
 
-    # SUBMIT
     frame_submit = tk.Frame(rootsubmit)
     frame_submit.pack(**padding_heading, side=tk.BOTTOM)
 
@@ -674,14 +680,22 @@ All pairs of subfolders will be compared.""",
     frame_status = tk.Frame(rootsubmit)
     frame_status.pack(side=tk.BOTTOM)
 
-    plot_Button = tk.Button(frame_status, text="View Plots",
-                            command=lambda: open_plot_window(root, data_dict_var,
-                                                             pair_results_var,
-                                                             frange_min_var,
-                                                             frange_max_var),
-                            bg=button_color)
-    plot_Button.pack(**padding_heading, side=tk.LEFT)
-    plot_Button.bind("")
+    plot_Button = make_button(frame_status, text="View Plots",
+                              command=lambda: open_plot_window(root, data_dict_var,
+                                                               pair_results_var,
+                                                               frange_min_var,
+                                                               frange_max_var),
+                              padding=padding_heading
+                              )
+    # plot_Button = tk.Button(frame_status, text="View Plots",
+    #                         command=lambda: open_plot_window(root, data_dict_var,
+    #                                                          pair_results_var,
+    #                                                          frange_min_var,
+    #                                                          frange_max_var),
+    #                         bg=button_color)
+    # plot_Button.pack(**padding_heading, side=tk.LEFT)
+    # plot_Button.bind("<Enter>", update_button_color)
+    # plot_Button.bind("<Leave>", update_button_color)
 
     status_label0 = tk.Label(frame_status, text='Status:', font=(default_font_name, 12))
     status_label0.pack(**padding_setting, side=tk.LEFT)

@@ -196,3 +196,8 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
     canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
     return
+
+
+if __name__ == '__main__':
+    from app import run_app
+    run_app()
