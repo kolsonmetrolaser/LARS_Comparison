@@ -15,7 +15,8 @@ try:
     from LARS_Comparison import LARS_Comparison_from_app
     from app_helpers import heading, labeled_options, labeled_file_select, labeled_entry
     from app_helpers import padding_none, padding_setting, padding_option, padding_heading
-    from app_helpers import bool_options, CustomVar
+    from app_helpers import bool_options, CustomVar, button_color
+    from app_helpers import button_color, active_bg, active_fg
     from app_window_part_matching import open_part_matching_window
     from app_window_plot import open_plot_window
 except ModuleNotFoundError:
@@ -24,6 +25,7 @@ except ModuleNotFoundError:
     from MetroLaserLARS.app_helpers import heading, labeled_options, labeled_file_select, labeled_entry
     from MetroLaserLARS.app_helpers import padding_none, padding_setting, padding_option, padding_heading
     from MetroLaserLARS.app_helpers import bool_options, CustomVar
+    from MetroLaserLARS.app_helpers import button_color, active_bg, active_fg
     from MetroLaserLARS.app_window_part_matching import open_part_matching_window
     from MetroLaserLARS.app_window_plot import open_plot_window
 
@@ -285,8 +287,7 @@ def run_app():
     root = tk.Tk()
     root.protocol("WM_DELETE_WINDOW", _quit)
     root.geometry("1500x1000")
-    bgc = 'gray65'
-    buttoncolor = 'gray75'
+    bgc = 'white'
     root.config(bg=bgc)
     root.option_add("*Background", bgc)
 
@@ -348,6 +349,8 @@ def run_app():
     data_dict_var, pair_results_var = CustomVar(), CustomVar()
     data_dict_var.set({})
     pair_results_var.set({})
+    option_menu_kwargs = {'bg': button_color, 'highlightthickness': 0,
+                          'activebackground': active_bg, 'activeforeground': active_fg}
 
     common_kwargs = {'update_status': update_status, 'varframe': root}
 
@@ -383,7 +386,7 @@ All pairs of subfolders will be compared.""",
                                                                label='Enter path to pickled data or select a file:',
                                                                infotext=infotext['pickled_data_path'], side=tk.LEFT,
                                                                **common_kwargs)
-    import_settings_Button = tk.Button(roottop, text="Import Settings", command=import_settings, bg=buttoncolor)
+    import_settings_Button = tk.Button(roottop, text="Import Settings", command=import_settings, bg=button_color)
     import_settings_Button.pack(**padding_setting)
 
     heading('Settings', frame=roottop, side=tk.BOTTOM)
@@ -422,7 +425,7 @@ All pairs of subfolders will be compared.""",
     part_matching_text_var = tk.StringVar(root, value='')
     part_matching_strategy_var = tk.StringVar(root, value='list')
 
-    part_matching_Button = tk.Button(rootr, text="Define Known Part Matching", bg='gray75',
+    part_matching_Button = tk.Button(rootr, text="Define Known Part Matching", bg=button_color,
                                      command=lambda: part_matching_text_var.set(open_part_matching_window(root, grouped_folders_var, part_matching_text_var, part_matching_strategy_var, **common_kwargs)))
     part_matching_Button.pack()
 
@@ -459,10 +462,10 @@ All pairs of subfolders will be compared.""",
     plot_recursive_noise_menu = tk.OptionMenu(frame_plot_menus, plot_recursive_noise_var, *bool_options)
     plot_classification_menu = tk.OptionMenu(frame_plot_menus, plot_classification_var, *bool_options)
 
-    plot_menu.config(bg='gray75', highlightthickness=0)
-    plot_detail_menu.config(bg='gray75', highlightthickness=0)
-    plot_recursive_noise_menu.config(bg='gray75', highlightthickness=0)
-    plot_classification_menu.config(bg='gray75', highlightthickness=0)
+    plot_menu.config(**option_menu_kwargs)
+    plot_detail_menu.config(**option_menu_kwargs)
+    plot_recursive_noise_menu.config(**option_menu_kwargs)
+    plot_classification_menu.config(**option_menu_kwargs)
 
     plot_menu.grid(row=0, column=0)
     plot_detail_menu.grid(row=0, column=1)
@@ -676,7 +679,7 @@ All pairs of subfolders will be compared.""",
                                                              pair_results_var,
                                                              frange_min_var,
                                                              frange_max_var),
-                            bg=buttoncolor)
+                            bg=button_color)
     plot_Button.pack(**padding_heading, side=tk.LEFT)
 
     status_label0 = tk.Label(frame_status, text='Status:', font=(default_font_name, 12))
