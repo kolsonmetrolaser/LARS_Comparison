@@ -234,13 +234,35 @@ def run_app():
         running_var.set(False)
         update_status()
 
-    def import_settings(*args, **kwargs):
-        path = tk.filedialog.askopenfilename(**kwargs, title='Choose settings to import',
-                                             filetypes=(('Settings Files', '*settings*.pkl'), ('All Files', '*')))
-        if path:
-            with open(path, 'rb') as f:
-                settings_import = pickle.load(f)
-                set_settings(settings_import)
+    def import_pickle(mode, *args, **kwargs):
+        paths = []
+        if mode == 'settings':
+            paths.append(tk.filedialog.askopenfilename(**kwargs, title='Choose settings to import',
+                                                       filetypes=(('Settings Files', '*settings*.pkl'),
+                                                                  ('All Files', '*'))))
+        elif mode == 'data':
+            paths.append(tk.filedialog.askopenfilename(**kwargs, title='Choose data dict to import',
+                                                       filetypes=(('Pickled Data Dictionaries', '*data_dict*.pkl'),
+                                                                  ('All Files', '*'))))
+            if paths[0]:
+                paths.append(tk.filedialog.askopenfilename(**kwargs, title='Choose pair results to import',
+                                                           filetypes=(('Pickled Pair Results', '*pair_results*.pkl'),
+                                                                      ('All Files', '*'))))
+
+        data = []
+        for path in [p for p in paths if p]:
+            try:
+                with open(path, 'rb') as f:
+                    data.append(pickle.load(f))
+            except:
+                tk.messagebox.showerror(title='Load Failed', message=f'{mode} import failed.')
+                return
+        if data:
+            if mode == 'settings':
+                set_settings(data)
+            elif mode == 'data':
+                data_dict_var.set(data[0])
+                pair_results_var.set(data[1])
         return
 
     def update_peak_match_window_label(entry_text):
@@ -391,7 +413,12 @@ All pairs of subfolders will be compared.""",
                                                                label='Enter path to pickled data or select a file:',
                                                                infotext=infotext['pickled_data_path'], side=tk.LEFT,
                                                                **common_kwargs)
-    import_settings_Button = make_button(roottop, text="Import Settings", command=import_settings, side=tk.TOP)
+    frame_load_button = tk.Frame(roottop)
+    frame_load_button.pack(side=tk.TOP)
+    make_button(frame_load_button, text="Import Settings",
+                command=lambda: import_pickle('settings'), side=tk.LEFT)
+    make_button(frame_load_button, text="Import Data",
+                command=lambda: import_pickle('data'), side=tk.LEFT)
 
     heading('Settings', frame=roottop, side=tk.BOTTOM)
 
@@ -429,16 +456,16 @@ All pairs of subfolders will be compared.""",
     part_matching_text_var = tk.StringVar(root, value='')
     part_matching_strategy_var = tk.StringVar(root, value='list')
 
-    part_matching_Button = make_button(rootr, text="Define Known Part Matching",
-                                       command=lambda: part_matching_text_var.set(
-                                           open_part_matching_window(
-                                               root,
-                                               grouped_folders_var,
-                                               part_matching_text_var,
-                                               part_matching_strategy_var,
-                                               **common_kwargs)
-                                       ), side=tk.TOP
-                                       )
+    make_button(rootr, text="Define Known Part Matching",
+                command=lambda: part_matching_text_var.set(
+                    open_part_matching_window(
+                        root,
+                        grouped_folders_var,
+                        part_matching_text_var,
+                        part_matching_strategy_var,
+                        **common_kwargs)
+                ), side=tk.TOP
+                )
 
     # PLOTTING AND PRINTING
 
@@ -690,17 +717,17 @@ All pairs of subfolders will be compared.""",
                             bg='firebrick4', fg='white', font=(default_font_name, 12))
     status_label.pack(**padding_setting, side=tk.RIGHT)
 
-    plot_Button = make_button(rootbuttons, text="View Plots",
-                              command=lambda: open_plot_window(root, data_dict_var,
-                                                               pair_results_var,
-                                                               frange_min_var,
-                                                               frange_max_var),
-                              padding=padding_heading)
+    make_button(rootbuttons, text="View Plots",
+                command=lambda: open_plot_window(root, data_dict_var,
+                                                 pair_results_var,
+                                                 frange_min_var,
+                                                 frange_max_var),
+                padding=padding_heading)
 
-    results_table_Button = make_button(rootbuttons, text="Results Table",
-                                       command=lambda: open_results_table_window(root, data_dict_var,
-                                                                                 pair_results_var),
-                                       padding=padding_heading)
+    make_button(rootbuttons, text="Results Table",
+                command=lambda: open_results_table_window(root, data_dict_var,
+                                                          pair_results_var),
+                padding=padding_heading)
 
     # Start the main loop
     root.mainloop()
