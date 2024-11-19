@@ -22,13 +22,14 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
 
     window = tk.Toplevel(root)
     window.title("Plots")
+    window.geometry("1600x900")
 
     f0, f1 = frange_min_var.get(), frange_max_var.get()
-    common_kwargs['x_lim'] = (f0, f1)
+    common_kwargs['x_lim'] = (f0/1000, f1/1000)
     common_kwargs['line_width'] = 4
     common_kwargs['show_plot_in_spyder'] = False
     common_kwargs['font_settings'] = {'weight': 'bold', 'size': 16}
-    common_kwargs['x_slice'] = (1000, np.inf)
+    common_kwargs['x_slice'] = (1, np.inf)
 
     data_dict, pair_results = data_dict_var.get(), pair_results_var.get()
     keys = list(data_dict.keys())
@@ -36,12 +37,13 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
         k = keys[0] if keys else None
         data = data_dict[k] if k is not None else None
         x, y = data.freq, data.vel
-        fig, [line] = line_plot(x, y, title='Raw Data', **common_kwargs)
+        fig, _ = line_plot(x/1000, y, x_label='Frequency (kHz)', y_label='Intensity (µm/s)',
+                           title='Raw Data', **common_kwargs)
     else:
         k = None
         data = None
         x, y = np.linspace(0, 1, 100), np.sin(2*np.pi*np.linspace(0, 1, 100))
-        fig, [line] = line_plot(x, y, title='Example', show_plot_in_spyder=False)
+        fig, _ = line_plot(x, y, title='Example', show_plot_in_spyder=False)
 
     canvas = FigureCanvasTkAgg(fig, master=window)
     canvas.draw()
@@ -103,22 +105,25 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
 
         # Make Plots
         if t == 'Raw Data':
-            x, y = data.freq.copy(), data.vel.copy()
-            _ = line_plot(x, y, title='Raw Data', **kwargs)
+            x, y = data.freq.copy()/1000, data.vel.copy()
+            _ = line_plot(x, y, x_label='Frequency (kHz)', y_label='Intensity (µm/s)',
+                          title='Raw Data', **kwargs)
         elif t == 'Peak Fits':
-            x, y, p = data.freq.copy(), data.newvel.copy(), data.peaks['positions']
+            x, y, p = data.freq.copy()/1000, data.newvel.copy(), data.peaks['positions']/1000
             f0, f1 = common_kwargs['x_lim']
             x = x[np.logical_and(x > f0, x < f1)]
-            _ = line_plot(x, y, v_line_pos=p, v_line_width=2, title='Peak Fits', **kwargs)
+            _ = line_plot(x, y, x_label='Frequency (kHz)', y_label='Intensity (µm/s)',
+                          v_line_pos=p, v_line_width=2, title='Peak Fits', **kwargs)
         elif t == 'Compare Raw':
-            x, y = data.freq.copy(), data.vel.copy()
-            x2, y2 = data2.freq.copy(), data2.vel.copy()
-            _ = line_plot([x, x2], [y, y2], legend=[n, n2], title='Peak Fits', **kwargs)
+            x, y = data.freq.copy()/1000, data.vel.copy()
+            x2, y2 = data2.freq.copy()/1000, data2.vel.copy()
+            _ = line_plot([x, x2], [y, y2], x_label='Frequency (kHz)', y_label='Intensity (µm/s)',
+                          legend=[n, n2], legend_location='upper right', title='Peak Fits', **kwargs)
         elif t == 'Matched Peaks':
             pr = [pair for pair in pair_results if n in pair['names'] and n2 in pair['names']][0]
             s = pr['stretch']
-            x, y = data.freq.copy(), data.newvel.copy()
-            x2, y2 = data2.freq.copy(), data2.newvel.copy()
+            x, y = data.freq.copy()/1000, data.newvel.copy()
+            x2, y2 = data2.freq.copy()/1000, data2.newvel.copy()
 
             f0, f1 = common_kwargs['x_lim']
             x = x[np.logical_and(x > f0, x < f1)]
@@ -131,10 +136,11 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
                 x *= s
                 unmatched = pr['unmatched'][::-1]
 
-            _ = line_plot([x, x2], [y, y2],
-                          v_line_pos=[[el2*1000 for el2 in el] for el in [pr['matched'], *unmatched]],
+            _ = line_plot([x, x2], [y, y2], x_label='Frequency (kHz)', y_label='Normalized Intensity (arb.)',
+                          v_line_pos=[pr['matched'], *unmatched],
                           v_line_color=['k', 'C0', 'C1'], v_line_width=[4, 2, 2],
-                          y_norm='each', title='Stretched peak matches raw', **kwargs)
+                          legend=[n, n2], legend_location='upper right', y_norm='each',
+                          title='Stretched peak matches raw', **kwargs)
 
         # required to update canvas and attached toolbar!
         canvas.draw_idle()
