@@ -466,6 +466,8 @@ All pairs of subfolders will be compared.""",
                         **common_kwargs)
                 ), side=tk.TOP
                 )
+    part_matching_text_var.trace_add("write", update_status)
+    part_matching_strategy_var.trace_add("write", update_status)
 
     # PLOTTING AND PRINTING
 
