@@ -12,10 +12,10 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 
 try:
     from plotfunctions import line_plot
-    from app_helpers import CustomVar, labeled_options, padding_setting, plot_style_widget
+    from app_helpers import CustomVar, padding_setting, plot_style_widget
 except ModuleNotFoundError:
     from MetroLaserLARS.plotfunctions import line_plot
-    from MetroLaserLARS.app_helpers import CustomVar, labeled_options, padding_setting, plot_style_widget
+    from MetroLaserLARS.app_helpers import CustomVar, padding_setting, plot_style_widget
 
 
 def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, frange_max_var, **common_kwargs):
