@@ -5,6 +5,7 @@ Created on Tue Nov 12 13:58:07 2024
 @author: KOlson
 """
 import tkinter as tk
+from matplotlib.colors import to_hex, to_rgb
 
 bool_options = ['True', 'False']
 padding_heading = {'pady': 10, 'padx': 10}
@@ -21,6 +22,10 @@ active_bg = 'floral white'
 active_fg = 'dark goldenrod'
 options_style = ['-', ':', '--', '-.', '.', 'o', 'v', '^', '<', '>', 's', '*', 'd', 'p', 'x']
 options_color = ['C'+str(i) for i in range(10)]
+
+
+def unique(mylist):
+    return list(dict.fromkeys(mylist))
 
 
 class CustomVar(tk.Variable):
@@ -186,8 +191,6 @@ def labeled_options(baseframe, label: str = '', varframe=None, postlabel: str = 
         if update_status is not None:
             var.trace_add("write", update_status)
         optionmenu = tk.OptionMenu(frame, var, *options, command=command)
-        optionmenu.config(bg=button_color, highlightthickness=0,
-                          activebackground=active_bg, activeforeground=active_fg)
         optionmenu.pack(side=tk.LEFT)
     label2 = labeled_widget_label(frame, postlabel)
     if infobox:
@@ -253,22 +256,44 @@ def labeled_file_select(baseframe, headingtxt: str = '', varframe=None, subheadi
     return var, frame, label1, entry, button, infolabel
 
 
-def styleoptions_widget(frame, side=tk.LEFT, command=None):
-    return labeled_options(frame, side=side, infobox=False, vartype=tk.StringVar, vardefault=options_style[0],
-                           options=options_style, command=command)
+def styleoptions_widget(frame, side=tk.LEFT, command=None, default_style=None):
+    _options_style = options_style if default_style is None else unique([default_style]+options_style)
+    return labeled_options(frame, side=side, infobox=False, vartype=tk.StringVar, vardefault=_options_style[0],
+                           options=_options_style, command=command)
 
 
-def coloroptions_widget(frame, side=tk.LEFT, command=None):
-    return labeled_options(frame, side=side, infobox=False, vartype=tk.StringVar, vardefault=options_color[0],
-                           options=options_color, command=command)
+def coloroptions_widget(frame, side=tk.LEFT, command=None, default_color=None):
+    def update_background(*args):
+        option_menu.configure(background=to_hex(color_var.get()),
+                              foreground='white' if sum([v for v in to_rgb(color_var.get())]) < 0.5*3 else 'black')
+    _options_color = (options_color
+                      if (default_color is None
+                          or to_hex(default_color) in [to_hex(c) for c in options_color])
+                      else unique([default_color]+options_color))
+    _default = (_options_color[[to_hex(c) for c in options_color].index(to_hex(default_color))]
+                if to_hex(default_color) in [to_hex(c) for c in options_color]
+                else _options_color[0])
+    result = labeled_options(frame, side=side, infobox=False, vartype=tk.StringVar, vardefault=_default,
+                             options=_options_color, command=command)
+    color_var = result[0]
+    color_var.trace_add('write', update_background)
+    option_menu = result[3]
+    option_menu.configure(background=to_hex(_default),
+                          foreground='white' if sum([v for v in to_rgb(_default)]) < 0.5*3 else 'black')
+    inner_menu = option_menu.nametowidget(option_menu.cget('menu'))
+    for c in _options_color:
+        index = inner_menu.index(c)
+        inner_menu.entryconfigure(index, background=to_hex(c),
+                                  foreground='white' if sum([v for v in to_rgb(c)]) < 0.5*3 else 'black')
+    return result
 
 
 def plot_style_widget(baseframe, text: str = '', command=None, padding=padding_setting, side=tk.LEFT, grid=None,
-                      vartype_color=tk.StringVar, vartype_style=tk.StringVar):
+                      vartype_color=tk.StringVar, vartype_style=tk.StringVar, default_color='k', default_style='-'):
     frame = labeled_widget_frame(baseframe, padding, side, grid)
     labeled_widget_label(frame, text, side=tk.TOP)
-    color_out = coloroptions_widget(frame, side=tk.TOP, command=command)
-    style_out = styleoptions_widget(frame, side=tk.TOP, command=command)
+    color_out = coloroptions_widget(frame, side=tk.TOP, command=command, default_color=default_color)
+    style_out = styleoptions_widget(frame, side=tk.TOP, command=command, default_style=default_style)
     var_color, var_style = color_out[0], style_out[0]
     return var_color, var_style
 

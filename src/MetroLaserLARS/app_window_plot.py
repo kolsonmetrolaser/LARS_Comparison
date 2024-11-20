@@ -24,6 +24,8 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
     window.title("Plots")
     window.geometry("1600x900")
 
+    color_vars, style_vars = CustomVar(), CustomVar()
+
     f0, f1 = frange_min_var.get(), frange_max_var.get()
     common_kwargs['x_lim'] = (f0/1000, f1/1000)
     common_kwargs['line_width'] = 4
@@ -82,16 +84,46 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
         data_selection2_menu.set_menu(current_selection if current_selection in data2_options else data2_options[0],
                                       *data2_options)
 
-    def update_plot_style():
+    def update_plot_style(*args, **kwargs):
+        lines = [line for axis in canvas.figure.axes for line in axis.get_lines()]
+        line_names = [line.get_label() for legend in canvas.figure.legends for line in legend.get_lines()]
+        for line_name in line_names:
+            color = color_vars.get()[line_name].get()
+            style = style_vars.get()[line_name].get()
+            for line in lines:
+                if line.get_label() == line_name or (line.get_label()[0] == '_' and line.get_label()[1:] == line_name):
+                    line.set_color(color)
+                    if style in ['-', ':', '--', '-.']:
+                        line.set_linestyle(style)
+                        line.set_marker('None')
+                    else:
+                        line.set_marker(style)
+                        line.set_linestyle('None')
+            canvas.draw_idle()
         return
 
     def update_style_options():
-        legend_entries = [line.get_label() for legend in canvas.figure.legends for line in legend.get_lines()]
-        print(legend_entries)
+        legend_lines = [line for legend in canvas.figure.legends for line in legend.get_lines()]
 
-        for le in legend_entries:
-            color_var, style_var = plot_style_widget(frame_style, text=le,
-                                                     command=update_plot_style, padding=padding_setting)
+        for child in frame_style.winfo_children():
+            child.destroy()
+
+        cvs = {}
+        svs = {}
+        for le in legend_lines:
+            name = le.get_label()
+            dc = 'C0'
+            ds = '-'
+            dc = le.get_color()
+            ds = le.get_linestyle()
+            ds = le.get_marker() if ds == 'None' else ds
+            color_var, style_var = plot_style_widget(frame_style, text=name,
+                                                     command=update_plot_style, padding=padding_setting,
+                                                     default_color=dc, default_style=ds)
+            cvs[name] = color_var
+            svs[name] = style_var
+        color_vars.set(cvs)
+        style_vars.set(svs)
         return
 
     def update_plot_contents(canvas, name_to_key, *args, **common_kwargs):
