@@ -12,10 +12,10 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 
 try:
     from plotfunctions import line_plot
-    from app_helpers import CustomVar
+    from app_helpers import CustomVar, labeled_options, padding_setting, plot_style_widget
 except ModuleNotFoundError:
     from MetroLaserLARS.plotfunctions import line_plot
-    from MetroLaserLARS.app_helpers import CustomVar
+    from MetroLaserLARS.app_helpers import CustomVar, labeled_options, padding_setting, plot_style_widget
 
 
 def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, frange_max_var, **common_kwargs):
@@ -30,6 +30,7 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
     common_kwargs['show_plot_in_spyder'] = False
     common_kwargs['font_settings'] = {'weight': 'bold', 'size': 16}
     common_kwargs['x_slice'] = (1, np.inf)
+    common_kwargs['legend_interactive'] = True
 
     data_dict, pair_results = data_dict_var.get(), pair_results_var.get()
     keys = list(data_dict.keys())
@@ -37,13 +38,13 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
         k = keys[0] if keys else None
         data = data_dict[k] if k is not None else None
         x, y = data.freq, data.vel
-        fig, _ = line_plot(x/1000, y, x_label='Frequency (kHz)', y_label='Intensity (µm/s)',
-                           title='Raw Data', **common_kwargs)
+        fig = line_plot(x/1000, y, legend=[data.name], x_label='Frequency (kHz)', y_label='Intensity (µm/s)',
+                        title='Raw Data', **common_kwargs)
     else:
         k = None
         data = None
         x, y = np.linspace(0, 1, 100), np.sin(2*np.pi*np.linspace(0, 1, 100))
-        fig, _ = line_plot(x, y, title='Example', show_plot_in_spyder=False)
+        fig = line_plot(x, y, legend=['data'], legend_interactive=True, title='Example', show_plot_in_spyder=False)
 
     canvas = FigureCanvasTkAgg(fig, master=window)
     canvas.draw()
@@ -81,6 +82,18 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
         data_selection2_menu.set_menu(current_selection if current_selection in data2_options else data2_options[0],
                                       *data2_options)
 
+    def update_plot_style():
+        return
+
+    def update_style_options():
+        legend_entries = [line.get_label() for legend in canvas.figure.legends for line in legend.get_lines()]
+        print(legend_entries)
+
+        for le in legend_entries:
+            color_var, style_var = plot_style_widget(frame_style, text=le,
+                                                     command=update_plot_style, padding=padding_setting)
+        return
+
     def update_plot_contents(canvas, name_to_key, *args, **common_kwargs):
         canvas.figure.clear()
 
@@ -106,13 +119,13 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
         # Make Plots
         if t == 'Raw Data':
             x, y = data.freq.copy()/1000, data.vel.copy()
-            _ = line_plot(x, y, x_label='Frequency (kHz)', y_label='Intensity (µm/s)',
+            _ = line_plot(x, y, legend=[n], x_label='Frequency (kHz)', y_label='Intensity (µm/s)',
                           title='Raw Data', **kwargs)
         elif t == 'Peak Fits':
             x, y, p = data.freq.copy()/1000, data.newvel.copy(), data.peaks['positions']/1000
             f0, f1 = common_kwargs['x_lim']
             x = x[np.logical_and(x > f0, x < f1)]
-            _ = line_plot(x, y, x_label='Frequency (kHz)', y_label='Intensity (µm/s)',
+            _ = line_plot(x, y, legend=[n], x_label='Frequency (kHz)', y_label='Intensity (µm/s)',
                           v_line_pos=p, v_line_width=2, title='Peak Fits', **kwargs)
         elif t == 'Compare Raw':
             x, y = data.freq.copy()/1000, data.vel.copy()
@@ -139,13 +152,18 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
             _ = line_plot([x, x2], [y, y2], x_label='Frequency (kHz)', y_label='Normalized Intensity (arb.)',
                           v_line_pos=[pr['matched'], *unmatched],
                           v_line_color=['k', 'C0', 'C1'], v_line_width=[4, 2, 2],
-                          legend=[n, n2], legend_location='upper right', y_norm='each',
+                          legend=[n, n2], v_line_legend=['Matched', f'Unmatched {n}', f'Unmatched {n2}'],
+                          legend_location='upper right', y_norm='each',
                           title='Stretched peak matches raw', **kwargs)
 
         # required to update canvas and attached toolbar!
         canvas.draw_idle()
+        update_style_options()
+        return
 
-    frame_options = tk.Frame(window)
+    frame_options_legend = tk.Frame(window)
+    frame_options = tk.Frame(frame_options_legend)
+    frame_style = tk.Frame(frame_options_legend)
 
     plot_type_options = ['Raw Data', 'Peak Fits', 'Compare Raw', 'Matched Peaks']
     data_keys = list(data_dict.keys())
@@ -197,7 +215,9 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
     data_selection2_label.pack(side=tk.LEFT)
     data_selection2_menu.pack(side=tk.LEFT)
 
-    frame_options.pack(side=tk.BOTTOM)
+    frame_options_legend.pack(side=tk.BOTTOM)
+    frame_options.pack(side=tk.TOP)
+    frame_style.pack(side=tk.TOP)
     toolbar.pack(side=tk.BOTTOM, fill=tk.X)
     canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 

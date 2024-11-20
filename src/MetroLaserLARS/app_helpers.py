@@ -19,6 +19,8 @@ entry_color = 'white'
 button_color = 'gray92'
 active_bg = 'floral white'
 active_fg = 'dark goldenrod'
+options_style = ['-', ':', '--', '-.', '.', 'o', 'v', '^', '<', '>', 's', '*', 'd', 'p', 'x']
+options_color = ['C'+str(i) for i in range(10)]
 
 
 class CustomVar(tk.Variable):
@@ -125,17 +127,19 @@ def heading(txt, frame, lvl=0, padding=True, side=tk.TOP, subtext=None):
     return h
 
 
-def labeled_widget_frame(baseframe, padding, side):
+def labeled_widget_frame(baseframe, padding, side, grid):
     lwframe = tk.Frame(baseframe)
-    lwframe.pack(**padding, side=side)
+    if grid is None:
+        lwframe.pack(**padding, side=side)
+    else:
+        lwframe.pack(row=grid[0], column=grid[1], **padding)
     return lwframe
 
 
-def labeled_widget_label(frame, text):
-    label = None
+def labeled_widget_label(frame, text, side=tk.LEFT):
+    label = tk.Label(frame, text=text)
+    label.pack(side=side)
     if text != '':
-        label = tk.Label(frame, text=text)
-        label.pack(side=tk.LEFT)
         if text == '(?)':
             f = tk.font.Font(label, label.cget("font"))
             f.configure(underline=True)
@@ -145,13 +149,13 @@ def labeled_widget_label(frame, text):
 
 def labeled_entry(baseframe, label: str = '', varframe=None, postlabel: str = '', padding=padding_setting,
                   entry_width: int = 6, vardefault=0, vartype=None, update_status=None, command=None,
-                  side=tk.TOP, infobox=True, infotext='Placeholder info text.'):
+                  side=tk.TOP, grid=None, infobox=True, infotext='Placeholder info text.'):
     if command is not None and update_status is not None:
-        raise("Only one of command and update_status may be specified")
+        raise ("Only one of command and update_status may be specified")
     update_status = command if update_status is None else update_status
     varframe = baseframe if varframe is None else varframe
     entry, infolabel = None, None
-    frame = labeled_widget_frame(baseframe, padding, side)
+    frame = labeled_widget_frame(baseframe, padding, side, grid)
     label1 = labeled_widget_label(frame, label)
     if vartype is not None:
         var = vartype(varframe, value=vardefault)
@@ -169,10 +173,10 @@ def labeled_entry(baseframe, label: str = '', varframe=None, postlabel: str = ''
 def labeled_options(baseframe, label: str = '', varframe=None, postlabel: str = '', padding=padding_setting,
                     var=None, vardefault=None, vartype=None, update_status=None,
                     command=None, side=tk.TOP, options=bool_options, infobox=True,
-                    infotext='Placeholder info text.'):
+                    infotext='Placeholder info text.', grid=None):
     varframe = baseframe if varframe is None else varframe
     optionmenu, infolabel = None, None
-    frame = labeled_widget_frame(baseframe, padding, side)
+    frame = labeled_widget_frame(baseframe, padding, side, grid)
     label1 = labeled_widget_label(frame, label)
     if vartype is not None or var is not None:
         if var is not None and vardefault is not None:
@@ -193,7 +197,7 @@ def labeled_options(baseframe, label: str = '', varframe=None, postlabel: str = 
 
 
 def make_button(baseframe, text: str = '', command=None, padding=padding_setting,
-                infobox=False, infotext='Placeholder info text.', side=tk.LEFT):
+                infobox=False, infotext='Placeholder info text.', side=tk.LEFT, grid=None):
     def update_button_color(event, *args, **kwargs):
         if event.type.name == 'Enter':
             event.widget['background'] = active_bg
@@ -202,7 +206,7 @@ def make_button(baseframe, text: str = '', command=None, padding=padding_setting
             event.widget['background'] = button_color
             event.widget['foreground'] = 'black'
 
-    frame = labeled_widget_frame(baseframe, padding, side)
+    frame = labeled_widget_frame(baseframe, padding, side, grid)
 
     b = tk.Button(frame, text=text,
                   command=command, bg=button_color)
@@ -218,11 +222,11 @@ def make_button(baseframe, text: str = '', command=None, padding=padding_setting
 
 def labeled_file_select(baseframe, headingtxt: str = '', varframe=None, subheading: str = '', label: str = '',
                         padding=padding_setting, entry_width: int = 40, vardefault='', vartype=tk.StringVar,
-                        update_status=None, side=tk.TOP, selection='file',
+                        update_status=None, side=tk.TOP, grid=None, selection='file',
                         filetype='pickle', infobox=True, infotext='Placeholder info text.'):
     varframe = baseframe if varframe is None else varframe
     entry, button, infolabel = None, None, None
-    frame = labeled_widget_frame(baseframe, padding, side)
+    frame = labeled_widget_frame(baseframe, padding, side, grid)
     if headingtxt != '':
         heading(headingtxt, lvl=1, frame=frame,
                 subtext=subheading)
@@ -247,6 +251,26 @@ def labeled_file_select(baseframe, headingtxt: str = '', varframe=None, subheadi
             infolabel = labeled_widget_label(frame, '(?)')
             CreateToolTip(infolabel, infotext)
     return var, frame, label1, entry, button, infolabel
+
+
+def styleoptions_widget(frame, side=tk.LEFT, command=None):
+    return labeled_options(frame, side=side, infobox=False, vartype=tk.StringVar, vardefault=options_style[0],
+                           options=options_style, command=command)
+
+
+def coloroptions_widget(frame, side=tk.LEFT, command=None):
+    return labeled_options(frame, side=side, infobox=False, vartype=tk.StringVar, vardefault=options_color[0],
+                           options=options_color, command=command)
+
+
+def plot_style_widget(baseframe, text: str = '', command=None, padding=padding_setting, side=tk.LEFT, grid=None,
+                      vartype_color=tk.StringVar, vartype_style=tk.StringVar):
+    frame = labeled_widget_frame(baseframe, padding, side, grid)
+    labeled_widget_label(frame, text, side=tk.TOP)
+    color_out = coloroptions_widget(frame, side=tk.TOP, command=command)
+    style_out = styleoptions_widget(frame, side=tk.TOP, command=command)
+    var_color, var_style = color_out[0], style_out[0]
+    return var_color, var_style
 
 
 if __name__ == '__main__':

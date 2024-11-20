@@ -192,16 +192,6 @@ def open_results_table_window(root, data_dict_var, pair_results_var, **common_kw
         canvas.create_text(1/2*5*size*(len(data_dict)+2), 1/2*4*size,
                            text='Measurement', font=fontstr)
 
-        # entry = tk.Label(frame, text=textvars[i][j].get(), width=5,
-        #                  bg=_from_cmap(_cmap(
-        #                      cmap_val if data not in ['stretch'] else
-        #                      (1 - (1 + (((1-cmap_val)*lp)/(cmap_val*(1-lp)))**2)**-1
-        #                       if cmap_val != 0 and cmap_val != 1 else 1-cmap_val
-        #                       )
-        #                  )),
-        #                  font=(default_font_name, font_size, 'bold' if same_part else 'normal'))
-        # entry.grid(row=i+1, column=j+1)
-
     window = tk.Toplevel(root, bg=bgc)
     window.title("Data Tables")
     window.geometry("1600x900")

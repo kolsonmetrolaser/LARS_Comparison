@@ -444,7 +444,9 @@ def line_plot(x: ArrayLike, y: ArrayLike, legend=None, x_lim: tuple[float, float
               save_folder: Optional[str] = None, font_settings: dict = {'weight': 'bold', 'size': 22}, y_format=None,
               x_ticks: Optional[ArrayLike] = None, y_ticks: Optional[ArrayLike] = None,
               v_line_pos: Optional[ArrayLike] = None, v_line_color='k', v_line_width: float = 6,
-              y_norm: Literal[None, 'global', 'each'] = None, fig=None, x_slice: tuple[float, float] = (-np.inf, np.inf)):
+              v_line_legend=None,
+              y_norm: Literal[None, 'global', 'each'] = None, fig=None,
+              x_slice: tuple[float, float] = (-np.inf, np.inf), legend_interactive: bool = False):
 
     x = x.copy()
     y = y.copy()
@@ -513,26 +515,77 @@ def line_plot(x: ArrayLike, y: ArrayLike, legend=None, x_lim: tuple[float, float
             for i in range(len(y)):
                 colors.append(colormap((i+1)/(len(y)+1)))
 
+    v_line_legend_used = [False for vll in v_line_legend] if v_line_legend is not None else None
     if v_line_pos is not None:
         if can_iter(v_line_pos):  # multiple vlines?
             if can_iter(v_line_pos[0]):  # multiple sets of vlines?
                 if can_iter(v_line_color) and not isinstance(v_line_color, str):  # multiple colors?
-                    for vlps, vlc, vlw in zip(v_line_pos, v_line_color, v_line_width):
+                    for vlgroup, (vlps, vlc, vlw) in enumerate(zip(v_line_pos, v_line_color, v_line_width)):
                         for vlp in vlps:
-                            ax.axvline(x=vlp, color=vlc, linewidth=vlw)
+                            ax.axvline(x=vlp, color=vlc, linewidth=vlw,
+                                       label=(v_line_legend[vlgroup] if
+                                              (v_line_legend is not None and not v_line_legend_used[vlgroup])
+                                              else (
+                                                  '_'+v_line_legend[vlgroup] if
+                                                  (v_line_legend is not None)
+                                                  else '')
+                                              )
+                                       )
+                            if v_line_legend is not None:
+                                v_line_legend_used[vlgroup] = True
                 else:  # one color
                     for vlps in v_line_pos:
                         for vlp in vlps:
-                            ax.axvline(x=vlp, color=v_line_color, linewidth=v_line_width)
+                            ax.axvline(x=vlp, color=v_line_color, linewidth=v_line_width,
+                                       label=(v_line_legend[0] if
+                                              (v_line_legend is not None and not v_line_legend_used[vlgroup])
+                                              else (
+                                                  '_'+v_line_legend[0] if
+                                                  (v_line_legend is not None)
+                                                  else '')
+                                              )
+                                       )
+                            if v_line_legend is not None:
+                                v_line_legend_used[0] = True
             else:  # one set of vlines
                 if can_iter(v_line_color) and not isinstance(v_line_color, str):  # multiple colors?
-                    for vlp, vlc in zip(v_line_pos, v_line_color):
-                        ax.axvline(x=vlp, color=vlc, linewidth=v_line_width)
+                    for vlgroup, (vlp, vlc) in enumerate(zip(v_line_pos, v_line_color)):
+                        ax.axvline(x=vlp, color=vlc, linewidth=v_line_width,
+                                   label=(v_line_legend[vlgroup] if
+                                          (v_line_legend is not None and not v_line_legend_used[vlgroup])
+                                          else (
+                                              '_'+v_line_legend[vlgroup] if
+                                              (v_line_legend is not None)
+                                              else '')
+                                          )
+                                   )
+                        if v_line_legend is not None:
+                            v_line_legend_used[vlgroup] = True
                 else:  # one color
                     for vlp in v_line_pos:
-                        ax.axvline(x=vlp, color=v_line_color, linewidth=v_line_width)
+                        ax.axvline(x=vlp, color=v_line_color, linewidth=v_line_width,
+                                   label=(v_line_legend[0] if
+                                          (v_line_legend is not None and not v_line_legend_used[vlgroup])
+                                          else (
+                                              '_'+v_line_legend[0] if
+                                              (v_line_legend is not None)
+                                              else '')
+                                          )
+                                   )
+                        if v_line_legend is not None:
+                            v_line_legend_used[0] = True
         else:  # one vline
-            ax.axvline(x=v_line_pos, color=v_line_color, linewidth=v_line_width)
+            ax.axvline(x=v_line_pos, color=v_line_color, linewidth=v_line_width,
+                       label=(v_line_legend[0] if
+                              (v_line_legend is not None and not v_line_legend_used[vlgroup])
+                              else (
+                                  '_'+v_line_legend[0] if
+                                  (v_line_legend is not None)
+                                  else '')
+                              )
+                       )
+            if v_line_legend is not None:
+                v_line_legend_used[0] = True
 
     vlinelist = []
     for axes in fig.axes:
@@ -543,17 +596,22 @@ def line_plot(x: ArrayLike, y: ArrayLike, legend=None, x_lim: tuple[float, float
         if any(isinstance(el, list) for el in x) or isinstance(x, list):
             for idx, (plotx, ploty) in enumerate(zip(x, y)):
                 if cmap is not None:
-                    line_out = ax.plot(plotx, ploty, style, color=colors[idx])
+                    ax.plot(plotx, ploty, style, color=colors[idx],
+                            label=legend[idx] if legend is not None else '')
                 else:
-                    line_out = ax.plot(plotx, ploty, style)
+                    ax.plot(plotx, ploty, style,
+                            label=legend[idx] if legend is not None else '')
         else:
             for idx, ploty in enumerate(y):
                 if cmap is not None:
-                    line_out = ax.plot(x, ploty, style, color=colors[idx])
+                    ax.plot(x, ploty, style, color=colors[idx],
+                            label=legend[idx] if legend is not None else '')
                 else:
-                    line_out = ax.plot(x, ploty, style)
+                    ax.plot(x, ploty, style,
+                            label=legend[idx] if legend is not None else '')
     else:
-        line_out = ax.plot(x, y, style)  # linestyle='solid')
+        ax.plot(x, y, style,
+                label=legend if legend is not None else '')
 
     if y_format is not None:
         ax.yaxis.set_major_formatter(y_format)
@@ -572,12 +630,15 @@ def line_plot(x: ArrayLike, y: ArrayLike, legend=None, x_lim: tuple[float, float
         line.set_linewidth(line_width)
 
     if legend is not None:
+        leglinelist = linelist+vlinelist if v_line_legend is not None else linelist
         legend_plot_source = fig if using_extant_figure else plt
         if legend_location == 'outside':
-            leg = legend_plot_source.legend(linelist, legend, title=legend_title, bbox_to_anchor=(1.04, 1), loc='upper left',
+            leg = legend_plot_source.legend(handles=leglinelist, title=legend_title,
+                                            bbox_to_anchor=(1.04, 1), loc='upper left',
                                             framealpha=1, fancybox=False)
         else:
-            leg = legend_plot_source.legend(linelist, legend, loc=legend_location, title=legend_title, framealpha=1, fancybox=False)
+            leg = legend_plot_source.legend(handles=leglinelist, loc=legend_location,
+                                            title=legend_title, framealpha=1, fancybox=False)
         leg.get_frame().set_linewidth(axis_line_width)
         leg.get_frame().set_edgecolor('black')
 
@@ -588,6 +649,38 @@ def line_plot(x: ArrayLike, y: ArrayLike, legend=None, x_lim: tuple[float, float
 
     if title is not None:
         ax.set_title(title)
+
+    if legend_interactive:
+        map_legend_to_ax = {}
+        pickradius = int(font_settings['size']/4)
+
+        # for legend_line, ax_line in zip(leg.get_lines(), leglinelist):
+        #     legend_line.set_picker(pickradius)
+        #     map_legend_to_ax[legend_line] = ax_line
+
+        for legend_line in leg.get_lines():
+            map_legend_to_ax[legend_line] = []
+            for ax_line in leglinelist:
+                if ((ax_line.get_label() == legend_line.get_label())
+                        or (ax_line.get_label()[0] == '_' and ax_line.get_label()[1:] == legend_line.get_label())):
+                    legend_line.set_picker(pickradius)
+                    map_legend_to_ax[legend_line].append(ax_line)
+
+        def on_pick(event):
+            legend_line = event.artist
+
+            if legend_line not in map_legend_to_ax:
+                return
+
+            ax_lines = map_legend_to_ax[legend_line]
+            for ax_line in ax_lines:
+                visible = not ax_line.get_visible()
+                ax_line.set_visible(visible)
+            legend_line.set_alpha(1.0 if visible else 0.2)
+            fig.canvas.draw()
+
+        fig.canvas.mpl_connect('pick_event', on_pick)
+        leg.set_draggable(True)
 
     plt.draw()
 
@@ -613,7 +706,7 @@ def line_plot(x: ArrayLike, y: ArrayLike, legend=None, x_lim: tuple[float, float
         plt.show()
 
     plt.close(fig)
-    return fig, line_out
+    return fig
 
 
 def radial_plot(x, y, legend=None, x_lim=None, y_lim=None, fig_size=(12, 9),
