@@ -85,7 +85,8 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
                                       *data2_options)
 
     def update_plot_style(*args, **kwargs):
-        lines = [line for axis in canvas.figure.axes for line in axis.get_lines()]
+        lines = ([line for axis in canvas.figure.axes for line in axis.get_lines()]
+                 + [line for legend in canvas.figure.legends for line in legend.get_lines()])
         line_names = [line.get_label() for legend in canvas.figure.legends for line in legend.get_lines()]
         for line_name in line_names:
             color = color_vars.get()[line_name].get()

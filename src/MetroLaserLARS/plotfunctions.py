@@ -652,7 +652,7 @@ def line_plot(x: ArrayLike, y: ArrayLike, legend=None, x_lim: tuple[float, float
 
     if legend_interactive:
         map_legend_to_ax = {}
-        pickradius = int(font_settings['size']/4)
+        pickradius = int(font_settings['size']/2)
 
         # for legend_line, ax_line in zip(leg.get_lines(), leglinelist):
         #     legend_line.set_picker(pickradius)
@@ -663,8 +663,10 @@ def line_plot(x: ArrayLike, y: ArrayLike, legend=None, x_lim: tuple[float, float
             for ax_line in leglinelist:
                 if ((ax_line.get_label() == legend_line.get_label())
                         or (ax_line.get_label()[0] == '_' and ax_line.get_label()[1:] == legend_line.get_label())):
-                    legend_line.set_picker(pickradius)
                     map_legend_to_ax[legend_line].append(ax_line)
+
+        for h in leg.legend_handles:
+            h.set_picker(pickradius)
 
         def on_pick(event):
             legend_line = event.artist
