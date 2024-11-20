@@ -144,8 +144,11 @@ def labeled_widget_label(frame, text):
 
 
 def labeled_entry(baseframe, label: str = '', varframe=None, postlabel: str = '', padding=padding_setting,
-                  entry_width: int = 6, vardefault=0, vartype=None, update_status=None,
+                  entry_width: int = 6, vardefault=0, vartype=None, update_status=None, command=None,
                   side=tk.TOP, infobox=True, infotext='Placeholder info text.'):
+    if command is not None and update_status is not None:
+        raise("Only one of command and update_status may be specified")
+    update_status = command if update_status is None else update_status
     varframe = baseframe if varframe is None else varframe
     entry, infolabel = None, None
     frame = labeled_widget_frame(baseframe, padding, side)
@@ -215,7 +218,7 @@ def make_button(baseframe, text: str = '', command=None, padding=padding_setting
 
 def labeled_file_select(baseframe, headingtxt: str = '', varframe=None, subheading: str = '', label: str = '',
                         padding=padding_setting, entry_width: int = 40, vardefault='', vartype=tk.StringVar,
-                        update_status=None, command=None, side=tk.TOP, selection='file',
+                        update_status=None, side=tk.TOP, selection='file',
                         filetype='pickle', infobox=True, infotext='Placeholder info text.'):
     varframe = baseframe if varframe is None else varframe
     entry, button, infolabel = None, None, None
