@@ -15,17 +15,23 @@ try:
     from LARS_Comparison import LARS_Comparison_from_app
     from app_helpers import heading, labeled_options, labeled_file_select, labeled_entry
     from app_helpers import padding_none, padding_setting, padding_option, padding_heading
-    from app_helpers import bool_options, CustomVar
+    from app_helpers import bool_options, CustomVar, make_button
+    from app_helpers import button_color, active_bg, active_fg
+    from app_helpers import background_color as bgc
     from app_window_part_matching import open_part_matching_window
     from app_window_plot import open_plot_window
+    from app_window_results_table import open_results_table_window
 except ModuleNotFoundError:
     from MetroLaserLARS.infotext import infotext
     from MetroLaserLARS.LARS_Comparison import LARS_Comparison_from_app
     from MetroLaserLARS.app_helpers import heading, labeled_options, labeled_file_select, labeled_entry
     from MetroLaserLARS.app_helpers import padding_none, padding_setting, padding_option, padding_heading
-    from MetroLaserLARS.app_helpers import bool_options, CustomVar
+    from MetroLaserLARS.app_helpers import bool_options, CustomVar, make_button
+    from MetroLaserLARS.app_helpers import button_color, active_bg, active_fg
+    from MetroLaserLARS.app_helpers import background_color as bgc
     from MetroLaserLARS.app_window_part_matching import open_part_matching_window
     from MetroLaserLARS.app_window_plot import open_plot_window
+    from MetroLaserLARS.app_window_results_table import open_results_table_window
 
 
 def run_app():
@@ -228,13 +234,35 @@ def run_app():
         running_var.set(False)
         update_status()
 
-    def import_settings(*args, **kwargs):
-        path = tk.filedialog.askopenfilename(**kwargs, title='Choose settings to import',
-                                             filetypes=(('Settings Files', '*settings*.pkl'), ('All Files', '*')))
-        if path:
-            with open(path, 'rb') as f:
-                settings_import = pickle.load(f)
-                set_settings(settings_import)
+    def import_pickle(mode, *args, **kwargs):
+        paths = []
+        if mode == 'settings':
+            paths.append(tk.filedialog.askopenfilename(**kwargs, title='Choose settings to import',
+                                                       filetypes=(('Settings Files', '*settings*.pkl'),
+                                                                  ('All Files', '*'))))
+        elif mode == 'data':
+            paths.append(tk.filedialog.askopenfilename(**kwargs, title='Choose data dict to import',
+                                                       filetypes=(('Pickled Data Dictionaries', '*data_dict*.pkl'),
+                                                                  ('All Files', '*'))))
+            if paths[0]:
+                paths.append(tk.filedialog.askopenfilename(**kwargs, title='Choose pair results to import',
+                                                           filetypes=(('Pickled Pair Results', '*pair_results*.pkl'),
+                                                                      ('All Files', '*'))))
+
+        data = []
+        for path in [p for p in paths if p]:
+            try:
+                with open(path, 'rb') as f:
+                    data.append(pickle.load(f))
+            except:
+                tk.messagebox.showerror(title='Load Failed', message=f'{mode} import failed.')
+                return
+        if data:
+            if mode == 'settings':
+                set_settings(data)
+            elif mode == 'data':
+                data_dict_var.set(data[0])
+                pair_results_var.set(data[1])
         return
 
     def update_peak_match_window_label(entry_text):
@@ -284,9 +312,7 @@ def run_app():
         root.destroy()
     root = tk.Tk()
     root.protocol("WM_DELETE_WINDOW", _quit)
-    root.geometry("1500x1000")
-    bgc = 'gray65'
-    buttoncolor = 'gray75'
+    root.geometry("1600x900")
     root.config(bg=bgc)
     root.option_add("*Background", bgc)
 
@@ -333,7 +359,9 @@ def run_app():
     rootsettings = tk.Frame(frame_canvas)
     rootsettings.pack(side=tk.TOP)
     rootsubmit = tk.Frame(frame_canvas)
-    rootsubmit.pack(side=tk.BOTTOM)
+    rootsubmit.pack(side=tk.TOP)
+    rootbuttons = tk.Frame(frame_canvas)
+    rootbuttons.pack(side=tk.TOP)
 
     rootl = tk.Frame(rootsettings)
     rootl.pack(side=tk.LEFT)
@@ -348,6 +376,8 @@ def run_app():
     data_dict_var, pair_results_var = CustomVar(), CustomVar()
     data_dict_var.set({})
     pair_results_var.set({})
+    option_menu_kwargs = {'bg': button_color, 'highlightthickness': 0,
+                          'activebackground': active_bg, 'activeforeground': active_fg}
 
     common_kwargs = {'update_status': update_status, 'varframe': root}
 
@@ -383,8 +413,12 @@ All pairs of subfolders will be compared.""",
                                                                label='Enter path to pickled data or select a file:',
                                                                infotext=infotext['pickled_data_path'], side=tk.LEFT,
                                                                **common_kwargs)
-    import_settings_Button = tk.Button(roottop, text="Import Settings", command=import_settings, bg=buttoncolor)
-    import_settings_Button.pack(**padding_setting)
+    frame_load_button = tk.Frame(roottop)
+    frame_load_button.pack(side=tk.TOP)
+    make_button(frame_load_button, text="Import Settings",
+                command=lambda: import_pickle('settings'), side=tk.LEFT)
+    make_button(frame_load_button, text="Import Data",
+                command=lambda: import_pickle('data'), side=tk.LEFT)
 
     heading('Settings', frame=roottop, side=tk.BOTTOM)
 
@@ -422,9 +456,18 @@ All pairs of subfolders will be compared.""",
     part_matching_text_var = tk.StringVar(root, value='')
     part_matching_strategy_var = tk.StringVar(root, value='list')
 
-    part_matching_Button = tk.Button(rootr, text="Define Known Part Matching", bg='gray75',
-                                     command=lambda: part_matching_text_var.set(open_part_matching_window(root, grouped_folders_var, part_matching_text_var, part_matching_strategy_var, **common_kwargs)))
-    part_matching_Button.pack()
+    make_button(rootr, text="Define Known Part Matching",
+                command=lambda: part_matching_text_var.set(
+                    open_part_matching_window(
+                        root,
+                        grouped_folders_var,
+                        part_matching_text_var,
+                        part_matching_strategy_var,
+                        **common_kwargs)
+                ), side=tk.TOP
+                )
+    part_matching_text_var.trace_add("write", update_status)
+    part_matching_strategy_var.trace_add("write", update_status)
 
     # PLOTTING AND PRINTING
 
@@ -459,10 +502,10 @@ All pairs of subfolders will be compared.""",
     plot_recursive_noise_menu = tk.OptionMenu(frame_plot_menus, plot_recursive_noise_var, *bool_options)
     plot_classification_menu = tk.OptionMenu(frame_plot_menus, plot_classification_var, *bool_options)
 
-    plot_menu.config(bg='gray75', highlightthickness=0)
-    plot_detail_menu.config(bg='gray75', highlightthickness=0)
-    plot_recursive_noise_menu.config(bg='gray75', highlightthickness=0)
-    plot_classification_menu.config(bg='gray75', highlightthickness=0)
+    plot_menu.config(**option_menu_kwargs)
+    plot_detail_menu.config(**option_menu_kwargs)
+    plot_recursive_noise_menu.config(**option_menu_kwargs)
+    plot_classification_menu.config(**option_menu_kwargs)
 
     plot_menu.grid(row=0, column=0)
     plot_detail_menu.grid(row=0, column=1)
@@ -660,30 +703,33 @@ All pairs of subfolders will be compared.""",
     dummy_label = tk.Label(frame_dummy, text="")
     dummy_label.pack(side=tk.LEFT)
 
-    # SUBMIT
     frame_submit = tk.Frame(rootsubmit)
     frame_submit.pack(**padding_heading, side=tk.BOTTOM)
 
-    submit_Button = tk.Button(frame_canvas, text="Run Code", bg='firebrick4', fg='white',
+    submit_Button = tk.Button(frame_submit, text="Run Code", bg='firebrick4', fg='white',
                               width=20, height=2, command=submit, font=(default_font_name, 20, "bold"))
     submit_Button.pack(**padding_heading)
 
-    frame_status = tk.Frame(rootsubmit)
+    frame_status = tk.Frame(frame_submit)
     frame_status.pack(side=tk.BOTTOM)
-
-    plot_Button = tk.Button(frame_status, text="View Plots",
-                            command=lambda: open_plot_window(root, data_dict_var,
-                                                             pair_results_var,
-                                                             frange_min_var,
-                                                             frange_max_var),
-                            bg=buttoncolor)
-    plot_Button.pack(**padding_heading, side=tk.LEFT)
 
     status_label0 = tk.Label(frame_status, text='Status:', font=(default_font_name, 12))
     status_label0.pack(**padding_setting, side=tk.LEFT)
     status_label = tk.Label(frame_status, text='No directory selected.',
                             bg='firebrick4', fg='white', font=(default_font_name, 12))
     status_label.pack(**padding_setting, side=tk.RIGHT)
+
+    make_button(rootbuttons, text="View Plots",
+                command=lambda: open_plot_window(root, data_dict_var,
+                                                 pair_results_var,
+                                                 frange_min_var,
+                                                 frange_max_var),
+                padding=padding_heading)
+
+    make_button(rootbuttons, text="Results Table",
+                command=lambda: open_results_table_window(root, data_dict_var,
+                                                          pair_results_var),
+                padding=padding_heading)
 
     # Start the main loop
     root.mainloop()

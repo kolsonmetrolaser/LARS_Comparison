@@ -14,6 +14,12 @@ padding_none = {'pady': 0, 'padx': 0}
 kwargs_pickle = {'title': "Select a data_dict[...].pkl file",
                  'filetypes': [("Pickled Data Dictionaries", "data_dict*.pkl"), ("All Files", "*.*")]}
 
+background_color = '#FFFEFC'
+entry_color = 'white'
+button_color = 'gray92'
+active_bg = 'floral white'
+active_fg = 'dark goldenrod'
+
 
 class CustomVar(tk.Variable):
     def __init__(self):
@@ -138,8 +144,11 @@ def labeled_widget_label(frame, text):
 
 
 def labeled_entry(baseframe, label: str = '', varframe=None, postlabel: str = '', padding=padding_setting,
-                  entry_width: int = 6, vardefault=0, vartype=None, update_status=None,
+                  entry_width: int = 6, vardefault=0, vartype=None, update_status=None, command=None,
                   side=tk.TOP, infobox=True, infotext='Placeholder info text.'):
+    if command is not None and update_status is not None:
+        raise("Only one of command and update_status may be specified")
+    update_status = command if update_status is None else update_status
     varframe = baseframe if varframe is None else varframe
     entry, infolabel = None, None
     frame = labeled_widget_frame(baseframe, padding, side)
@@ -148,7 +157,7 @@ def labeled_entry(baseframe, label: str = '', varframe=None, postlabel: str = ''
         var = vartype(varframe, value=vardefault)
         if update_status is not None:
             var.trace_add("write", update_status)
-        entry = tk.Entry(frame, width=entry_width, textvariable=var)
+        entry = tk.Entry(frame, width=entry_width, textvariable=var, bg=entry_color)
         entry.pack(side=tk.LEFT)
     label2 = labeled_widget_label(frame, postlabel)
     if infobox:
@@ -173,7 +182,8 @@ def labeled_options(baseframe, label: str = '', varframe=None, postlabel: str = 
         if update_status is not None:
             var.trace_add("write", update_status)
         optionmenu = tk.OptionMenu(frame, var, *options, command=command)
-        optionmenu.config(bg='gray75', highlightthickness=0)
+        optionmenu.config(bg=button_color, highlightthickness=0,
+                          activebackground=active_bg, activeforeground=active_fg)
         optionmenu.pack(side=tk.LEFT)
     label2 = labeled_widget_label(frame, postlabel)
     if infobox:
@@ -182,9 +192,33 @@ def labeled_options(baseframe, label: str = '', varframe=None, postlabel: str = 
     return var, frame, label1, optionmenu, label2, infolabel
 
 
+def make_button(baseframe, text: str = '', command=None, padding=padding_setting,
+                infobox=False, infotext='Placeholder info text.', side=tk.LEFT):
+    def update_button_color(event, *args, **kwargs):
+        if event.type.name == 'Enter':
+            event.widget['background'] = active_bg
+            event.widget['foreground'] = active_fg
+        if event.type.name == 'Leave':
+            event.widget['background'] = button_color
+            event.widget['foreground'] = 'black'
+
+    frame = labeled_widget_frame(baseframe, padding, side)
+
+    b = tk.Button(frame, text=text,
+                  command=command, bg=button_color)
+    b.pack(side=tk.LEFT)
+    b.bind("<Enter>", update_button_color)
+    b.bind("<Leave>", update_button_color)
+
+    if infobox:
+        infolabel = labeled_widget_label(frame, '(?)')
+        CreateToolTip(infolabel, infotext)
+    return b
+
+
 def labeled_file_select(baseframe, headingtxt: str = '', varframe=None, subheading: str = '', label: str = '',
                         padding=padding_setting, entry_width: int = 40, vardefault='', vartype=tk.StringVar,
-                        update_status=None, command=None, side=tk.TOP, selection='file',
+                        update_status=None, side=tk.TOP, selection='file',
                         filetype='pickle', infobox=True, infotext='Placeholder info text.'):
     varframe = baseframe if varframe is None else varframe
     entry, button, infolabel = None, None, None
@@ -199,7 +233,7 @@ def labeled_file_select(baseframe, headingtxt: str = '', varframe=None, subheadi
         var = vartype(varframe, value=vardefault)
         if update_status is not None:
             var.trace_add("write", update_status)
-        entry = tk.Entry(frame, width=entry_width, textvariable=var)
+        entry = tk.Entry(frame, width=entry_width, textvariable=var, bg=entry_color)
         if selection == 'file':
             fun = select_file
             if filetype == 'pickle':
@@ -207,10 +241,14 @@ def labeled_file_select(baseframe, headingtxt: str = '', varframe=None, subheadi
         elif selection == 'dir':
             kwargs = {}
             fun = select_directory
-        button = tk.Button(frame, text="Open", command=lambda: fun(entry, **kwargs), bg='gray75')
-        button.pack(side=tk.LEFT, padx=4)
+        button = make_button(frame, text="Open", command=lambda: fun(entry, **kwargs), padding={'padx': 4})
         entry.pack(side=tk.LEFT, padx=4)
         if infobox:
             infolabel = labeled_widget_label(frame, '(?)')
             CreateToolTip(infolabel, infotext)
     return var, frame, label1, entry, button, infolabel
+
+
+if __name__ == '__main__':
+    from app import run_app
+    run_app()

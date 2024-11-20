@@ -483,10 +483,12 @@ def line_plot(x: ArrayLike, y: ArrayLike, legend=None, x_lim: tuple[float, float
     matplotlib.rc('font', **font_settings)
 
     if fig is None:
+        using_extant_figure = False
         fig = plt.figure()
+        fig.set_size_inches(fig_size[0], fig_size[1])
     else:
+        using_extant_figure = True
         fig.clear()
-    fig.set_size_inches(fig_size[0], fig_size[1])
     ax = fig.gca()
     ax.set_xlabel(x_label, fontweight="bold")
     ax.set_ylabel(y_label, fontweight="bold")
@@ -511,26 +513,6 @@ def line_plot(x: ArrayLike, y: ArrayLike, legend=None, x_lim: tuple[float, float
             for i in range(len(y)):
                 colors.append(colormap((i+1)/(len(y)+1)))
 
-    # if v_line_pos is not None:
-    #     if can_iter(v_line_pos):  # multiple vlines?
-    #         if can_iter(v_line_pos[0]):  # multiple sets of vlines?
-    #             if can_iter(v_line_color) and not isinstance(v_line_color, str):  # multiple colors?
-    #                 for vlps, vlc, vlw in zip(v_line_pos, v_line_color, v_line_width):
-    #                     for vlp in vlps:
-    #                         plt.axvline(x=vlp, color=vlc, linewidth=vlw)
-    #             else:  # one color
-    #                 for vlps in v_line_pos:
-    #                     for vlp in vlps:
-    #                         plt.axvline(x=vlp, color=v_line_color, linewidth=v_line_width)
-    #         else:  # one set of vlines
-    #             if can_iter(v_line_color) and not isinstance(v_line_color, str):  # multiple colors?
-    #                 for vlp, vlc in zip(v_line_pos, v_line_color):
-    #                     plt.axvline(x=vlp, color=vlc, linewidth=v_line_width)
-    #             else:  # one color
-    #                 for vlp in v_line_pos:
-    #                     plt.axvline(x=vlp, color=v_line_color, linewidth=v_line_width)
-    #     else:  # one vline
-    #         plt.axvline(x=v_line_pos, color=v_line_color, linewidth=v_line_width)
     if v_line_pos is not None:
         if can_iter(v_line_pos):  # multiple vlines?
             if can_iter(v_line_pos[0]):  # multiple sets of vlines?
@@ -590,11 +572,12 @@ def line_plot(x: ArrayLike, y: ArrayLike, legend=None, x_lim: tuple[float, float
         line.set_linewidth(line_width)
 
     if legend is not None:
+        legend_plot_source = fig if using_extant_figure else plt
         if legend_location == 'outside':
-            leg = plt.legend(linelist, legend, title=legend_title, bbox_to_anchor=(1.04, 1), loc='upper left',
-                             framealpha=1, fancybox=False)
+            leg = legend_plot_source.legend(linelist, legend, title=legend_title, bbox_to_anchor=(1.04, 1), loc='upper left',
+                                            framealpha=1, fancybox=False)
         else:
-            leg = plt.legend(linelist, legend, loc=legend_location, title=legend_title, framealpha=1, fancybox=False)
+            leg = legend_plot_source.legend(linelist, legend, loc=legend_location, title=legend_title, framealpha=1, fancybox=False)
         leg.get_frame().set_linewidth(axis_line_width)
         leg.get_frame().set_edgecolor('black')
 
