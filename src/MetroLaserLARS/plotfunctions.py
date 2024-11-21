@@ -13,7 +13,6 @@ from mpl_toolkits.mplot3d.axis3d import Axis
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 from numpy.typing import ArrayLike
-import time
 from scipy.stats import gmean
 from typing import Literal, Optional
 
@@ -164,16 +163,13 @@ You must supply 'z' only or all three.""")
         print('starting spline interpolation')
         from scipy.interpolate import bisplrep, bisplev
         newz = np.zeros_like(z)
-        time0 = time.time()
         print('bisplrep')
         xscale = gmean(np.abs(x), axis=None)
         yscale = gmean(np.abs(y), axis=None)
         zscale = gmean(np.abs(z), axis=None)
         splfit = bisplrep(x/xscale, y/yscale, z/zscale, kx=smooth_order[0], ky=smooth_order[1], task=-1, tx=tx/xscale,
                           ty=ty/yscale)
-        print(time.time()-time0, 'bisplev')
         newz = bisplev(x[0]/xscale, y[:, 0]/yscale, splfit).T*zscale
-        print(time.time()-time0, 'done')
 
         x = presmoothx
         y = presmoothy

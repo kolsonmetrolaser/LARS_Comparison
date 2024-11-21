@@ -7,7 +7,6 @@ Created on Tue Oct 15 12:08:17 2024
 # External imports
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
-import pandas as pd
 import pytdms
 import os.path as osp
 from typing import Literal
@@ -105,9 +104,11 @@ class LarsData:
             return cls(name=osp.basename(permanent_path), path=permanent_path, time=data[:, 0], pztV=data[:, 1],
                        ldvV=data[:, 2], freq=data[:, 3], vel=data[:, 4])
         elif ext == '.csv':
-            df = pd.read_csv(path)
-            data = dict(zip(df.columns.values, df.to_numpy().T))
-            for k, v in list(data.items()):
+            header = np.loadtxt(path, max_rows=1, delimiter=',', dtype=str)
+            datain = np.genfromtxt(path, delimiter=',', skip_header=1, unpack=True, dtype=np.float64,
+                                   missing_values='', filling_values=np.nan)
+            data = {}
+            for k, v in zip(header.copy(), datain.copy()):
                 data[k] = v[~np.isnan(v)]
                 if nn['v'] in k:
                     if nn['v'] not in data:
@@ -131,8 +132,22 @@ Only load .npz, .tdms, .all, or .csv files. Full path: {permanent_path}"""
                             dataout[nn['v']+' '+str(i)] = row
                 if pop:
                     dataout.pop(nn['v'])
-                df = pd.DataFrame.from_dict(dataout, orient='index').transpose()
-                df.to_csv(path_no_ext+'.csv', index=False)
+
+                maxsize = 0
+                for k, v in dataout.items():
+                    maxsize = max(maxsize, len(v))
+                npout = np.nan*np.ones((maxsize, len(dataout)), dtype=object)
+                npheader = ''
+                for i, (k, v) in enumerate(dataout.items()):
+                    npheader += k if npheader == '' else ','+k
+                    npout[:len(v), i] = v
+                np.savetxt(path_no_ext+'.csv', npout, delimiter=',', comments='', header=npheader)
+                # replace 'nan' with ''
+                with open(path_no_ext+'.csv', 'r') as f:
+                    fdata = f.read()
+                fdata = fdata.replace('nan', '')
+                with open(path_no_ext+'.csv', 'w') as f:
+                    f.write(fdata)
 
             if data[nn['v']].ndim > 1:
                 ldvV = np.mean(data[nn['v']], axis=0)
@@ -147,7 +162,7 @@ Only load .npz, .tdms, .all, or .csv files. Full path: {permanent_path}"""
                    ldvV=c.ldvV, freq=c.freq, vel=c.vel)
 
 
-def all_equal(l: list[ArrayLike]) -> bool:
+def all_equal(li: list[ArrayLike]) -> bool:
     """
     Checks if all arrays in a list are equal to each other.
 
@@ -162,8 +177,8 @@ def all_equal(l: list[ArrayLike]) -> bool:
         Whether all arrays in `l` are equal.
 
     """
-    for el in l[1:]:
-        if not (el == l[0]).all():
+    for el in li[1:]:
+        if not (el == li[0]).all():
             return False
     return True
 

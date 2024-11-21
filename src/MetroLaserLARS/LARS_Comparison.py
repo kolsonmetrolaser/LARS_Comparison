@@ -8,7 +8,7 @@ Created on Tue Oct 15 12:08:17 2024
 import numpy as np
 from time import time
 import pickle
-import os
+from os import listdir
 from os import path as osp
 
 # Internal imports
@@ -295,11 +295,11 @@ All code finished running after {time()-time0:.3f} s""")
 
 def get_subfolders(folder, grouped_folders=False):
     subfolders = []
-    for item in os.listdir(folder):
+    for item in listdir(folder):
         item_path = osp.join(folder, item)
         if osp.isdir(item_path):
             if grouped_folders:
-                for item2 in os.listdir(item_path):
+                for item2 in listdir(item_path):
                     item_path = osp.join(folder, item, item2)
                     if osp.isdir(item_path):
                         subfolders.append(item_path)

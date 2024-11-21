@@ -363,7 +363,7 @@ def Load_LARS_data(folder: str = '', **settings):
     else:
         for subdir, dirs, files in os.walk(folder):
             for file in [f for f in files if data_format in f]:
-                result.append(LarsData.from_file(osp.join(subdir, file, **settings)))
+                result.append(LarsData.from_file(osp.join(subdir, file), **settings))
     return result
 
 
