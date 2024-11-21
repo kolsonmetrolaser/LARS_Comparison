@@ -192,6 +192,8 @@ def labeled_options(baseframe, label: str = '', varframe=None, postlabel: str = 
             var.trace_add("write", update_status)
         optionmenu = tk.OptionMenu(frame, var, *options, command=command)
         optionmenu.pack(side=tk.LEFT)
+        optionmenu.config(bg=button_color, highlightthickness=0,
+                          activebackground=active_bg, activeforeground=active_fg)
     label2 = labeled_widget_label(frame, postlabel)
     if infobox:
         infolabel = labeled_widget_label(frame, '(?)')

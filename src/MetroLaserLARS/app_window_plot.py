@@ -37,8 +37,8 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
     data_dict, pair_results = data_dict_var.get(), pair_results_var.get()
     keys = list(data_dict.keys())
     if keys:
-        k = keys[0] if keys else None
-        data = data_dict[k] if k is not None else None
+        k = keys[0]
+        data = data_dict[k]
         x, y = data.freq, data.vel
         fig = line_plot(x/1000, y, legend=[data.name], x_label='Frequency (kHz)', y_label='Intensity (µm/s)',
                         title='Raw Data', **common_kwargs)
@@ -81,7 +81,9 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
         data2_options.remove(data_selection_var.get())
         data2_options_var.set(data2_options)
         current_selection = data_selection2_var.get()
-        data_selection2_menu.set_menu(current_selection if current_selection in data2_options else data2_options[0],
+        data_selection2_menu.set_menu(current_selection
+                                      if current_selection in data2_options
+                                      else (data2_options[0] if data2_options else ''),
                                       *data2_options)
 
     def update_plot_style(*args, **kwargs):
@@ -128,8 +130,7 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
         return
 
     def update_plot_contents(canvas, name_to_key, *args, **common_kwargs):
-        canvas.figure.clear()
-
+        # canvas.figure.clear()
         update_data_selection2()
 
         kwargs = common_kwargs
@@ -149,23 +150,47 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
         if t in ['Compare Raw', 'Matched Peaks']:
             data2 = data_dict[name_to_key[n2]]
 
+        if t in ['Raw Data', 'Peak Fits']:
+            data_selection2_label.pack_forget()
+            data_selection2_menu.pack_forget()
+            custom_plot_action_label.pack_forget()
+            custom_plot_action_menu.pack_forget()
+        elif t in ['Compare Raw', 'Matched Peaks']:
+            data_selection2_label.pack(side=tk.LEFT)
+            data_selection2_menu.pack(side=tk.LEFT)
+            custom_plot_action_label.pack_forget()
+            custom_plot_action_menu.pack_forget()
+        elif t in ['Custom Plot']:
+            data_selection2_label.pack_forget()
+            data_selection2_menu.pack_forget()
+            custom_plot_action_label.pack(side=tk.LEFT)
+            custom_plot_action_menu.pack(side=tk.LEFT)
+
         # Make Plots
         if t == 'Raw Data':
             x, y = data.freq.copy()/1000, data.vel.copy()
             _ = line_plot(x, y, legend=[n], x_label='Frequency (kHz)', y_label='Intensity (µm/s)',
                           title='Raw Data', **kwargs)
         elif t == 'Peak Fits':
+            data_selection2_label.pack_forget()
+            data_selection2_menu.pack_forget()
             x, y, p = data.freq.copy()/1000, data.newvel.copy(), data.peaks['positions']/1000
             f0, f1 = common_kwargs['x_lim']
             x = x[np.logical_and(x > f0, x < f1)]
-            _ = line_plot(x, y, legend=[n], x_label='Frequency (kHz)', y_label='Intensity (µm/s)',
-                          v_line_pos=p, v_line_width=2, title='Peak Fits', **kwargs)
+            _ = line_plot(x, y, legend=[n], x_label='Frequency (kHz)', y_label='Intensity (arb.)',
+                          v_line_pos=p, v_line_width=2, v_line_legend=['Peak Locations'],
+                          y_norm='each', title='Peak Fits',
+                          legend_location='upper right', **kwargs)
         elif t == 'Compare Raw':
+            data_selection2_label.pack(side=tk.LEFT)
+            data_selection2_menu.pack(side=tk.LEFT)
             x, y = data.freq.copy()/1000, data.vel.copy()
             x2, y2 = data2.freq.copy()/1000, data2.vel.copy()
             _ = line_plot([x, x2], [y, y2], x_label='Frequency (kHz)', y_label='Intensity (µm/s)',
                           legend=[n, n2], legend_location='upper right', title='Peak Fits', **kwargs)
         elif t == 'Matched Peaks':
+            data_selection2_label.pack(side=tk.LEFT)
+            data_selection2_menu.pack(side=tk.LEFT)
             pr = [pair for pair in pair_results if n in pair['names'] and n2 in pair['names']][0]
             s = pr['stretch']
             x, y = data.freq.copy()/1000, data.newvel.copy()
@@ -188,6 +213,41 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
                           legend=[n, n2], v_line_legend=['Matched', f'Unmatched {n}', f'Unmatched {n2}'],
                           legend_location='upper right', y_norm='each',
                           title='Stretched peak matches raw', **kwargs)
+        elif t == 'Custom Plot':
+            action = custom_plot_action_var.get()
+            if action == 'Clear All':
+                canvas.figure.clear()
+            elif 'Add' in action:
+                x, p = data.freq.copy()/1000, data.peaks['positions']/1000
+                y = data.newvel.copy() if 'Smoothed' in action else data.vel.copy()
+                f0, f1 = common_kwargs['x_lim']
+                x = x[np.logical_and(x > f0, x < f1)] if 'Smoothed' in action else x
+
+                if 'with Peaks' in action:
+                    vline_kwargs = {'v_line_pos': p, 'v_line_width': 2, 'v_line_legend': [n+' Peaks']}
+                else:
+                    vline_kwargs = {}
+
+                line_plot(x, y, legend=[n + ' Smoothed' if 'Smoothed' in action else n],
+                          x_label='Frequency (kHz)', y_label='Intensity (arb.)',
+                          title='Custom Plot',
+                          legend_location='upper right', clear_fig=False, **kwargs, **vline_kwargs)
+
+                pass
+            elif 'Remove' in action:
+                lines = [line for axis in canvas.figure.axes for line in axis.get_lines()]
+                # lines = ([line for axis in canvas.figure.axes for line in axis.get_lines()]
+                #          + [line for legend in canvas.figure.legends for line in legend.get_lines()])
+                line_names = [line.get_label() for line in lines]
+                for line, name in zip(lines, line_names):
+                    if name in [n, '_'+n, n+' Peaks', '_'+n+' Peaks', n+' Smoothed', '_'+n+' Smoothed']:
+                        line.remove()
+
+                lines = [line for legend in canvas.figure.legends for line in legend.get_lines()]
+                line_names = [line.get_label() for line in lines]
+                for line, name in zip(lines, line_names):
+                    if name in [n, '_'+n, n+' Peaks', '_'+n+' Peaks', n+' Smoothed', '_'+n+' Smoothed']:
+                        line.set_visible(False)
 
         # required to update canvas and attached toolbar!
         canvas.draw_idle()
@@ -198,7 +258,7 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
     frame_options = tk.Frame(frame_options_legend)
     frame_style = tk.Frame(frame_options_legend)
 
-    plot_type_options = ['Raw Data', 'Peak Fits', 'Compare Raw', 'Matched Peaks']
+    plot_type_options = ['Raw Data', 'Peak Fits', 'Compare Raw', 'Matched Peaks', 'Custom Plot']
     data_keys = list(data_dict.keys())
     if data_keys:
         name_to_key = {}
@@ -209,7 +269,7 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
         data2_options = data_options.copy()
         data2_options.pop(0)
     else:
-        name_to_key = {'': ''}
+        name_to_key = {}
         data_options = ['']
         data2_options = ['']
     data2_options_var = CustomVar()
@@ -227,7 +287,20 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
     data_selection2_menu = ttk.OptionMenu(frame_options, data_selection2_var,
                                           data2_options[0], *data2_options)
 
+    custom_plot_options = ['Add Raw', 'Add Smoothed', 'Add Raw with Peaks', 'Add Smoothed with Peaks',
+                           'Remove', 'Remove Peaks', 'Clear All']
+    custom_plot_action_var = tk.StringVar(window)
+    custom_plot_action_label = tk.Label(frame_options, text="Plotting Action")
+    custom_plot_action_menu = ttk.OptionMenu(frame_options, custom_plot_action_var,
+                                             custom_plot_options[0], *custom_plot_options)
+
     def update_plot_contents_wrapper(*args):
+        if args[0] == data_selection_var._name and plot_type_var.get() == 'Custom Plot':
+            return
+        if args[0] == plot_type_var._name and plot_type_var.get() == 'Custom Plot':
+            custom_plot_action_var.set('Clear All')
+            return
+
         data_selection2_var.trace_remove("write", data_selection2_var_traceid_var.get())
         update_plot_contents(canvas, name_to_key, **common_kwargs)
         traceid = data_selection2_var.trace_add("write", update_plot_contents_wrapper)
@@ -240,19 +313,20 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
     # data_selection2_var.trace_add("write", lambda *args: update_plot_contents(canvas, name_to_key, **common_kwargs))
     traceid = data_selection2_var.trace_add("write", update_plot_contents_wrapper)
     data_selection2_var_traceid_var.set(traceid)
+    custom_plot_action_var.trace_add("write", update_plot_contents_wrapper)
 
     plot_type_label.pack(side=tk.LEFT)
     plot_type_menu.pack(side=tk.LEFT)
     data_selection_label.pack(side=tk.LEFT)
     data_selection_menu.pack(side=tk.LEFT)
-    data_selection2_label.pack(side=tk.LEFT)
-    data_selection2_menu.pack(side=tk.LEFT)
 
     frame_options_legend.pack(side=tk.BOTTOM)
     frame_options.pack(side=tk.TOP)
     frame_style.pack(side=tk.TOP)
     toolbar.pack(side=tk.BOTTOM, fill=tk.X)
     canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
+    update_plot_contents(canvas, name_to_key, **common_kwargs)
 
     return
 

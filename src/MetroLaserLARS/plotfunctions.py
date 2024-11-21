@@ -446,7 +446,8 @@ def line_plot(x: ArrayLike, y: ArrayLike, legend=None, x_lim: tuple[float, float
               v_line_pos: Optional[ArrayLike] = None, v_line_color='k', v_line_width: float = 6,
               v_line_legend=None,
               y_norm: Literal[None, 'global', 'each'] = None, fig=None,
-              x_slice: tuple[float, float] = (-np.inf, np.inf), legend_interactive: bool = False):
+              x_slice: tuple[float, float] = (-np.inf, np.inf), legend_interactive: bool = False,
+              clear_fig: bool = True):
 
     x = x.copy()
     y = y.copy()
@@ -490,8 +491,16 @@ def line_plot(x: ArrayLike, y: ArrayLike, legend=None, x_lim: tuple[float, float
         fig.set_size_inches(fig_size[0], fig_size[1])
     else:
         using_extant_figure = True
-        fig.clear()
+        if clear_fig:
+            fig.clear()
     ax = fig.gca()
+    extantlinelist = []
+    if using_extant_figure:
+        for leg in fig.legends:
+            leg.remove()
+        for axis in fig.axes:
+            for line in axis.lines:
+                extantlinelist.append(line)
     ax.set_xlabel(x_label, fontweight="bold")
     ax.set_ylabel(y_label, fontweight="bold")
     for axis in ['top', 'bottom', 'left', 'right']:
@@ -514,83 +523,6 @@ def line_plot(x: ArrayLike, y: ArrayLike, legend=None, x_lim: tuple[float, float
             colors = []
             for i in range(len(y)):
                 colors.append(colormap((i+1)/(len(y)+1)))
-
-    v_line_legend_used = [False for vll in v_line_legend] if v_line_legend is not None else None
-    if v_line_pos is not None:
-        if can_iter(v_line_pos):  # multiple vlines?
-            if can_iter(v_line_pos[0]):  # multiple sets of vlines?
-                if can_iter(v_line_color) and not isinstance(v_line_color, str):  # multiple colors?
-                    for vlgroup, (vlps, vlc, vlw) in enumerate(zip(v_line_pos, v_line_color, v_line_width)):
-                        for vlp in vlps:
-                            ax.axvline(x=vlp, color=vlc, linewidth=vlw,
-                                       label=(v_line_legend[vlgroup] if
-                                              (v_line_legend is not None and not v_line_legend_used[vlgroup])
-                                              else (
-                                                  '_'+v_line_legend[vlgroup] if
-                                                  (v_line_legend is not None)
-                                                  else '')
-                                              )
-                                       )
-                            if v_line_legend is not None:
-                                v_line_legend_used[vlgroup] = True
-                else:  # one color
-                    for vlps in v_line_pos:
-                        for vlp in vlps:
-                            ax.axvline(x=vlp, color=v_line_color, linewidth=v_line_width,
-                                       label=(v_line_legend[0] if
-                                              (v_line_legend is not None and not v_line_legend_used[vlgroup])
-                                              else (
-                                                  '_'+v_line_legend[0] if
-                                                  (v_line_legend is not None)
-                                                  else '')
-                                              )
-                                       )
-                            if v_line_legend is not None:
-                                v_line_legend_used[0] = True
-            else:  # one set of vlines
-                if can_iter(v_line_color) and not isinstance(v_line_color, str):  # multiple colors?
-                    for vlgroup, (vlp, vlc) in enumerate(zip(v_line_pos, v_line_color)):
-                        ax.axvline(x=vlp, color=vlc, linewidth=v_line_width,
-                                   label=(v_line_legend[vlgroup] if
-                                          (v_line_legend is not None and not v_line_legend_used[vlgroup])
-                                          else (
-                                              '_'+v_line_legend[vlgroup] if
-                                              (v_line_legend is not None)
-                                              else '')
-                                          )
-                                   )
-                        if v_line_legend is not None:
-                            v_line_legend_used[vlgroup] = True
-                else:  # one color
-                    for vlp in v_line_pos:
-                        ax.axvline(x=vlp, color=v_line_color, linewidth=v_line_width,
-                                   label=(v_line_legend[0] if
-                                          (v_line_legend is not None and not v_line_legend_used[vlgroup])
-                                          else (
-                                              '_'+v_line_legend[0] if
-                                              (v_line_legend is not None)
-                                              else '')
-                                          )
-                                   )
-                        if v_line_legend is not None:
-                            v_line_legend_used[0] = True
-        else:  # one vline
-            ax.axvline(x=v_line_pos, color=v_line_color, linewidth=v_line_width,
-                       label=(v_line_legend[0] if
-                              (v_line_legend is not None and not v_line_legend_used[vlgroup])
-                              else (
-                                  '_'+v_line_legend[0] if
-                                  (v_line_legend is not None)
-                                  else '')
-                              )
-                       )
-            if v_line_legend is not None:
-                v_line_legend_used[0] = True
-
-    vlinelist = []
-    for axes in fig.axes:
-        for line in axes.lines:
-            vlinelist.append(line)
 
     if any(isinstance(el, list) for el in y) or isinstance(y, list):
         if any(isinstance(el, list) for el in x) or isinstance(x, list):
@@ -621,16 +553,94 @@ def line_plot(x: ArrayLike, y: ArrayLike, legend=None, x_lim: tuple[float, float
         ax.set_yticks(y_ticks)
 
     linelist = []
-    for axes in fig.axes:
-        for line in axes.lines:
-            if line not in vlinelist:
+    for axis in fig.axes:
+        for line in axis.lines:
+            if line not in extantlinelist:
                 linelist.append(line)
+
+    v_line_legend_used = [False for vll in v_line_legend] if v_line_legend is not None else None
+    if v_line_pos is not None:
+        if can_iter(v_line_pos):  # multiple vlines?
+            if can_iter(v_line_pos[0]):  # multiple sets of vlines?
+                if can_iter(v_line_color) and not isinstance(v_line_color, str):  # multiple colors?
+                    for vlgroup, (vlps, vlc, vlw) in enumerate(zip(v_line_pos, v_line_color, v_line_width)):
+                        for vlp in vlps:
+                            ax.axvline(x=vlp, color=vlc, linewidth=vlw,
+                                       label=(v_line_legend[vlgroup] if
+                                              (v_line_legend is not None and not v_line_legend_used[vlgroup])
+                                              else (
+                                                  '_'+v_line_legend[vlgroup] if
+                                                  (v_line_legend is not None)
+                                                  else '')
+                                              )
+                                       )
+                            if v_line_legend is not None:
+                                v_line_legend_used[vlgroup] = True
+                else:  # one color
+                    for vlps in v_line_pos:
+                        for vlp in vlps:
+                            ax.axvline(x=vlp, color=v_line_color, linewidth=v_line_width,
+                                       label=(v_line_legend[0] if
+                                              (v_line_legend is not None and not v_line_legend_used[0])
+                                              else (
+                                                  '_'+v_line_legend[0] if
+                                                  (v_line_legend is not None)
+                                                  else '')
+                                              )
+                                       )
+                            if v_line_legend is not None:
+                                v_line_legend_used[0] = True
+            else:  # one set of vlines
+                if can_iter(v_line_color) and not isinstance(v_line_color, str):  # multiple colors?
+                    for vlgroup, (vlp, vlc) in enumerate(zip(v_line_pos, v_line_color)):
+                        ax.axvline(x=vlp, color=vlc, linewidth=v_line_width,
+                                   label=(v_line_legend[vlgroup] if
+                                          (v_line_legend is not None and not v_line_legend_used[vlgroup])
+                                          else (
+                                              '_'+v_line_legend[vlgroup] if
+                                              (v_line_legend is not None)
+                                              else '')
+                                          )
+                                   )
+                        if v_line_legend is not None:
+                            v_line_legend_used[vlgroup] = True
+                else:  # one color
+                    for vlp in v_line_pos:
+                        ax.axvline(x=vlp, color=v_line_color, linewidth=v_line_width,
+                                   label=(v_line_legend[0] if
+                                          (v_line_legend is not None and not v_line_legend_used[0])
+                                          else (
+                                              '_'+v_line_legend[0] if
+                                              (v_line_legend is not None)
+                                              else '')
+                                          )
+                                   )
+                        if v_line_legend is not None:
+                            v_line_legend_used[0] = True
+        else:  # one vline
+            ax.axvline(x=v_line_pos, color=v_line_color, linewidth=v_line_width,
+                       label=(v_line_legend[0] if
+                              (v_line_legend is not None and not v_line_legend_used[0])
+                              else (
+                                  '_'+v_line_legend[0] if
+                                  (v_line_legend is not None)
+                                  else '')
+                              )
+                       )
+            if v_line_legend is not None:
+                v_line_legend_used[0] = True
+
+    vlinelist = []
+    for axis in fig.axes:
+        for line in axis.lines:
+            if line not in extantlinelist and line not in linelist:
+                vlinelist.append(line)
 
     for line in linelist:
         line.set_linewidth(line_width)
 
     if legend is not None:
-        leglinelist = linelist+vlinelist if v_line_legend is not None else linelist
+        leglinelist = extantlinelist+linelist+vlinelist if v_line_legend is not None else extantlinelist+linelist
         legend_plot_source = fig if using_extant_figure else plt
         if legend_location == 'outside':
             leg = legend_plot_source.legend(handles=leglinelist, title=legend_title,
