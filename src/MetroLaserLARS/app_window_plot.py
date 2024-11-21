@@ -11,10 +11,10 @@ from matplotlib.backend_bases import key_press_handler
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 
 try:
-    from plotfunctions import line_plot
+    from plotfunctions import line_plot, make_legend_interactive
     from app_helpers import CustomVar, padding_setting, plot_style_widget
 except ModuleNotFoundError:
-    from MetroLaserLARS.plotfunctions import line_plot
+    from MetroLaserLARS.plotfunctions import line_plot, make_legend_interactive
     from MetroLaserLARS.app_helpers import CustomVar, padding_setting, plot_style_widget
 
 
@@ -216,7 +216,14 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
         elif t == 'Custom Plot':
             action = custom_plot_action_var.get()
             if action == 'Clear All':
-                canvas.figure.clear()
+                if (len(canvas.figure.get_children()) != 1
+                    and (custom_plot_clear_var.get()
+                         or tk.messagebox.askokcancel('Clear Plots?',
+                                                      'Are you sure you want to completely clear the plot?',
+                                                      parent=window, master=window)
+                         )
+                    ):
+                    canvas.figure.clear()
             elif 'Add' in action:
                 x, p = data.freq.copy()/1000, data.peaks['positions']/1000
                 y = data.newvel.copy() if 'Smoothed' in action else data.vel.copy()
@@ -235,24 +242,42 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
 
                 pass
             elif 'Remove' in action:
+                removed_lines = False
                 lines = [line for axis in canvas.figure.axes for line in axis.get_lines()]
                 # lines = ([line for axis in canvas.figure.axes for line in axis.get_lines()]
                 #          + [line for legend in canvas.figure.legends for line in legend.get_lines()])
                 line_names = [line.get_label() for line in lines]
                 for line, name in zip(lines, line_names):
-                    if name in [n, '_'+n, n+' Peaks', '_'+n+' Peaks', n+' Smoothed', '_'+n+' Smoothed']:
-                        line.remove()
+                    if action == 'Remove':
+                        if name in [n, '_'+n, n+' Peaks', '_'+n+' Peaks', n+' Smoothed', '_'+n+' Smoothed']:
+                            line.remove()
+                            removed_lines = True
+                    elif action == 'Remove Peaks':
+                        for n in name_to_key:
+                            if name in [n+' Peaks', '_'+n+' Peaks']:
+                                line.remove()
+                                removed_lines = True
 
-                lines = [line for legend in canvas.figure.legends for line in legend.get_lines()]
-                line_names = [line.get_label() for line in lines]
-                for legend in canvas.figure.legends:
-                    legend.remove()
-                for line, name in zip(lines, line_names):
-                    if name in [n, '_'+n, n+' Peaks', '_'+n+' Peaks', n+' Smoothed', '_'+n+' Smoothed']:
-                        # line.set_visible(False)
-                        lines.remove(line)
-                        line_names.remove(name)
-                canvas.figure.legend(lines, line_names)
+                if removed_lines:
+                    # Update Legend
+                    leglines = [line for legend in canvas.figure.legends for line in legend.get_lines()]
+                    legline_names = [line.get_label() for line in leglines]
+                    for legend in canvas.figure.legends:
+                        legend.remove()
+                    for line, name in zip(reversed(leglines), reversed(legline_names)):
+                        if action == 'Remove':
+                            if name in [n, '_'+n, n+' Peaks', '_'+n+' Peaks', n+' Smoothed', '_'+n+' Smoothed']:
+                                leglines.remove(line)
+                                legline_names.remove(name)
+                        elif action == 'Remove Peaks':
+                            for n in name_to_key:
+                                if name in [n+' Peaks', '_'+n+' Peaks']:
+                                    leglines.remove(line)
+                                    legline_names.remove(name)
+                    leg = canvas.figure.legend(leglines, legline_names, loc='upper right', framealpha=1, fancybox=False)
+                    leg.get_frame().set_linewidth(4)
+                    leg.get_frame().set_edgecolor('black')
+                    make_legend_interactive(canvas.figure, leg, lines)
 
         # required to update canvas and attached toolbar!
         canvas.draw_idle()
@@ -295,6 +320,7 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
     custom_plot_options = ['Add Raw', 'Add Smoothed', 'Add Raw with Peaks', 'Add Smoothed with Peaks',
                            'Remove', 'Remove Peaks', 'Clear All']
     custom_plot_action_var = tk.StringVar(window)
+    custom_plot_clear_var = tk.BooleanVar(window)
     custom_plot_action_label = tk.Label(frame_options, text="Plotting Action")
     custom_plot_action_menu = ttk.OptionMenu(frame_options, custom_plot_action_var,
                                              custom_plot_options[0], *custom_plot_options)
@@ -303,7 +329,9 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
         if args[0] == data_selection_var._name and plot_type_var.get() == 'Custom Plot':
             return
         if args[0] == plot_type_var._name and plot_type_var.get() == 'Custom Plot':
+            custom_plot_clear_var.set(True)
             custom_plot_action_var.set('Clear All')
+            custom_plot_clear_var.set(False)
             return
 
         data_selection2_var.trace_remove("write", data_selection2_var_traceid_var.get())

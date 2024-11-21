@@ -661,38 +661,7 @@ def line_plot(x: ArrayLike, y: ArrayLike, legend=None, x_lim: tuple[float, float
         ax.set_title(title)
 
     if legend_interactive:
-        map_legend_to_ax = {}
-        pickradius = int(font_settings['size']/2)
-
-        # for legend_line, ax_line in zip(leg.get_lines(), leglinelist):
-        #     legend_line.set_picker(pickradius)
-        #     map_legend_to_ax[legend_line] = ax_line
-
-        for legend_line in leg.get_lines():
-            map_legend_to_ax[legend_line] = []
-            for ax_line in leglinelist:
-                if ((ax_line.get_label() == legend_line.get_label())
-                        or (ax_line.get_label()[0] == '_' and ax_line.get_label()[1:] == legend_line.get_label())):
-                    map_legend_to_ax[legend_line].append(ax_line)
-
-        for h in leg.legend_handles:
-            h.set_picker(pickradius)
-
-        def on_pick(event):
-            legend_line = event.artist
-
-            if legend_line not in map_legend_to_ax:
-                return
-
-            ax_lines = map_legend_to_ax[legend_line]
-            for ax_line in ax_lines:
-                visible = not ax_line.get_visible()
-                ax_line.set_visible(visible)
-            legend_line.set_alpha(1.0 if visible else 0.2)
-            fig.canvas.draw()
-
-        fig.canvas.mpl_connect('pick_event', on_pick)
-        leg.set_draggable(True)
+        make_legend_interactive(fig, leg, leglinelist, font_settings=font_settings)
 
     plt.draw()
 
@@ -719,6 +688,38 @@ def line_plot(x: ArrayLike, y: ArrayLike, legend=None, x_lim: tuple[float, float
 
     plt.close(fig)
     return fig
+
+
+def make_legend_interactive(fig, leg, leglinelist, font_settings: dict = {'weight': 'bold', 'size': 22}):
+    map_legend_to_ax = {}
+    pickradius = int(font_settings['size']/2)
+
+    for legend_line in leg.get_lines():
+        map_legend_to_ax[legend_line] = []
+        for ax_line in leglinelist:
+            if ((ax_line.get_label() == legend_line.get_label())
+                    or (ax_line.get_label()[0] == '_' and ax_line.get_label()[1:] == legend_line.get_label())):
+                map_legend_to_ax[legend_line].append(ax_line)
+
+    for h in leg.legend_handles:
+        h.set_picker(pickradius)
+
+    def on_pick(event):
+        legend_line = event.artist
+
+        if legend_line not in map_legend_to_ax:
+            return
+
+        ax_lines = map_legend_to_ax[legend_line]
+        for ax_line in ax_lines:
+            visible = not ax_line.get_visible()
+            ax_line.set_visible(visible)
+        legend_line.set_alpha(1.0 if visible else 0.2)
+        fig.canvas.draw()
+
+    fig.canvas.mpl_connect('pick_event', on_pick)
+    leg.set_draggable(True)
+    return leg
 
 
 def radial_plot(x, y, legend=None, x_lim=None, y_lim=None, fig_size=(12, 9),
