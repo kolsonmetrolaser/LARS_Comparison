@@ -245,9 +245,14 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
 
                 lines = [line for legend in canvas.figure.legends for line in legend.get_lines()]
                 line_names = [line.get_label() for line in lines]
+                for legend in canvas.figure.legends:
+                    legend.remove()
                 for line, name in zip(lines, line_names):
                     if name in [n, '_'+n, n+' Peaks', '_'+n+' Peaks', n+' Smoothed', '_'+n+' Smoothed']:
-                        line.set_visible(False)
+                        # line.set_visible(False)
+                        lines.remove(line)
+                        line_names.remove(name)
+                canvas.figure.legend(lines, line_names)
 
         # required to update canvas and attached toolbar!
         canvas.draw_idle()
