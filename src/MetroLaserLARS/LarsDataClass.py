@@ -149,12 +149,27 @@ Only load .npz, .tdms, .all, or .csv files. Full path: {permanent_path}"""
                 with open(path_no_ext+'.csv', 'w') as f:
                     f.write(fdata)
 
-            if data[nn['v']].ndim > 1:
-                ldvV = np.mean(data[nn['v']], axis=0)
+            unrecognized_columns = False
+            for v in nn.values():
+                if v not in data:
+                    unrecognized_columns = True
+
+            if not unrecognized_columns:
+                if data[nn['v']].ndim > 1:
+                    ldvV = np.mean(data[nn['v']], axis=0)
+                else:
+                    ldvV = data[nn['v']]
+
+                return cls(name=osp.basename(permanent_path), path=permanent_path, time=data[nn['t']], pztV=data[nn['p']],
+                           ldvV=ldvV, freq=data[nn['f']], vel=data[nn['a']])
+            elif unrecognized_columns and len(data) == 5:  # in a .all style format
+                data_list = []
+                for v in data.values():
+                    data_list.append(v)
+                return cls(name=osp.basename(permanent_path), path=permanent_path, time=data_list[0], pztV=data_list[1],
+                           ldvV=data_list[2], freq=data_list[3], vel=data_list[4])
             else:
-                ldvV = data[nn['v']]
-            return cls(name=osp.basename(permanent_path), path=permanent_path, time=data[nn['t']], pztV=data[nn['p']],
-                       ldvV=ldvV, freq=data[nn['f']], vel=data[nn['a']])
+                raise ("Successfully loaded and saved data to new formats, but its contents are not in a recognized format")
 
     @classmethod
     def from_subdata(cls, c):

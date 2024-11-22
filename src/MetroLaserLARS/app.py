@@ -8,6 +8,7 @@ Created on Tue Oct 15 12:08:17 2024
 import tkinter as tk
 import pickle
 from numpy import log10
+import sys
 
 # Internal imports
 try:
@@ -15,7 +16,7 @@ try:
     from LARS_Comparison import LARS_Comparison_from_app
     from app_helpers import heading, labeled_options, labeled_file_select, labeled_entry
     from app_helpers import padding_none, padding_setting, padding_option, padding_heading
-    from app_helpers import bool_options, CustomVar, make_button
+    from app_helpers import bool_options, CustomVar, make_button, log_decorator, open_log_window
     from app_helpers import button_color, active_bg, active_fg
     from app_helpers import background_color as bgc
     from app_window_part_matching import open_part_matching_window
@@ -26,7 +27,7 @@ except ModuleNotFoundError:
     from MetroLaserLARS.LARS_Comparison import LARS_Comparison_from_app
     from MetroLaserLARS.app_helpers import heading, labeled_options, labeled_file_select, labeled_entry
     from MetroLaserLARS.app_helpers import padding_none, padding_setting, padding_option, padding_heading
-    from MetroLaserLARS.app_helpers import bool_options, CustomVar, make_button
+    from MetroLaserLARS.app_helpers import bool_options, CustomVar, make_button, log_decorator, open_log_window
     from MetroLaserLARS.app_helpers import button_color, active_bg, active_fg
     from MetroLaserLARS.app_helpers import background_color as bgc
     from MetroLaserLARS.app_window_part_matching import open_part_matching_window
@@ -226,6 +227,9 @@ def run_app():
         running_var.set(True)
         update_status()
 
+        if settings['PRINT_MODE'] in ['full']:
+            print(settings)
+
         data_dict, pair_results = LARS_Comparison_from_app(settings)
         data_dict_var.set(data_dict)
         pair_results_var.set(pair_results)
@@ -259,7 +263,7 @@ def run_app():
                 return
         if data:
             if mode == 'settings':
-                set_settings(data)
+                set_settings(data[0])
             elif mode == 'data':
                 data_dict_var.set(data[0])
                 pair_results_var.set(data[1])
@@ -311,7 +315,7 @@ def run_app():
         root.quit()
         root.destroy()
     root = tk.Tk()
-    root.protocol("WM_DELETE_WINDOW", _quit)
+    # root.protocol("WM_DELETE_WINDOW", _quit)
     root.geometry("1600x900")
     root.config(bg=bgc)
     root.option_add("*Background", bgc)
@@ -367,6 +371,10 @@ def run_app():
     rootl.pack(side=tk.LEFT)
     rootr = tk.Frame(rootsettings)
     rootr.pack(side=tk.LEFT)
+
+    # Add printing to log
+    log_var = tk.StringVar(root, value='')
+    sys.stdout.write = log_decorator(sys.stdout.write, log_var)
 
     # Global info
     running_var = tk.BooleanVar(root, value=False)
@@ -729,6 +737,10 @@ All pairs of subfolders will be compared.""",
     make_button(rootbuttons, text="Results Table",
                 command=lambda: open_results_table_window(root, data_dict_var,
                                                           pair_results_var),
+                padding=padding_heading)
+
+    make_button(rootbuttons, text="Log",
+                command=lambda: open_log_window(root, log_var),
                 padding=padding_heading)
 
     # Start the main loop

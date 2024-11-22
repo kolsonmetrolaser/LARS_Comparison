@@ -24,6 +24,43 @@ options_style = ['-', ':', '--', '-.', '.', 'o', 'v', '^', '<', '>', 's', '*', '
 options_color = ['C'+str(i) for i in range(10)]
 
 
+def log_decorator(func, var):
+    def inner(inputStr):
+        try:
+            var.set(var.get()+inputStr)
+            return func(inputStr)
+        except:
+            print('excepted inside log decorator')
+            return func(inputStr)
+    return inner
+
+
+def open_log_window(root, log_var):
+    window = tk.Toplevel(root, bg=background_color)
+    window.title("Log")
+    window.geometry("800x450")
+
+    log_text = tk.Text(window, bg='white')
+    log_text.insert("0.0", log_var.get())
+    log_text.pack(side=tk.LEFT)
+
+    def update_log(*args):
+        log_text.delete('1.0', tk.END)
+        log_text.insert("0.0", log_var.get())
+        return
+
+    traceid = log_var.trace_add("write", update_log)
+    # update_log()
+
+    def on_closing():
+        log_var.trace_remove("write", traceid)
+        window.destroy()
+
+    window.protocol('WM_DELETE_WINDOW', on_closing)
+
+    return
+
+
 def unique(mylist):
     return list(dict.fromkeys(mylist))
 
