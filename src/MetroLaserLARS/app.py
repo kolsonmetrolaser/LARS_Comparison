@@ -312,10 +312,12 @@ def run_app():
 
     # Create the main window
     def _quit():
+        for t in log_var.trace_vinfo():
+            log_var.trace_vdelete(*t)
         root.quit()
         root.destroy()
     root = tk.Tk()
-    # root.protocol("WM_DELETE_WINDOW", _quit)
+    root.protocol("WM_DELETE_WINDOW", _quit)
     root.geometry("1600x900")
     root.config(bg=bgc)
     root.option_add("*Background", bgc)
@@ -345,16 +347,16 @@ def run_app():
     frame_canvas.bind('<Leave>',
                       lambda event: canvas.unbind_all("<MouseWheel>"))
 
-    menu_bar = tk.Menu(root)
-    menu_bar.config(bg='lightblue', fg='black')
-    # file_menu = tk.Menu(menu_bar)
-    file_menu = tk.Menu(menu_bar, tearoff=0, bg="lightblue", fg="black")
-    file_menu.add_command(label="New", command=lambda: print("New File"))
-    file_menu.add_command(label="Open", command=lambda: print("Open File"))
-    file_menu.add_separator()
-    file_menu.add_command(label="Exit", command=_quit)
-    menu_bar.add_cascade(label="File", menu=file_menu)
-    root.config(menu=menu_bar)
+    # menu_bar = tk.Menu(root, background=bgc)
+    # menu_bar.config(bg=bgc, fg='black')
+    # # file_menu = tk.Menu(menu_bar)
+    # file_menu = tk.Menu(menu_bar, tearoff=0, bg=bgc, fg="black")
+    # file_menu.add_command(label="New", command=lambda: print("New File"))
+    # file_menu.add_command(label="Open", command=lambda: print("Open File"))
+    # file_menu.add_separator()
+    # file_menu.add_command(label="Exit", command=_quit)
+    # menu_bar.add_cascade(label="File", menu=file_menu)
+    # root.config(menu=menu_bar)
 
     root.title("LARS Comparison Settings")
 

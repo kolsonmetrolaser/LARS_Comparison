@@ -39,6 +39,7 @@ def open_log_window(root, log_var):
     window = tk.Toplevel(root, bg=background_color)
     window.title("Log")
     window.geometry("800x450")
+    print('opened log window')
 
     log_text = tk.Text(window, bg='white')
     log_text.insert("0.0", log_var.get())
