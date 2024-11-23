@@ -10,10 +10,10 @@ from copy import copy
 
 # Internal imports
 try:
-    from app_helpers import labeled_options, labeled_entry, padding_setting, bool_options
+    from app_helpers import labeled_options, labeled_entry, padding_setting
     from app_helpers import background_color as bgc
 except ModuleNotFoundError:
-    from MetroLaserLARS.app_helpers import labeled_options, labeled_entry, padding_setting, bool_options
+    from MetroLaserLARS.app_helpers import labeled_options, labeled_entry, padding_setting
     from MetroLaserLARS.app_helpers import background_color as bgc
 
 
@@ -110,11 +110,12 @@ def open_results_table_window(root, data_dict_var, pair_results_var, **common_kw
         elif data in ['unmatched']:
             vals = [len([f for ul in p[data] for f in ul]) for p in pair_results]
 
-        roundval = 3 if data in ['match_probability', 'stretch'] else 0
         dtype = np.float64
         printformat = ':.3f' if data in ['match_probability', 'stretch'] else ':.0f'
 
-        min_val, max_val = np.min(vals).astype(dtype), np.max(vals).astype(dtype)
+        min_val, max_val = ((np.min(vals).astype(dtype), np.max(vals).astype(dtype))
+                            if data not in ['same_part'] else
+                            (0.0, 1.0))
 
         if data in ['stretch']:
             lp = np.median(np.abs(1-np.array(vals))/max(np.abs(1-min_val), np.abs(1-max_val)))
@@ -174,8 +175,13 @@ def open_results_table_window(root, data_dict_var, pair_results_var, **common_kw
                     )
 
                 textvars[i][j] = tk.StringVar(varroot, value='' if np.isnan(val) else eval("f'{val"+printformat+"}'"))
-                cmap_val = ((val-min_val)/(max_val-min_val) if data not in ['stretch'] else
-                            (np.abs(val-1)/max(np.abs(max_val-1), np.abs(min_val-1))))
+                cmap_val = ((val-min_val)/(max_val-min_val)
+                            if data not in ['unmatched', 'stretch'] else
+                            (1-(val-min_val)/(max_val-min_val)
+                             if data in ['unmatched'] else
+                             (np.abs(val-1)/max(np.abs(max_val-1), np.abs(min_val-1)))
+                             )
+                            )
                 canvas.create_rectangle(5*size*(j+1.5), 2*size*(i+2.5), 5*size*(j+2.5), 2*size*(i+3.5),
                                         fill=_from_cmap(_cmap(
                                             cmap_val if data not in ['stretch'] else

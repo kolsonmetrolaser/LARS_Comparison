@@ -30,7 +30,7 @@ def log_decorator(func, var):
             var.set(var.get()+inputStr)
             return func(inputStr)
         except:
-            print('excepted inside log decorator')
+            print('Error inside log_decorator, doing default print')
             return func(inputStr)
     return inner
 
@@ -39,7 +39,6 @@ def open_log_window(root, log_var):
     window = tk.Toplevel(root, bg=background_color)
     window.title("Log")
     window.geometry("800x450")
-    print('opened log window')
 
     log_text = tk.Text(window, bg='white')
     log_text.insert("0.0", log_var.get())
