@@ -17,7 +17,7 @@ try:
     from app_helpers import heading, labeled_options, labeled_file_select, labeled_entry
     from app_helpers import padding_none, padding_setting, padding_option, padding_heading
     from app_helpers import bool_options, CustomVar, make_button, log_decorator, open_log_window
-    from app_helpers import button_color, active_bg, active_fg
+    from app_helpers import button_color, active_bg, active_fg, icon_ML
     from app_helpers import background_color as bgc
     from app_window_part_matching import open_part_matching_window
     from app_window_plot import open_plot_window
@@ -28,7 +28,7 @@ except ModuleNotFoundError:
     from MetroLaserLARS.app_helpers import heading, labeled_options, labeled_file_select, labeled_entry
     from MetroLaserLARS.app_helpers import padding_none, padding_setting, padding_option, padding_heading
     from MetroLaserLARS.app_helpers import bool_options, CustomVar, make_button, log_decorator, open_log_window
-    from MetroLaserLARS.app_helpers import button_color, active_bg, active_fg
+    from MetroLaserLARS.app_helpers import button_color, active_bg, active_fg, icon_ML
     from MetroLaserLARS.app_helpers import background_color as bgc
     from MetroLaserLARS.app_window_part_matching import open_part_matching_window
     from MetroLaserLARS.app_window_plot import open_plot_window
@@ -318,9 +318,9 @@ def run_app():
         root.destroy()
     root = tk.Tk()
     root.protocol("WM_DELETE_WINDOW", _quit)
-    root.geometry("1600x900")
     root.config(bg=bgc)
     root.option_add("*Background", bgc)
+    root.wm_iconphoto(False, tk.PhotoImage(file=icon_ML))
 
     canvas = tk.Canvas(root, background=bgc)
     frame_canvas = tk.Frame(canvas, background=bgc)
@@ -346,6 +346,8 @@ def run_app():
                                                     lambda event: canvas.yview_scroll(int(-1*(event.delta/120)), "units")))
     frame_canvas.bind('<Leave>',
                       lambda event: canvas.unbind_all("<MouseWheel>"))
+
+    root.geometry("1600x900")
 
     # menu_bar = tk.Menu(root, background=bgc)
     # menu_bar.config(bg=bgc, fg='black')

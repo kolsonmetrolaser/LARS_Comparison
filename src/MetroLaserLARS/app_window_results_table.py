@@ -10,10 +10,10 @@ from copy import copy
 
 # Internal imports
 try:
-    from app_helpers import labeled_options, labeled_entry, padding_setting
+    from app_helpers import labeled_options, labeled_entry, padding_setting, icon_ML
     from app_helpers import background_color as bgc
 except ModuleNotFoundError:
-    from MetroLaserLARS.app_helpers import labeled_options, labeled_entry, padding_setting
+    from MetroLaserLARS.app_helpers import labeled_options, labeled_entry, padding_setting, icon_ML
     from MetroLaserLARS.app_helpers import background_color as bgc
 
 
@@ -201,6 +201,7 @@ def open_results_table_window(root, data_dict_var, pair_results_var, **common_kw
     window = tk.Toplevel(root, bg=bgc)
     window.title("Data Tables")
     window.geometry("1600x900")
+    window.wm_iconphoto(False, tk.PhotoImage(file=icon_ML))
 
     data_dict, pair_results = data_dict_var.get(), pair_results_var.get()
     data_dict = sort_data_dict(data_dict, pair_results)
@@ -213,13 +214,6 @@ def open_results_table_window(root, data_dict_var, pair_results_var, **common_kw
     canvas_sheet = tk.Canvas(frame_sheet, bg=bgc)
     canvas_sheet.pack(expand=True, fill=tk.BOTH)
 
-    # font_size_var, _, _, _, _, _ = labeled_entry(frame_options, 'Font Size:', padding=padding_setting, side=tk.LEFT,
-    #                                               vardefault=tk.font.nametofont('TkTextFont').actual()['size'],
-    #                                               vartype=tk.StringVar, infobox=False,
-    #                                               command=lambda *args: fill_table(frame_sheet, root,
-    #                                                                               data_dict=data_dict,
-    #                                                                               pair_results=pair_results,
-    #                                                                               font_size=font_size_var.get()))
     font_size_var, _, _, font_size_entry, _, _ = labeled_entry(frame_options, 'Font Size:', padding=padding_setting,
                                                                side=tk.LEFT,
                                                                vardefault=tk.font.nametofont('TkTextFont').actual()['size'],

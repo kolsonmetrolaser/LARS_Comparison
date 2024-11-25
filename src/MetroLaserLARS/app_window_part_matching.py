@@ -7,12 +7,13 @@ Created on Tue Nov 12 15:08:28 2024
 import tkinter as tk
 
 try:
-    from app_helpers import labeled_options, make_button
+    from app_helpers import labeled_options, make_button, icon_ML
 except ModuleNotFoundError:
-    from MetroLaserLARS.app_helpers import labeled_options, make_button
+    from MetroLaserLARS.app_helpers import labeled_options, make_button, icon_ML
 
 
-def open_part_matching_window(root, grouped_folders_var, part_matching_text_var, part_matching_strategy_var, **common_kwargs):
+def open_part_matching_window(root, grouped_folders_var, part_matching_text_var,
+                              part_matching_strategy_var, **common_kwargs):
     def toggle_code_labels(*args):
         if part_matching_strategy_var.get() == 'custom':
             try:
@@ -74,9 +75,15 @@ Group2PartA, Group2PartB""", font=("Courier New", 9), justify='left')
                 pass
         return
 
+    def save_text(*args):
+        part_matching_text_var.set(part_matching_text.get("0.0", tk.END))
+        return
+
     window = tk.Toplevel(root)
     window.grab_set()
     window.title("Define Known Part Matching")
+    window.wm_iconphoto(False, tk.PhotoImage(file=icon_ML))
+
     label1 = tk.Label(window,
                       text="""
 Define known part matching by entering a list of equivalent parts,
@@ -104,13 +111,10 @@ grouped folder structure" is set to True).""")
     part_matching_text = tk.Text(frame_text, bg='white')
     part_matching_text.insert("0.0", part_matching_text_var.get())
     part_matching_text.pack(side=tk.LEFT)
+    part_matching_text.bind("<KeyRelease>", save_text)
 
     code_label_3 = tk.Label(frame_input, text='return result', font=("Courier New", 9))
     code_label_3.pack(anchor="w")
-
-    make_button(window, text='Save entered text',
-                command=lambda: part_matching_text_var.set(
-                    part_matching_text.get("0.0", tk.END)), side=tk.TOP)
 
     fn = toggle_code_labels
     part_matching_strategy_var.trace_add('write', fn)

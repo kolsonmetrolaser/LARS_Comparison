@@ -23,6 +23,8 @@ active_fg = 'dark goldenrod'
 options_style = ['-', ':', '--', '-.', '.', 'o', 'v', '^', '<', '>', 's', '*', 'd', 'p', 'x']
 options_color = ['C'+str(i) for i in range(10)]
 
+icon_ML = 'MLicon_128.png'
+
 
 def log_decorator(func, var):
     def inner(inputStr):
@@ -39,6 +41,7 @@ def open_log_window(root, log_var):
     window = tk.Toplevel(root, bg=background_color)
     window.title("Log")
     window.geometry("800x450")
+    window.wm_iconphoto(False, tk.PhotoImage(file=icon_ML))
 
     log_text = tk.Text(window, bg='white')
     log_text.insert("0.0", log_var.get())
