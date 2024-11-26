@@ -9,7 +9,7 @@ import tkinter as tk
 import pickle
 from numpy import log10
 import sys
-from os import replace as osreplace
+from shutil import move as shmove
 import os.path as osp
 import tempfile
 
@@ -84,9 +84,9 @@ def run_app_main():
             # PEAK MATCHING
             # stretching
             settings['max_stretch']               = max_stretch_var.get() # noqa
-            settings['num_stretches']             = num_stretches_var.get() # noqa
-            settings['stretching_iterations']     = stretching_iterations_var.get() # noqa
-            settings['stretch_iteration_factor']  = stretch_iteration_factor_var.get() # noqa
+            settings['num_stretches']             = 10**num_stretches_var.get() # noqa
+            # settings['stretching_iterations']     = stretching_iterations_var.get() # noqa
+            # settings['stretch_iteration_factor']  = stretch_iteration_factor_var.get() # noqa
             # matching
             settings['peak_match_window']         = peak_match_window_var.get() # noqa
             settings['matching_penalty_order']    = matching_penalty_order_var.get() # noqa
@@ -153,9 +153,9 @@ def run_app_main():
             # PEAK MATCHING
             # stretching
             max_stretch_var.set(               settings['max_stretch'] if 'max_stretch' in settings else 0.02) # noqa
-            num_stretches_var.set(             settings['num_stretches'] if 'num_stretches' in settings else 1000) # noqa
-            stretching_iterations_var.set(     settings['stretching_iterations'] if 'stretching_iterations' in settings else 10) # noqa
-            stretch_iteration_factor_var.set(  settings['stretch_iteration_factor'] if 'stretch_iteration_factor' in settings else 5) # noqa
+            num_stretches_var.set(             settings['num_stretches'] if 'num_stretches' in settings else 5) # noqa
+            # stretching_iterations_var.set(     settings['stretching_iterations'] if 'stretching_iterations' in settings else 10) # noqa
+            # stretch_iteration_factor_var.set(  settings['stretch_iteration_factor'] if 'stretch_iteration_factor' in settings else 5) # noqa
             # matching
             peak_match_window_var.set(         settings['peak_match_window'] if 'peak_match_window' in settings else 150) # noqa
             matching_penalty_order_var.set(    settings['matching_penalty_order'] if 'matching_penalty_order' in settings else 1) # noqa
@@ -239,6 +239,8 @@ def run_app_main():
 
         prev_settings_var.set(settings)
         running_var.set(False)
+        with open(log_file_loc_var.get(), 'w') as f:
+            f.write(log_var.get())
         update_status()
 
     def import_pickle(mode, *args, **kwargs):
@@ -345,11 +347,11 @@ def run_app_main():
     canvas.bind("<Configure>", handle_resize)
 
     # canvas.bind_all("<MouseWheel>", lambda event: canvas.yview_scroll(int(-1*(event.delta/120)), "units"))
-    frame_canvas.bind('<Enter>',
-                      lambda event: canvas.bind_all("<MouseWheel>",
-                                                    lambda event: canvas.yview_scroll(int(-1*(event.delta/120)), "units")))
-    frame_canvas.bind('<Leave>',
-                      lambda event: canvas.unbind_all("<MouseWheel>"))
+    canvas.bind('<Enter>',
+                lambda event: canvas.bind_all("<MouseWheel>",
+                                              lambda event: canvas.yview_scroll(int(-1*(event.delta/120)), "units")))
+    canvas.bind('<Leave>',
+                lambda event: canvas.unbind_all("<MouseWheel>"))
 
     root.geometry("1600x900")
 
@@ -672,21 +674,21 @@ All pairs of subfolders will be compared.""",
                                                    infotext=infotext['max_stretch'], **common_kwargs)
 
     # num_stretches
-    num_stretches_var, _, _, _, _, _ = labeled_entry(frame_peak_matchl, 'Number of stretches per iteration:',
-                                                     padding=padding_setting, vardefault=1000, vartype=tk.IntVar,
+    num_stretches_var, _, _, _, _, _ = labeled_entry(frame_peak_matchl, 'Number of stretches per iteration: 10^',
+                                                     padding=padding_setting, vardefault=5, vartype=tk.IntVar,
                                                      infotext=infotext['num_stretches'], **common_kwargs)
 
-    # stretching_iterations
-    stretching_iterations_var, _, _, _, _, _ = labeled_entry(frame_peak_matchl, 'Number of stretching iterations:',
-                                                             padding=padding_setting, vardefault=10, vartype=tk.IntVar,
-                                                             infotext=infotext['stretching_iterations'], **common_kwargs)
+    # # stretching_iterations
+    # stretching_iterations_var, _, _, _, _, _ = labeled_entry(frame_peak_matchl, 'Number of stretching iterations:',
+    #                                                          padding=padding_setting, vardefault=10, vartype=tk.IntVar,
+    #                                                          infotext=infotext['stretching_iterations'], **common_kwargs)
 
-    # stretch_iteration_factor
-    stretch_iteration_factor_var, _, _, _, _, _ = labeled_entry(frame_peak_matchl,
-                                                                'Factor to reduce stretch space each iteration:',
-                                                                padding=padding_setting, vardefault=5,
-                                                                vartype=tk.DoubleVar,
-                                                                infotext=infotext['stretch_iteration_factor'], **common_kwargs)
+    # # stretch_iteration_factor
+    # stretch_iteration_factor_var, _, _, _, _, _ = labeled_entry(frame_peak_matchl,
+    #                                                             'Factor to reduce stretch space each iteration:',
+    #                                                             padding=padding_setting, vardefault=5,
+    #                                                             vartype=tk.DoubleVar,
+    #                                                             infotext=infotext['stretch_iteration_factor'], **common_kwargs)
 
     # nw_normalized
     nw_normalized_var, _, _, _, _, _ = labeled_options(frame_peak_matchr, 'Normalize frequency for peak matching:',
@@ -752,31 +754,40 @@ All pairs of subfolders will be compared.""",
     directory_var_prev = tk.StringVar(root, value='')
 
     log_file = tempfile.NamedTemporaryFile('w', delete=False)
+    log_file.close()
+    log_file_loc_var = tk.StringVar(root, value=log_file.name)
 
     def update_directory(*args):
         if directory_var.get() == directory_var_prev.get():
             return
+        log_file_loc_var.set(osp.join(directory_var.get(), 'LARSAnalysisLog.log'))
         if using_temp_file.get():
-            log_file.close()
-            osreplace(log_file.name,
-                      osp.join(directory_var.get(), 'LARSAnalysisLog.log'))
+            shmove(log_file.name,
+                   log_file_loc_var.get())
         else:
-            osreplace(osp.join(directory_var_prev.get(), 'LARSAnalysisLog.log'),
-                      osp.join(directory_var.get(), 'LARSAnalysisLog.log'))
+            shmove(osp.join(directory_var_prev.get(), 'LARSAnalysisLog.log'),
+                   log_file_loc_var.get())
+        using_temp_file.set(False)
         directory_var_prev.set(directory_var.get())
-        sys.stdout.write = log_decorator(sys.stdout.write, log_var,
-                                         osp.join(directory_var.get(), 'LARSAnalysisLog.log'))
         return
 
     directory_var.trace_add('write', update_directory)
 
     # Add printing to log
     log_var = tk.StringVar(root, value='')
-    sys.stdout.write = log_decorator(sys.stdout.write, log_var, log_file.name)
+    sys.stdout.write = log_decorator(sys.stdout.write, log_var, log_file_loc_var, running_var)
+
     # sys.stdout.write = log_decorator(sys.stdout.write, log_var, osp.join(directory_var.get(), 'LARSAnalysisLog.log'))
-    print('Opened App')
+    print('opened app')
 
     # print(1*[]+'s')
+    canvas.update()
+    canvas_frame = canvas.nametowidget(canvas.itemcget("frame_canvas", "window"))
+    min_width = canvas_frame.winfo_reqwidth()
+    min_height = canvas_frame.winfo_reqheight()
+    canvas.itemconfigure("frame_canvas", width=min_width)
+    canvas.itemconfigure("frame_canvas", height=min_height)
+    canvas.configure(scrollregion=canvas.bbox("all"))
 
     # Start the main loop
     root.mainloop()

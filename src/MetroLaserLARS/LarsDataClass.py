@@ -101,6 +101,9 @@ class LarsData:
                     data[k] = v
         elif ext == '.all':
             data = np.loadtxt(path)
+            if np.all(data[:, 3] == 0):
+                print(f'WARNING: frequency data from {path} is missing. Assuming frequency is spaced by 0.5 Hz.')
+                data[:, 3] = np.linspace(0, 0.5*(len(data[:, 3])-1), len(data[:, 3]))
             return cls(name=osp.basename(permanent_path), path=permanent_path, time=data[:, 0], pztV=data[:, 1],
                        ldvV=data[:, 2], freq=data[:, 3], vel=data[:, 4])
         elif ext == '.csv':

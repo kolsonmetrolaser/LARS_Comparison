@@ -26,12 +26,13 @@ options_color = ['C'+str(i) for i in range(10)]
 icon_ML = 'MLicon_128.png'
 
 
-def log_decorator(func, var, file):
+def log_decorator(func, log_var, log_file_loc_var, running_var):
     def inner(inputStr):
         try:
-            var.set(var.get()+inputStr)
-            with open(file, 'a') as f:
-                f.write(inputStr+'\n')
+            log_var.set(log_var.get()+inputStr)
+            if not running_var.get():
+                with open(log_file_loc_var.get(), 'a') as f:
+                    f.write(inputStr)
             return func(inputStr)
         except:
             print('Error inside log_decorator, doing default print')
@@ -44,6 +45,8 @@ def open_log_window(root, log_var):
     window.title("Log")
     window.geometry("800x450")
     window.wm_iconphoto(False, tk.PhotoImage(file=icon_ML))
+
+    print('opened log window')
 
     log_text = tk.Text(window, bg='white')
     log_text.insert("0.0", log_var.get())
