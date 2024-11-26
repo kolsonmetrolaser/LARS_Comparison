@@ -9,6 +9,9 @@ import tkinter as tk
 import pickle
 from numpy import log10
 import sys
+from os import replace as osreplace
+import os.path as osp
+import tempfile
 
 # Internal imports
 try:
@@ -35,7 +38,7 @@ except ModuleNotFoundError:
     from MetroLaserLARS.app_window_results_table import open_results_table_window
 
 
-def run_app():
+def run_app_main():
     def make_settings(suppress=False):
         try:
             settings = {}
@@ -71,8 +74,8 @@ def run_app():
             settings['sgf_windowsize']            = sgf_windowsize_var.get() # noqa
             settings['sgf_polyorder']             = sgf_polyorder_var.get() # noqa
             # peak finding
-            settings['peak_height_min']           = peak_height_min_var.get() # noqa
-            settings['peak_prominence_min']       = peak_prominence_min_var.get() # noqa
+            settings['peak_height_min']           = peak_height_min_var.get()-1 # noqa
+            settings['peak_prominence_min']       = peak_prominence_min_var.get()-1 # noqa
             settings['peak_ph_ratio_min']         = peak_ph_ratio_min_var.get() # noqa
             # noise reduction
             settings['recursive_noise_reduction'] = True if recursive_noise_reduction_var.get() == 'True' else False  # noqa
@@ -140,8 +143,8 @@ def run_app():
             sgf_windowsize_var.set(            settings['sgf_windowsize'] if 'sgf_windowsize' in settings else 101) # noqa
             sgf_polyorder_var.set(             settings['sgf_polyorder'] if 'sgf_polyorder' in settings else 0) # noqa
             # peak finding
-            peak_height_min_var.set(           settings['peak_height_min'] if 'peak_height_min' in settings else 0.2) # noqa
-            peak_prominence_min_var.set(       settings['peak_prominence_min'] if 'peak_prominence_min' in settings else 0.2) # noqa
+            peak_height_min_var.set(           settings['peak_height_min']+1 if 'peak_height_min' in settings else 0.2) # noqa
+            peak_prominence_min_var.set(       settings['peak_prominence_min']+1 if 'peak_prominence_min' in settings else 0.2) # noqa
             peak_ph_ratio_min_var.set(         settings['peak_ph_ratio_min'] if 'peak_ph_ratio_min' in settings else 0.5) # noqa
             # noise reduction
             recursive_noise_reduction_var.set( ('True' if settings['recursive_noise_reduction'] else 'False') if 'recursive_noise_reduction' in settings else 'True') # noqa
@@ -317,6 +320,7 @@ def run_app():
         root.quit()
         root.destroy()
     root = tk.Tk()
+
     root.protocol("WM_DELETE_WINDOW", _quit)
     root.config(bg=bgc)
     root.option_add("*Background", bgc)
@@ -376,11 +380,8 @@ def run_app():
     rootr = tk.Frame(rootsettings)
     rootr.pack(side=tk.LEFT)
 
-    # Add printing to log
-    log_var = tk.StringVar(root, value='')
-    sys.stdout.write = log_decorator(sys.stdout.write, log_var)
-
     # Global info
+    using_temp_file = tk.BooleanVar(root, value=True)
     running_var = tk.BooleanVar(root, value=False)
     prev_settings_var = tk.Variable(root, value={})
     status_var = tk.StringVar(root, value='nodir')
@@ -405,6 +406,7 @@ All pairs of subfolders will be compared.""",
                                                        label='Enter path to LARS data or select a folder:',
                                                        selection='dir',
                                                        infotext=infotext['directory'], **common_kwargs)
+
     frame_data_format = tk.Frame(rootload)
     frame_data_format.pack(side=tk.TOP)
     # data_format
@@ -545,7 +547,7 @@ All pairs of subfolders will be compared.""",
     # PRINT_MODE
     PRINT_MODE_var, _, _, _, _, _ = labeled_options(rootl, 'Print details:',
                                                     padding=padding_setting, vartype=tk.StringVar,
-                                                    vardefault='sparse', options=['none', 'sparse', 'full'],
+                                                    vardefault='full', options=['none', 'sparse', 'full'],
                                                     infotext=infotext['PRINT_MODE'], **common_kwargs)
     # SAVING
 
@@ -623,12 +625,12 @@ All pairs of subfolders will be compared.""",
 
     # peak_height_min
     peak_height_min_var, _, _, _, _, _ = labeled_entry(frame_peak_fitl, 'Peak height minimum: noise *',
-                                                       padding=padding_setting, vardefault=0.2, vartype=tk.DoubleVar,
+                                                       padding=padding_setting, vardefault=1.2, vartype=tk.DoubleVar,
                                                        infotext=infotext['peak_height_min'], **common_kwargs)
 
     # peak_prominence_min
     peak_prominence_min_var, _, _, _, _, _ = labeled_entry(frame_peak_fitl, 'Peak prominence minimum: noise *',
-                                                           padding=padding_setting, vardefault=0.2, vartype=tk.DoubleVar,
+                                                           padding=padding_setting, vardefault=1.2, vartype=tk.DoubleVar,
                                                            infotext=infotext['peak_prominence_min'], **common_kwargs)
 
     # peak_ph_ratio_min
@@ -747,8 +749,47 @@ All pairs of subfolders will be compared.""",
                 command=lambda: open_log_window(root, log_var),
                 padding=padding_heading)
 
+    directory_var_prev = tk.StringVar(root, value='')
+
+    log_file = tempfile.NamedTemporaryFile('w', delete=False)
+
+    def update_directory(*args):
+        if directory_var.get() == directory_var_prev.get():
+            return
+        if using_temp_file.get():
+            log_file.close()
+            osreplace(log_file.name,
+                      osp.join(directory_var.get(), 'LARSAnalysisLog.log'))
+        else:
+            osreplace(osp.join(directory_var_prev.get(), 'LARSAnalysisLog.log'),
+                      osp.join(directory_var.get(), 'LARSAnalysisLog.log'))
+        directory_var_prev.set(directory_var.get())
+        sys.stdout.write = log_decorator(sys.stdout.write, log_var,
+                                         osp.join(directory_var.get(), 'LARSAnalysisLog.log'))
+        return
+
+    directory_var.trace_add('write', update_directory)
+
+    # Add printing to log
+    log_var = tk.StringVar(root, value='')
+    sys.stdout.write = log_decorator(sys.stdout.write, log_var, log_file.name)
+    # sys.stdout.write = log_decorator(sys.stdout.write, log_var, osp.join(directory_var.get(), 'LARSAnalysisLog.log'))
+    print('Opened App')
+
+    # print(1*[]+'s')
+
     # Start the main loop
     root.mainloop()
+
+
+def run_app():
+    try:
+        run_app_main()
+    except Exception as e:
+        import traceback
+        print('Error:', e)
+        print(traceback.format_exc())
+        raise (e)
 
 
 if __name__ == '__main__':

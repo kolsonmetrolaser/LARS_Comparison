@@ -26,10 +26,12 @@ options_color = ['C'+str(i) for i in range(10)]
 icon_ML = 'MLicon_128.png'
 
 
-def log_decorator(func, var):
+def log_decorator(func, var, file):
     def inner(inputStr):
         try:
             var.set(var.get()+inputStr)
+            with open(file, 'a') as f:
+                f.write(inputStr+'\n')
             return func(inputStr)
         except:
             print('Error inside log_decorator, doing default print')
