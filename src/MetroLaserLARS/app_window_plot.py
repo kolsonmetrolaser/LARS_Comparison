@@ -12,10 +12,10 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 
 try:
     from plotfunctions import line_plot, make_legend_interactive
-    from app_helpers import CustomVar, padding_setting, plot_style_widget, icon_ML
+    from app_helpers import CustomVar, padding_setting, plot_style_widget, icon_ML, edit_name_menu_bar
 except ModuleNotFoundError:
     from MetroLaserLARS.plotfunctions import line_plot, make_legend_interactive
-    from MetroLaserLARS.app_helpers import CustomVar, padding_setting, plot_style_widget, icon_ML
+    from MetroLaserLARS.app_helpers import CustomVar, padding_setting, plot_style_widget, icon_ML, edit_name_menu_bar
 
 
 def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, frange_max_var, **common_kwargs):
@@ -24,6 +24,7 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
     window.title("Plots")
     window.geometry("1600x900")
     window.wm_iconphoto(False, tk.PhotoImage(file=icon_ML))
+    edit_name_menu_bar(window)
 
     color_vars, style_vars = CustomVar(), CustomVar()
 

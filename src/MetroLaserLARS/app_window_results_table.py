@@ -10,10 +10,10 @@ from copy import copy
 
 # Internal imports
 try:
-    from app_helpers import labeled_options, labeled_entry, padding_setting, icon_ML
+    from app_helpers import labeled_options, labeled_entry, padding_setting, icon_ML, edit_name_menu_bar
     from app_helpers import background_color as bgc
 except ModuleNotFoundError:
-    from MetroLaserLARS.app_helpers import labeled_options, labeled_entry, padding_setting, icon_ML
+    from MetroLaserLARS.app_helpers import labeled_options, labeled_entry, padding_setting, icon_ML, edit_name_menu_bar
     from MetroLaserLARS.app_helpers import background_color as bgc
 
 
@@ -202,6 +202,8 @@ def open_results_table_window(root, data_dict_var, pair_results_var, **common_kw
     window.title("Data Tables")
     window.geometry("1600x900")
     window.wm_iconphoto(False, tk.PhotoImage(file=icon_ML))
+
+    edit_name_menu_bar(window)
 
     data_dict, pair_results = data_dict_var.get(), pair_results_var.get()
     data_dict = sort_data_dict(data_dict, pair_results)

@@ -50,7 +50,7 @@ def open_log_window(root, log_var):
 
     log_text = tk.Text(window, bg='white')
     log_text.insert("0.0", log_var.get())
-    log_text.pack(side=tk.LEFT)
+    log_text.pack(side=tk.LEFT, expand=True, fill='both')
 
     def update_log(*args):
         log_text.delete('1.0', tk.END)
@@ -71,6 +71,19 @@ def open_log_window(root, log_var):
 
 def unique(mylist):
     return list(dict.fromkeys(mylist))
+
+
+def edit_name_menu_bar(window):
+    menubar = tk.Menu(window)
+    menubar.add_command(label="Rename Window",
+                        command=lambda: window.title(
+                            tk.simpledialog.askstring(title='Rename window',
+                                                      prompt='Enter new window name:',
+                                                      initialvalue=window.title()
+                                                      ))
+                        )
+    window.config(menu=menubar)
+    return
 
 
 class CustomVar(tk.Variable):
@@ -268,6 +281,37 @@ def make_button(baseframe, text: str = '', command=None, padding=padding_setting
         infolabel = labeled_widget_label(frame, '(?)')
         CreateToolTip(infolabel, infotext)
     return b
+
+
+def make_progress_bar(baseframe, var, text: str = '',
+                      orient=tk.HORIZONTAL, length=200, mode="determinate",
+                      maximum=1, padding=padding_setting, side=tk.LEFT, grid=None):
+    frame = labeled_widget_frame(baseframe, padding, side, grid)
+    labeled_widget_label(frame, text)
+
+    progress_bar = tk.ttk.Progressbar(baseframe, orient=orient, length=length,
+                                      mode=mode, maximum=maximum, takefocus=True)
+    progress_bar['value'] = 0
+    progress_bar.pack()
+
+    def update_progress_bar(*args):
+        progress_bar['value'] = var.get()
+        progress_bar.update_idletasks()
+
+    var.trace_add('write', update_progress_bar)
+    return progress_bar
+
+
+def open_progress_window(root, progress_vars, progress_texts):
+    window = tk.Toplevel(root, bg=background_color)
+    window.grab_set()
+    window.title("Calculating...")
+    window.geometry("800x450")
+    window.wm_iconphoto(False, tk.PhotoImage(file=icon_ML))
+
+    for pvar, ptext in zip(progress_vars, progress_texts):
+        make_progress_bar(window, pvar, text=ptext, side=tk.TOP)
+    return window
 
 
 def labeled_file_select(baseframe, headingtxt: str = '', varframe=None, subheading: str = '', label: str = '',

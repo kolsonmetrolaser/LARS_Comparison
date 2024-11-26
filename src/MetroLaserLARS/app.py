@@ -20,7 +20,7 @@ try:
     from app_helpers import heading, labeled_options, labeled_file_select, labeled_entry
     from app_helpers import padding_none, padding_setting, padding_option, padding_heading
     from app_helpers import bool_options, CustomVar, make_button, log_decorator, open_log_window
-    from app_helpers import button_color, active_bg, active_fg, icon_ML
+    from app_helpers import button_color, active_bg, active_fg, icon_ML, open_progress_window
     from app_helpers import background_color as bgc
     from app_window_part_matching import open_part_matching_window
     from app_window_plot import open_plot_window
@@ -31,7 +31,7 @@ except ModuleNotFoundError:
     from MetroLaserLARS.app_helpers import heading, labeled_options, labeled_file_select, labeled_entry
     from MetroLaserLARS.app_helpers import padding_none, padding_setting, padding_option, padding_heading
     from MetroLaserLARS.app_helpers import bool_options, CustomVar, make_button, log_decorator, open_log_window
-    from MetroLaserLARS.app_helpers import button_color, active_bg, active_fg, icon_ML
+    from MetroLaserLARS.app_helpers import button_color, active_bg, active_fg, icon_ML, open_progress_window
     from MetroLaserLARS.app_helpers import background_color as bgc
     from MetroLaserLARS.app_window_part_matching import open_part_matching_window
     from MetroLaserLARS.app_window_plot import open_plot_window
@@ -223,6 +223,17 @@ def run_app_main():
         return
 
     def submit():
+        progress_vars = [tk.DoubleVar(root, value=0), tk.DoubleVar(root, value=0), tk.DoubleVar(root, value=0)]
+        progress_texts = ['first bar', 'second bar', 'third bar']
+        progress_window = open_progress_window(root, progress_vars, progress_texts)
+
+        for i in range(5):
+            for j in range(3):
+                progress_vars[j].set(progress_vars[j].get()+1/5)
+                root.after(500)
+        progress_window.destroy()
+        return
+
         if status_var.get() in ['nodir', 'running']:
             return
 

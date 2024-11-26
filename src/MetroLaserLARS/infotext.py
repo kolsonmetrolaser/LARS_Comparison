@@ -244,7 +244,7 @@ algorithm. Higher values are slower, but more precise and less likely
 to miss the globally optimal stretching value.
 
 The final precision in the stretching factor is approximately
-2*max_stretch/(stretches_per_iteration*stretch_factor^(num_iterations-1))
+2*(Max stretching)/(stretches per iteration)
 """
 
 stretching_iterations = """
