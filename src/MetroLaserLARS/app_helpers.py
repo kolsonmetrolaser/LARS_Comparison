@@ -26,6 +26,48 @@ options_color = ['C'+str(i) for i in range(10)]
 icon_ML = 'MLicon_128.png'
 
 
+def clone_widget(widget, master=None):
+    """
+    Create a cloned version o a widget
+
+    Parameters
+    ----------
+    widget : tkinter widget
+        tkinter widget that shall be cloned.
+    master : tkinter widget, optional
+        Master widget onto which cloned widget shall be placed. If None, same master of input widget will be used. The
+        default is None.
+
+    Returns
+    -------
+    cloned : tkinter widget
+        Clone of input widget onto master widget.
+
+    """
+    # Get main info
+    parent = master if master else widget.master
+    cls = widget.__class__
+
+    # Clone the widget configuration
+    cfg = {key: widget.cget(key) for key in widget.configure()}
+    cloned = cls(parent, **cfg)
+
+    # Clone the widget's children
+    for child in widget.winfo_children():
+        child_cloned = clone_widget(child, master=cloned)
+        if child.grid_info():
+            grid_info = {k: v for k, v in child.grid_info().items() if k not in {'in'}}
+            child_cloned.grid(**grid_info)
+        elif child.place_info():
+            place_info = {k: v for k, v in child.place_info().items() if k not in {'in'}}
+            child_cloned.place(**place_info)
+        else:
+            pack_info = {k: v for k, v in child.pack_info().items() if k not in {'in'}}
+            child_cloned.pack(**pack_info)
+
+    return cloned
+
+
 def log_decorator(func, log_var, log_file_loc_var, running_var):
     def inner(inputStr):
         try:
@@ -289,7 +331,7 @@ def make_progress_bar(baseframe, var, text: str = '',
     frame = labeled_widget_frame(baseframe, padding, side, grid)
     labeled_widget_label(frame, text)
 
-    progress_bar = tk.ttk.Progressbar(baseframe, orient=orient, length=length,
+    progress_bar = tk.ttk.Progressbar(frame, orient=orient, length=length,
                                       mode=mode, maximum=maximum, takefocus=True)
     progress_bar['value'] = 0
     progress_bar.pack()
@@ -302,15 +344,23 @@ def make_progress_bar(baseframe, var, text: str = '',
     return progress_bar
 
 
-def open_progress_window(root, progress_vars, progress_texts):
+def open_progress_window(root, progress_vars, progress_texts, status_label):
     window = tk.Toplevel(root, bg=background_color)
     window.grab_set()
     window.title("Calculating...")
-    window.geometry("800x450")
     window.wm_iconphoto(False, tk.PhotoImage(file=icon_ML))
 
-    for pvar, ptext in zip(progress_vars, progress_texts):
-        make_progress_bar(window, pvar, text=ptext, side=tk.TOP)
+    for pvar, ptext in zip(progress_vars[::-1], progress_texts[::-1]):
+        make_progress_bar(window, pvar, text=ptext, side=tk.BOTTOM)
+
+    cw = clone_widget(status_label, window)
+    cw.pack(side=tk.TOP)
+
+    def update_cloned_status_label(*args):
+        cw.config(**{key: status_label.cget(key) for key in status_label.configure()})
+        cw.update()
+
+    pvar.trace_add('write', update_cloned_status_label)
     return window
 
 

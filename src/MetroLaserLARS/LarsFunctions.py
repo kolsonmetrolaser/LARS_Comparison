@@ -440,6 +440,7 @@ def same_fit_settings(settings):
                     settings_saved = pickle.load(f)
             except:
                 skip_fitting = False
+                return skip_fitting
 
             settings_to_compare = settings.copy()
             settings_to_compare.pop('status_label', None)
@@ -658,6 +659,7 @@ def analyze_each_pair_of_folders(folders: Iterable = [], **settings) -> tuple[li
             print(f'Loading data from {settings["pickled_data_path"]}')
             with open(settings['pickled_data_path'], 'rb') as inp:
                 data_dict = pickle.load(inp)
+            settings['progress_bars'][0].set(len(data_dict)/len(folders))
         except:
             print('Loading from data pickle failed, proceeding without loading data...')
             data_dict = {}
@@ -673,6 +675,7 @@ def analyze_each_pair_of_folders(folders: Iterable = [], **settings) -> tuple[li
             label_text = f'Analyzing pair {i+1} of {len(folder_pairs)}'
             settings['status_label'].config(text=label_text, state=tkinter.NORMAL)
             settings['status_label'].update()
+            settings['progress_bars'][1].set((i)/len(folder_pairs))
         data_0 = data_dict[fpair[0]] if fpair[0] in data_dict.keys() else None
         data_1 = data_dict[fpair[1]] if fpair[1] in data_dict.keys() else None
         matching_analysis, datas = compare_LARS_measurements(
@@ -681,6 +684,9 @@ def analyze_each_pair_of_folders(folders: Iterable = [], **settings) -> tuple[li
         for data in datas:
             if data.path not in data_dict.keys():
                 data_dict[data.path] = data
+        if 'progress_bars' in settings:
+            settings['progress_bars'][0].set(len(data_dict)/len(folders))
+            settings['progress_bars'][1].set((i+1)/len(folder_pairs))
     for datapath in data_dict:
         data_dict[datapath].analyzed_this_session = False
     return results, data_dict

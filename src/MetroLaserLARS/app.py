@@ -99,6 +99,12 @@ def run_app_main():
             settings['save_settings']             = settings['save_data'] # True if save_settings_var.get() == 'True' else False # noqa
             # APP INTERACTION
             settings['status_label']              = status_label # noqa
+
+            try:
+                settings['progress_bars']         = progress_vars.get() # noqa
+            except NameError:
+                settings['progress_bars']         = None  # noqa
+
             # fmt: on
         except tk.TclError as e:
             if not suppress:
@@ -153,7 +159,7 @@ def run_app_main():
             # PEAK MATCHING
             # stretching
             max_stretch_var.set(               settings['max_stretch'] if 'max_stretch' in settings else 0.02) # noqa
-            num_stretches_var.set(             settings['num_stretches'] if 'num_stretches' in settings else 5) # noqa
+            num_stretches_var.set(             log10(settings['num_stretches']) if 'num_stretches' in settings else 5) # noqa
             # stretching_iterations_var.set(     settings['stretching_iterations'] if 'stretching_iterations' in settings else 10) # noqa
             # stretch_iteration_factor_var.set(  settings['stretch_iteration_factor'] if 'stretch_iteration_factor' in settings else 5) # noqa
             # matching
@@ -223,23 +229,17 @@ def run_app_main():
         return
 
     def submit():
-        progress_vars = [tk.DoubleVar(root, value=0), tk.DoubleVar(root, value=0), tk.DoubleVar(root, value=0)]
-        progress_texts = ['first bar', 'second bar', 'third bar']
-        progress_window = open_progress_window(root, progress_vars, progress_texts)
-
-        for i in range(5):
-            for j in range(3):
-                progress_vars[j].set(progress_vars[j].get()+1/5)
-                root.after(500)
-        progress_window.destroy()
-        return
-
         if status_var.get() in ['nodir', 'running']:
             return
 
-        settings = make_settings()
         running_var.set(True)
         update_status()
+
+        progress_vars.set([tk.DoubleVar(root, value=0), tk.DoubleVar(root, value=0)])
+        progress_texts = ['Loading data...', 'Analyzing data...']
+        progress_window = open_progress_window(root, progress_vars.get(), progress_texts, status_label)
+
+        settings = make_settings()
 
         if settings['PRINT_MODE'] in ['full']:
             print(settings)
@@ -253,6 +253,8 @@ def run_app_main():
         with open(log_file_loc_var.get(), 'w') as f:
             f.write(log_var.get())
         update_status()
+
+        progress_window.destroy()
 
     def import_pickle(mode, *args, **kwargs):
         paths = []
@@ -280,9 +282,12 @@ def run_app_main():
         if data:
             if mode == 'settings':
                 set_settings(data[0])
-            elif mode == 'data':
+            elif mode == 'data' and len(data) == 2:
                 data_dict_var.set(data[0])
                 pair_results_var.set(data[1])
+            elif mode == 'data':
+                tk.messagebox.showerror(title='Load Failed', message=f'{mode} import failed.')
+                return
         return
 
     def update_peak_match_window_label(entry_text):
@@ -399,9 +404,10 @@ def run_app_main():
     prev_settings_var = tk.Variable(root, value={})
     status_var = tk.StringVar(root, value='nodir')
     default_font_name = tk.font.nametofont('TkTextFont').actual()['family']
-    data_dict_var, pair_results_var = CustomVar(), CustomVar()
+    data_dict_var, pair_results_var, progress_vars = CustomVar(), CustomVar(), CustomVar()
     data_dict_var.set({})
     pair_results_var.set({})
+    progress_vars.set(None)
     option_menu_kwargs = {'bg': button_color, 'highlightthickness': 0,
                           'activebackground': active_bg, 'activeforeground': active_fg}
 

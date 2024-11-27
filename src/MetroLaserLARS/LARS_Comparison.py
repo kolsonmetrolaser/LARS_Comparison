@@ -195,9 +195,11 @@ def same_fit_and_matching_settings(settings):
                     settings_saved = pickle.load(f)
             except:
                 skip_fitting_and_matching = False
+                return skip_fitting_and_matching, pair_results, data_dict
 
             settings_to_compare = settings.copy()
             settings_to_compare.pop('status_label', None)
+            settings_to_compare.pop('progress_bars', None)
             diff_keys = [key for key in set(settings_to_compare.keys()).union(settings_saved.keys())
                          if settings.get(key) != settings_saved.get(key)]
             skip_fitting_and_matching = skip_fitting_and_matching and not (
@@ -283,6 +285,7 @@ def run_analysis(folders, settings):
         with open(save_path, 'wb') as outp:
             settings_to_save = settings.copy()
             settings_to_save.pop('status_label', None)
+            settings_to_save.pop('progress_bars', None)
             pickle.dump(settings_to_save, outp, pickle.HIGHEST_PROTOCOL)
 
     print(f"""
