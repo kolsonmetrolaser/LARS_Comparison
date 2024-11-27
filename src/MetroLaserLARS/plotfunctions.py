@@ -445,6 +445,9 @@ def line_plot(x: ArrayLike, y: ArrayLike, legend=None, x_lim: tuple[float, float
               x_slice: tuple[float, float] = (-np.inf, np.inf), legend_interactive: bool = False,
               clear_fig: bool = True):
 
+    if not show_plot_in_spyder and fname is None and fig is None:
+        return None
+
     x = x.copy()
     y = y.copy()
 
