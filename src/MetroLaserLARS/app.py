@@ -384,7 +384,13 @@ def run_app_main():
     canvas.bind('<Leave>',
                 lambda event: canvas.unbind_all("<MouseWheel>"))
 
-    root.geometry("1600x900")
+    # root.geometry("1600x900")
+    # maximize window
+    root.state("zoomed")
+
+    # Needed for window to appear on top of others in some cases
+    root.wm_attributes('-topmost', True)
+    root.wm_attributes('-topmost', False)
 
     # menu_bar = tk.Menu(root, background=bgc)
     # menu_bar.config(bg=bgc, fg='black')

@@ -253,7 +253,7 @@ def labeled_widget_label(frame, text, side=tk.LEFT):
 
 
 def labeled_entry(baseframe, label: str = '', varframe=None, postlabel: str = '', padding=padding_setting,
-                  var=None, entry_width: int = 6, vardefault=0, vartype=None, update_status=None, command=None,
+                  var=None, entry_width: int = 6, vardefault=None, vartype=None, update_status=None, command=None,
                   side=tk.TOP, grid=None, infobox=True, infotext='Placeholder info text.'):
     if command is not None and update_status is not None:
         raise ("Only one of command and update_status may be specified")
