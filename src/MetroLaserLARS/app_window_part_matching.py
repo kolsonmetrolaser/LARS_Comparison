@@ -98,7 +98,7 @@ grouped folder structure" is set to True).""")
                     options=options,
                     infotext=infotext['part_matching_strategy'], **common_kwargs)
 
-    labeled_entry(window, 'Reference Part(s):', var=reference_var, vardefault='', infotext=infotext['reference'])
+    labeled_entry(window, 'Reference Part(s):', var=reference_var, entry_width=20, infotext=infotext['reference'])
 
     frame_input = tk.Frame(window)
     frame_input.pack()

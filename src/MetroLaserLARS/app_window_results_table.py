@@ -71,7 +71,8 @@ def sort_data_dict(data_dict, pair_results):
             if k not in sorted_data_dict:
                 sorted_data_dict[k] = d
                 for k2, d2 in data_dict.items():
-                    if [p for p in pair_results if d.name in p['names'] and d2.name in p['names']][0]['same_part']:
+                    res = [p for p in pair_results if d.name in p['names'] and d2.name in p['names']]
+                    if res and res[0]['same_part']:
                         sorted_data_dict[k2] = d2
 
     return sorted_data_dict
@@ -151,11 +152,12 @@ def open_results_table_window(root, data_dict_var, pair_results_var, **common_kw
             size = 10/12*font_size
             canvas.create_text(5*size, 2*size*(i+3), text=d1.name, font=f"{default_font_name} {int(font_size)}")
             for j, d2 in enumerate(data_dict.values()):
+                pair = [p for p in pair_results if d1.name in p['names'] and d2.name in p['names']]
+                if not pair:
+                    continue
                 canvas.create_text(5*size*(j+2), 4*size, text=d2.name, font=f"{default_font_name} {int(font_size)}")
                 same_part = 1. if d1.name == d2.name else (
-                    np.array([
-                        p for p in pair_results if d1.name in p['names'] and d2.name in p['names']
-                    ][0]['same_part']).astype(dtype)
+                    np.array(pair[0]['same_part']).astype(dtype)
                 )
 
                 if data in ['matched']:
@@ -195,6 +197,7 @@ def open_results_table_window(root, data_dict_var, pair_results_var, **common_kw
                              (np.abs(val-1)/max(np.abs(max_val-1), np.abs(min_val-1)))
                              )
                             )
+                cmap_val *= -1 if data in ['quality'] else 1
                 canvas.create_rectangle(5*size*(j+1.5), 2*size*(i+2.5), 5*size*(j+2.5), 2*size*(i+3.5),
                                         fill=_from_cmap(_cmap(
                                             cmap_val if data not in ['stretch'] else

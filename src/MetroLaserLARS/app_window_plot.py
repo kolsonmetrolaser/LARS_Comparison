@@ -132,6 +132,12 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
         return
 
     def update_plot_contents(canvas, name_to_key, *args, **common_kwargs):
+
+        def no_data():
+            canvas.figure.clear()
+            canvas.figure.text(0.5, 0.5, 'Not calculated for this pair',
+                               horizontalalignment='center', verticalalignment='center')
+            return
         # canvas.figure.clear()
         update_data_selection2()
 
@@ -193,38 +199,42 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
         elif t == 'Matched Peaks':
             data_selection2_label.pack(side=tk.LEFT)
             data_selection2_menu.pack(side=tk.LEFT)
-            pr = [pair for pair in pair_results if n in pair['names'] and n2 in pair['names']][0]
-            s = pr['stretch']
-            x, y = data.freq.copy()/1000, data.newvel.copy()
-            x2, y2 = data2.freq.copy()/1000, data2.newvel.copy()
-
-            f0, f1 = common_kwargs['x_lim']
-            x = x[np.logical_and(x > f0, x < f1)]
-            x2 = x2[np.logical_and(x2 > f0, x2 < f1)]
-
-            if n == pr['names'][0]:
-                x2 *= s
-                unmatched = pr['unmatched']
+            pr = [pair for pair in pair_results if n in pair['names'] and n2 in pair['names']]
+            if not pr:
+                no_data()
             else:
-                x *= s
-                unmatched = pr['unmatched'][::-1]
+                pr = pr[0]
+                s = pr['stretch']
+                x, y = data.freq.copy()/1000, data.newvel.copy()
+                x2, y2 = data2.freq.copy()/1000, data2.newvel.copy()
 
-            _ = line_plot([x, x2], [y, y2], x_label='Frequency (kHz)', y_label='Normalized Intensity (arb.)',
-                          v_line_pos=[pr['matched'], *unmatched],
-                          v_line_color=['k', 'C0', 'C1'], v_line_width=[4, 2, 2],
-                          legend=[n, n2], v_line_legend=['Matched', f'Unmatched {n}', f'Unmatched {n2}'],
-                          legend_location='upper right', y_norm='each',
-                          title='Stretched peak matches raw', **kwargs)
+                f0, f1 = common_kwargs['x_lim']
+                x = x[np.logical_and(x > f0, x < f1)]
+                x2 = x2[np.logical_and(x2 > f0, x2 < f1)]
+
+                if n == pr['names'][0]:
+                    x2 *= s
+                    unmatched = pr['unmatched']
+                else:
+                    x *= s
+                    unmatched = pr['unmatched'][::-1]
+
+                _ = line_plot([x, x2], [y, y2], x_label='Frequency (kHz)', y_label='Normalized Intensity (arb.)',
+                              v_line_pos=[pr['matched'], *unmatched],
+                              v_line_color=['k', 'C0', 'C1'], v_line_width=[4, 2, 2],
+                              legend=[n, n2], v_line_legend=['Matched', f'Unmatched {n}', f'Unmatched {n2}'],
+                              legend_location='upper right', y_norm='each',
+                              title='Stretched peak matches raw', **kwargs)
         elif t == 'Custom Plot':
             action = custom_plot_action_var.get()
             if action == 'Clear All':
                 if (len(canvas.figure.get_children()) != 1
-                    and (custom_plot_clear_var.get()
-                         or tk.messagebox.askokcancel('Clear Plots?',
-                                                      'Are you sure you want to completely clear the plot?',
-                                                      parent=window, master=window)
-                         )
-                    ):
+                        and (custom_plot_clear_var.get()
+                             or tk.messagebox.askokcancel('Clear Plots?',
+                                                                  'Are you sure you want to completely clear the plot?',
+                                                                  parent=window, master=window)
+                             )
+                        ):
                     canvas.figure.clear()
             elif 'Add' in action:
                 x, p = data.freq.copy()/1000, data.peaks['positions']/1000
