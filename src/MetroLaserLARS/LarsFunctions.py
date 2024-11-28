@@ -627,8 +627,8 @@ def compare_LARS_measurements(folders: Iterable = [], previously_analyzed_data: 
     unmatched_X = [x/1000 for x, y in zip(bestrx, bestry) if y == -1]
     unmatched_Y = [y/1000 for x, y in zip(bestrx, bestry) if x == -1]
     matched = [(x+y)/2/1000 for x, y in zip(bestrx, bestry) if x != -1 and y != -1]
-    best_quality += peak_match_window*(len(unmatched_X)+len(unmatched_Y))
-    best_quality /= len(matched)
+    best_quality += peak_match_window*(len(unmatched_X)+len(unmatched_Y))/2
+    best_quality /= -len(matched)
     if 'PRINT_MODE' in settings and settings['PRINT_MODE'] == 'full':
         print(f'{len(unmatched_X)} unmatched peaks in reference at {unmatched_X} kHz')
         print(f'{len(unmatched_Y)} unmatched peaks in measurement at {unmatched_Y} kHz')
