@@ -55,6 +55,7 @@ def run_app_main():
             settings['grouped_folders']           = True if grouped_folders_var.get() == 'True' else False # noqa
             settings['part_matching_text']        = part_matching_text_var.get() # noqa
             settings['part_matching_strategy']    = part_matching_strategy_var.get() # noqa
+            settings['reference']                 = '' if reference_var.get()=='No Reference' else reference_var.get() # noqa
             # PLOTTING AND PRINTING
             settings['plot']                      = True if plot_var.get() == 'True' else False  # noqa
             settings['plot_detail']               = True if plot_detail_var.get() == 'True' else False  # noqa
@@ -130,6 +131,7 @@ def run_app_main():
             grouped_folders_var.set(           ('True' if settings['grouped_folders'] else 'False') if 'grouped_folders' in settings else 'False') # noqa
             part_matching_text_var.set(        settings['part_matching_text'] if 'part_matching_text' in settings else '') # noqa
             part_matching_strategy_var.set(    settings['part_matching_strategy'] if 'part_matching_strategy' in settings else 'list') # noqa
+            reference_var.set(                 settings['reference'] if 'reference' in settings else 'No Reference') # noqa
             # PLOTTING AND PRINTING
             plot_var.set(                      ('True' if settings['plot'] else 'False') if 'plot' in settings else 'False') # noqa
             plot_detail_var.set(               ('True' if settings['plot_detail'] else 'False') if 'plot_detail' in settings else 'False') # noqa
@@ -501,6 +503,7 @@ All pairs of subfolders will be compared.""",
 
     part_matching_text_var = tk.StringVar(root, value='')
     part_matching_strategy_var = tk.StringVar(root, value='list')
+    reference_var = tk.StringVar(root, value='No Reference')
 
     make_button(rootr, text="Define Known Part Matching",
                 command=lambda: part_matching_text_var.set(
@@ -509,6 +512,7 @@ All pairs of subfolders will be compared.""",
                         grouped_folders_var,
                         part_matching_text_var,
                         part_matching_strategy_var,
+                        reference_var,
                         **common_kwargs)
                 ), side=tk.TOP
                 )

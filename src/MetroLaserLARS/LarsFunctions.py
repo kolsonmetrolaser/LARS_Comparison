@@ -683,6 +683,7 @@ def analyze_each_pair_of_folders(folders: Iterable = [], **settings) -> tuple[li
         return False
 
     pickled_data_path = settings['pickled_data_path'] if 'pickled_data_path' in settings else ''
+    reference = settings['reference'] if 'reference' in settings else ''
 
     results = []
     if pickled_data_path:
@@ -697,7 +698,19 @@ def analyze_each_pair_of_folders(folders: Iterable = [], **settings) -> tuple[li
     else:
         data_dict = {}
 
-    folder_pairs = list(combinations(folders, 2))
+    all_folder_pairs = list(combinations(folders, 2))
+    folder_pairs = []
+    if reference:
+        references = reference.split(', ') if ', ' in reference else [reference]
+        for fpair in all_folder_pairs:  # accept only pairs which include a desired reference
+            if osp.basename(fpair[0]) in references or osp.basename(fpair[1]) in references:
+                folder_pairs.append(fpair)
+        if not folder_pairs:  # if none are found, proceed with full calculation
+            print('WARNING: reference supplied, but does not match any parts. Proceeding with full calculation table.')
+            folder_pairs = all_folder_pairs
+    else:
+        folder_pairs = all_folder_pairs
+
     for i, fpair in enumerate(folder_pairs):
         if 'PRINT_MODE' in settings and settings['PRINT_MODE'] in ['sparse', 'full']:
             print(f"Analyzing    {osp.split(fpair[0])[1]}    and    {osp.split(fpair[1])[1]}    (pair {i+1} of {len(folder_pairs)})")

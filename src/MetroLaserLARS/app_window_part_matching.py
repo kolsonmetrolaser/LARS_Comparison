@@ -7,13 +7,15 @@ Created on Tue Nov 12 15:08:28 2024
 import tkinter as tk
 
 try:
-    from app_helpers import labeled_options, make_button, icon_ML
+    from infotext import infotext
+    from app_helpers import labeled_options, labeled_entry, icon_ML
 except ModuleNotFoundError:
-    from MetroLaserLARS.app_helpers import labeled_options, make_button, icon_ML
+    from MetroLaserLARS.infotext import infotext
+    from MetroLaserLARS.app_helpers import labeled_options, labeled_entry, icon_ML
 
 
 def open_part_matching_window(root, grouped_folders_var, part_matching_text_var,
-                              part_matching_strategy_var, **common_kwargs):
+                              part_matching_strategy_var, reference_var, **common_kwargs):
     def toggle_code_labels(*args):
         if part_matching_strategy_var.get() == 'custom':
             try:
@@ -91,10 +93,12 @@ by creating a custom function, or by the folder structure (if "Use
 grouped folder structure" is set to True).""")
     label1.pack()
     options = ['folder', 'list', 'custom'] if grouped_folders_var.get() == 'True' else ['list', 'custom']
-    _, _, _, _, _, _ = labeled_options(window, 'Definition type:',
-                                       var=part_matching_strategy_var,
-                                       options=options,
-                                       infobox=False, **common_kwargs)
+    labeled_options(window, 'Definition type:',
+                    var=part_matching_strategy_var,
+                    options=options,
+                    infotext=infotext['part_matching_strategy'], **common_kwargs)
+
+    labeled_entry(window, 'Reference Part(s):', var=reference_var, vardefault='', infotext=infotext['reference'])
 
     frame_input = tk.Frame(window)
     frame_input.pack()

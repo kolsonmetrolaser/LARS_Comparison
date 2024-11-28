@@ -319,6 +319,19 @@ multiple folder levels rather than each individual part being in a single
 folder.
 """
 
+part_matching_strategy = """
+folder: Each set of equivalent parts is grouped into its own folders. Requires
+"Use Grouped Folder Structure" to be set to True.
+list: Define equivalent parts by listing each group on a new line in the text box.
+custom: Define equivalent parts using a Python function, given the part names.
+"""
+
+reference = """
+Enter a part (folder name) to be used as a reference (e.g.: Part1), or a list
+of parts to compare against separated by a comma and a space
+(e.g.: Part1, Part2, Part3)
+"""
+
 
 infotext = {
     # DATA
@@ -361,4 +374,6 @@ infotext = {
     'save_folder': save_folder,
     'save_settings': save_settings,
     'grouped_folders': grouped_folders,
+    'part_matching_strategy': part_matching_strategy,
+    'reference': reference
 }

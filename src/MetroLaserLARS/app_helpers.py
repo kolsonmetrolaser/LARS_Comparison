@@ -253,7 +253,7 @@ def labeled_widget_label(frame, text, side=tk.LEFT):
 
 
 def labeled_entry(baseframe, label: str = '', varframe=None, postlabel: str = '', padding=padding_setting,
-                  entry_width: int = 6, vardefault=0, vartype=None, update_status=None, command=None,
+                  var=None, entry_width: int = 6, vardefault=0, vartype=None, update_status=None, command=None,
                   side=tk.TOP, grid=None, infobox=True, infotext='Placeholder info text.'):
     if command is not None and update_status is not None:
         raise ("Only one of command and update_status may be specified")
@@ -262,8 +262,11 @@ def labeled_entry(baseframe, label: str = '', varframe=None, postlabel: str = ''
     entry, infolabel = None, None
     frame = labeled_widget_frame(baseframe, padding, side, grid)
     label1 = labeled_widget_label(frame, label)
-    if vartype is not None:
-        var = vartype(varframe, value=vardefault)
+    if vartype is not None or var is not None:
+        if var is not None and vardefault is not None:
+            var.set(vardefault)
+        if var is None:
+            var = vartype(varframe, value=vardefault)
         if update_status is not None:
             var.trace_add("write", update_status)
         entry = tk.Entry(frame, width=entry_width, textvariable=var, bg=entry_color)
