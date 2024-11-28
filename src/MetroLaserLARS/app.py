@@ -255,6 +255,7 @@ def run_app_main():
             tk.messagebox.showerror('Error', f'Error in analysis, exiting. See {log_file_loc_var.get()} for more detail.')
             running_var.set(False)
             update_status()
+            return
 
         data_dict_var.set(data_dict)
         pair_results_var.set(pair_results)
@@ -266,6 +267,7 @@ def run_app_main():
         update_status()
 
         progress_window.destroy()
+        return
 
     def import_pickle(mode, *args, **kwargs):
         paths = []
