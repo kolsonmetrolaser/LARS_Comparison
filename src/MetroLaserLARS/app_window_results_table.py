@@ -11,9 +11,11 @@ from copy import copy
 # Internal imports
 try:
     from app_helpers import labeled_options, labeled_entry, padding_setting, icon_ML, edit_name_menu_bar
+    from app_helpers import labeled_widget_label
     from app_helpers import background_color as bgc
 except ModuleNotFoundError:
     from MetroLaserLARS.app_helpers import labeled_options, labeled_entry, padding_setting, icon_ML, edit_name_menu_bar
+    from MetroLaserLARS.app_helpers import labeled_widget_label
     from MetroLaserLARS.app_helpers import background_color as bgc
 
 
@@ -98,7 +100,18 @@ def open_results_table_window(root, data_dict_var, pair_results_var, **common_kw
                              'Number of Matched Peaks': 'matched',
                              'Number of Unmatched Peaks': 'unmatched',
                              }
+
+        explainers = {'match_probability': 'A∩B/(A+B-A∩B) where A and B are the sets of peaks',
+                      'stretch': 'The frequencies of the measurements are multiplied by the stretch value',
+                      'quality': 'Average distance between peaks',
+                      'same_part': '1 if the parts were defined as equal, 0 if not',
+                      'matched': 'Number of matching peaks. The diagonal gives the number of peaks for that part.',
+                      'unmatched': 'Number of non-matching peaks.'
+                      }
+
         data = input_to_internal[data] if data in input_to_internal else data
+
+        explainer_label.config(text=explainers[data])
 
         grid_size = (len(data_dict)+1, len(data_dict)+1)
         textvars = [[[]]*grid_size[0]]*grid_size[1]
@@ -209,12 +222,14 @@ def open_results_table_window(root, data_dict_var, pair_results_var, **common_kw
     data_dict = sort_data_dict(data_dict, pair_results)
 
     frame_options = tk.Frame(window, bg=bgc)
-    frame_options.pack()
+    frame_options.pack(side=tk.TOP)
+    frame_explainer = tk.Frame(window, bg=bgc)
+    frame_explainer.pack(side=tk.TOP)
 
     frame_sheet = tk.Frame(window, bg=bgc)
-    frame_sheet.pack(expand=True, fill=tk.BOTH)
+    frame_sheet.pack(side=tk.TOP, expand=True, fill=tk.BOTH)
     canvas_sheet = tk.Canvas(frame_sheet, bg=bgc)
-    canvas_sheet.pack(expand=True, fill=tk.BOTH)
+    canvas_sheet.pack(side=tk.TOP, expand=True, fill=tk.BOTH)
 
     font_size_var, _, _, font_size_entry, _, _ = labeled_entry(frame_options, 'Font Size:', padding=padding_setting,
                                                                side=tk.LEFT,
@@ -225,7 +240,8 @@ def open_results_table_window(root, data_dict_var, pair_results_var, **common_kw
                                                                 pair_results=pair_results,
                                                                 font_size=font_size_var.get()))
 
-    table_options = ['Match Probability', 'Matching Quality', 'Stretching Factor', 'Number of Matched Peaks', 'Number of Unmatched Peaks', 'Same Part']
+    table_options = ['Match Probability', 'Matching Quality', 'Stretching Factor', 'Number of Matched Peaks',
+                     'Number of Unmatched Peaks', 'Same Part']
     table_options_var, _, _, _, _, _ = labeled_options(frame_options, 'Data to compare:', padding=padding_setting,
                                                        vartype=tk.StringVar, vardefault=table_options[0], side=tk.LEFT,
                                                        command=lambda *args: fill_table(canvas_sheet, root,
@@ -240,6 +256,8 @@ def open_results_table_window(root, data_dict_var, pair_results_var, **common_kw
                                                                                     data_dict=data_dict,
                                                                                     pair_results=pair_results),
                                                    infobox=False, options=reference_options)
+
+    explainer_label = labeled_widget_label(frame_explainer, '')
 
     fill_table(canvas_sheet, root, data=table_options[0], data_dict=data_dict, pair_results=pair_results)
     window.bind_all("<1>", lambda event: event.widget.focus_set())

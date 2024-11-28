@@ -194,8 +194,8 @@ ratio: {rms/stdev}""")
         hx = (h[1][:-1]+h[1][1:])/2
         hy = h[0]
         plt.plot(hx, hy, '-k')
-        fitfunc = lambda p, x: 1/np.sqrt(2*np.pi*p[1]**2)*np.exp(-0.5*((x-p[0])/p[1])**2)
-        errfunc = lambda p, x, y: (y - fitfunc(p, x))
+        def fitfunc(p, x): return 1/np.sqrt(2*np.pi*p[1]**2)*np.exp(-0.5*((x-p[0])/p[1])**2)
+        def errfunc(p, x, y): return (y - fitfunc(p, x))
         init = [mean, stdev]
         out = leastsq(errfunc, init, args=(hx, hy))
         print(out[0])
@@ -627,10 +627,12 @@ def compare_LARS_measurements(folders: Iterable = [], previously_analyzed_data: 
     unmatched_X = [x/1000 for x, y in zip(bestrx, bestry) if y == -1]
     unmatched_Y = [y/1000 for x, y in zip(bestrx, bestry) if x == -1]
     matched = [(x+y)/2/1000 for x, y in zip(bestrx, bestry) if x != -1 and y != -1]
+    best_quality += peak_match_window*(len(unmatched_X)+len(unmatched_Y))
+    best_quality /= len(matched)
     if 'PRINT_MODE' in settings and settings['PRINT_MODE'] == 'full':
         print(f'{len(unmatched_X)} unmatched peaks in reference at {unmatched_X} kHz')
         print(f'{len(unmatched_Y)} unmatched peaks in measurement at {unmatched_Y} kHz')
-        print(f'{len(matched)} matched peaks at {matched} kHz')
+        print(f'{len(matched)} matched peaks at {matched} kHz, with average mistmatch of {best_quality} Hz')
 
     # Plot results
     if plot and plot_detail:
