@@ -244,7 +244,18 @@ def run_app_main():
         if settings['PRINT_MODE'] in ['full']:
             print(settings)
 
-        data_dict, pair_results = LARS_Comparison_from_app(settings)
+        try:
+            data_dict, pair_results = LARS_Comparison_from_app(settings)
+        except Exception as e:
+            progress_window.destroy()
+            import traceback
+            print('Error in main analysis code')
+            print('Error:', e)
+            print(traceback.format_exc())
+            tk.messagebox.showerror('Error', f'Error in analysis, exiting. See {log_file_loc_var.get()} for more detail.')
+            running_var.set(False)
+            update_status()
+
         data_dict_var.set(data_dict)
         pair_results_var.set(pair_results)
 

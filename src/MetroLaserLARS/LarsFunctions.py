@@ -641,19 +641,6 @@ def compare_LARS_measurements(folders: Iterable = [], previously_analyzed_data: 
               min(frange[0]+(i)*peak_plot_width, frange[1])]
              for i in range(int(np.ceil((frange[1]-frange[0])/peak_plot_width)))]
 
-        # ([10, 60], [10, 10+50/3], [10+50/3, 10+100/3], [10+100/3, 10+150/3])
-        # for xlim in xlims:
-        #     pf.line_plot([freqs[0]/1000, freqs[1]/1000], [newvels[0], newvels[1]], style='.',
-        #                  x_lim=xlim, v_line_pos=[positions[0]/1000, positions[1]/1000],
-        #                  v_line_color=['C0', 'C1'], v_line_width=[2, 2], y_norm='each', title='Unstretched peak fits')
-        # for xlim in xlims:
-        #     pf.line_plot([freqs[0]/1000, freqs[1]/1000*best_stretch], [newvels[0], newvels[1]], style='.',
-        #                  x_lim=xlim, v_line_pos=[positions[0]/1000, positions[1]/1000*best_stretch],
-        #                  v_line_color=['C0', 'C1'], v_line_width=[2, 2], y_norm='each', title='Stretched peak fits')
-        # for xlim in xlims:
-        #     pf.line_plot([freqs[0]/1000, freqs[1]/1000*best_stretch], [newvels[0], newvels[1]], style='.',
-        #                  x_lim=xlim, v_line_pos=[matched, unmatched_X, unmatched_Y], v_line_color=['k', 'C0', 'C1'],
-        #                  v_line_width=[4, 2, 2], y_norm='each', title='Stretched peak matches filtered')
         for plotnum, xlim in enumerate(xlims):
             fname = f'{names[0]} and {names[1]} Stretched peak matches raw_{plotnum+1}'+save_tag if plotnum != 0 else\
                 f'{names[0]} and {names[1]} Stretched peak matches raw'
