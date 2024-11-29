@@ -82,8 +82,8 @@ def remove_noise(y: ArrayLike, normalize: bool = True, noise: Literal[None, Arra
         The noise level.
     """
     y = y.copy()
-    noise = np.sqrt(np.mean(y**2)) if noise is None else noise
-    # noise = np.std(y) if noise is None else noise
+    # noise = np.sqrt(np.mean(y**2)) if noise is None else noise
+    noise = np.std(y) if noise is None else noise
     if normalize:
         y /= noise
         y -= 1
@@ -172,38 +172,38 @@ def detailed_plots(folder, name, peaks, freqs, vels, vels_baseline_removed, vels
                      **kwargs, y_label='Amplitude (μm/s)',
                      fname=osp.join(save_folder, f'{folder}{name} peaks removed and baseline'+save_tag) if save_plots else None,
                      show_plot_in_spyder=show_plots)
-#     if vels_peaks_removed_baseline_removed is not None:
-#         import scipy.stats as st
-#         import matplotlib.pyplot as plt
-#         from scipy.optimize import leastsq
-#         y = vels_peaks_removed_baseline_removed.copy()
-#         rms = np.sqrt(np.mean(vels_peaks_removed_baseline_removed**2))
-#         stdev = np.std(vels_peaks_removed_baseline_removed)
-#         mean = np.mean(vels_peaks_removed_baseline_removed)
-#         print(f"""mean: {mean}    rms: {rms}    stdev: {stdev}
-# ratio: {rms/stdev}""")
-#         span = np.linspace(-rms, rms*4, 200)
-#         h = plt.hist(y, color='gray', bins=span, density=True)
-#         x = np.linspace(span[0], span[-1], 1000)
-#         # plt.plot(x, st.norm.pdf(x, noise/(2), noise/2))
-#         plt.plot(x, st.halfnorm.pdf(x, 0, rms), '-r')
-#         plt.plot(x, st.halfnorm.pdf(x, 0, stdev), '-b')
-#         plt.plot(x, st.foldnorm.pdf(x, mean, 0, stdev), '-g')
-#         plt.plot(x, st.norm.pdf(x, mean, stdev), '-c')
+    if vels_peaks_removed_baseline_removed is not None:
+        import scipy.stats as st
+        import matplotlib.pyplot as plt
+        from scipy.optimize import leastsq
+        y = vels_peaks_removed_baseline_removed.copy()
+        rms = np.sqrt(np.mean(vels_peaks_removed_baseline_removed**2))
+        stdev = np.std(vels_peaks_removed_baseline_removed)
+        mean = np.mean(vels_peaks_removed_baseline_removed)
+        print(f"""mean: {mean}    rms: {rms}    stdev: {stdev}
+ratio: {rms/stdev}""")
+        span = np.linspace(-rms, rms*4, 200)
+        h = plt.hist(y, color='gray', bins=span, density=True)
+        x = np.linspace(span[0], span[-1], 1000)
+        # plt.plot(x, st.norm.pdf(x, noise/(2), noise/2))
+        plt.plot(x, st.halfnorm.pdf(x, 0, rms), '-r')
+        plt.plot(x, st.halfnorm.pdf(x, 0, stdev), '-b')
+        plt.plot(x, st.foldnorm.pdf(x, mean, 0, stdev), '-g')
+        plt.plot(x, st.norm.pdf(x, mean, stdev), '-c')
 
-#         hx = (h[1][:-1]+h[1][1:])/2
-#         hy = h[0]
-#         plt.plot(hx, hy, '-k')
-#         def fitfunc(p, x): return 1/np.sqrt(2*np.pi*p[1]**2)*np.exp(-0.5*((x-p[0])/p[1])**2)
-#         def errfunc(p, x, y): return (y - fitfunc(p, x))
-#         init = [mean, stdev]
-#         out = leastsq(errfunc, init, args=(hx, hy))
-#         print(out[0])
-#         plt.plot(hx, fitfunc(out[0], hx), '-y')
+        hx = (h[1][:-1]+h[1][1:])/2
+        hy = h[0]
+        plt.plot(hx, hy, '-k')
+        def fitfunc(p, x): return 1/np.sqrt(2*np.pi*p[1]**2)*np.exp(-0.5*((x-p[0])/p[1])**2)
+        def errfunc(p, x, y): return (y - fitfunc(p, x))
+        init = [mean, stdev]
+        out = leastsq(errfunc, init, args=(hx, hy))
+        print(out[0])
+        plt.plot(hx, fitfunc(out[0], hx), '-y')
 
-#         plt.title('noise histogram')
-#         plt.xlim(span[0], span[-1])
-#         plt.show()
+        plt.title('noise histogram')
+        plt.xlim(span[0], span[-1])
+        plt.show()
     pf.line_plot(freqs/1000, [vels_baseline_removed], style='.', x_lim=xlim,
                  title=f'{folder}{name} baseline removed', y_lim=[-2, 200], **kwargs, y_label='Amplitude (μm/s)',
                  fname=osp.join(save_folder, f'{folder}{name} baseline removed'+save_tag) if save_plots else None,
@@ -320,8 +320,8 @@ def analyze_data(data: LarsData, **settings) -> tuple[dict, NDArray, NDArray, ND
 
         vels_peaks_removed_baseline_removed = vels_peaks_removed - baseline[indices_nonpeak]
 
-        rms = np.sqrt(np.mean(vels_peaks_removed_baseline_removed**2))
-        # rms = np.std(vels_peaks_removed_baseline_removed)
+        # rms = np.sqrt(np.mean(vels_peaks_removed_baseline_removed**2))
+        rms = np.std(vels_peaks_removed_baseline_removed)
 
         vels_baseline_removed = vels.copy() - updated_baseline
 
