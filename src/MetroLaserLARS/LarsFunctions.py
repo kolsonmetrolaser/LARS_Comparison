@@ -182,24 +182,25 @@ def detailed_plots(folder, name, peaks, freqs, vels, vels_baseline_removed, vels
         mean = np.mean(vels_peaks_removed_baseline_removed)
         print(f"""mean: {mean}    rms: {rms}    stdev: {stdev}
 ratio: {rms/stdev}""")
-        span = np.linspace(-rms, rms*4, 200)
+        num_bins = 200
+        span = np.linspace(-rms, rms*4, num_bins)
         h = plt.hist(y, color='gray', bins=span, density=True)
         x = np.linspace(span[0], span[-1], 1000)
         # plt.plot(x, st.norm.pdf(x, noise/(2), noise/2))
-        plt.plot(x, st.halfnorm.pdf(x, 0, rms), '-r')
-        plt.plot(x, st.halfnorm.pdf(x, 0, stdev), '-b')
-        plt.plot(x, st.foldnorm.pdf(x, mean, 0, stdev), '-g')
-        plt.plot(x, st.norm.pdf(x, mean, stdev), '-c')
+        # plt.plot(x, st.halfnorm.pdf(x, 0, rms), '-r')
+        # plt.plot(x, st.halfnorm.pdf(x, 0, stdev), '-b')
+        # plt.plot(x, st.foldnorm.pdf(x, mean, 0, stdev), '-g')
+        plt.plot(x, st.norm.pdf(x, mean, stdev), '-y')
 
         hx = (h[1][:-1]+h[1][1:])/2
         hy = h[0]
-        plt.plot(hx, hy, '-k')
-        def fitfunc(p, x): return 1/np.sqrt(2*np.pi*p[1]**2)*np.exp(-0.5*((x-p[0])/p[1])**2)
-        def errfunc(p, x, y): return (y - fitfunc(p, x))
+        plt.plot(hx, hy, ':k')
+        fitfunc = lambda p, x: 1/np.sqrt(2*np.pi*p[1]**2)*np.exp(-0.5*((x-p[0])/p[1])**2)
+        fitdifffunc = lambda p, x, y: y-fitfunc(p, x)
         init = [mean, stdev]
-        out = leastsq(errfunc, init, args=(hx, hy))
+        out = leastsq(fitdifffunc, init, args=(hx, hy))
         print(out[0])
-        plt.plot(hx, fitfunc(out[0], hx), '-y')
+        plt.plot(hx, fitfunc(out[0], hx), '-r')
 
         plt.title('noise histogram')
         plt.xlim(span[0], span[-1])
