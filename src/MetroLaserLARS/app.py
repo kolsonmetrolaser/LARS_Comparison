@@ -7,14 +7,14 @@ Created on Tue Oct 15 12:08:17 2024
 # External imports
 import tkinter as tk
 import pickle
-from numpy import log10
 import sys
 from shutil import move as shmove
 import os.path as osp
 import tempfile
 import threading
 import queue
-import time
+import traceback
+from numpy import log10
 
 # Internal imports
 try:
@@ -39,6 +39,7 @@ except ModuleNotFoundError:
     from MetroLaserLARS.app_window_part_matching import open_part_matching_window
     from MetroLaserLARS.app_window_plot import open_plot_window
     from MetroLaserLARS.app_window_results_table import open_results_table_window
+
 
 def run_app_main():
     def make_settings(suppress=False):
@@ -191,7 +192,7 @@ def run_app_main():
 
         return settings
 
-    def update_status(*args):
+    def update_status(*_):
         if running_var.get():
             status_var.set('running')
         elif tk.Variable(root, make_settings(suppress=True)).get() == prev_settings_var.get():
@@ -231,6 +232,10 @@ def run_app_main():
             tk.Button_text = 'Run Code'
             label_text = 'Just ran with these settings.'
             label_state = tk.NORMAL
+        else:
+            bg, fg = 'white', 'black'
+            label_text = ''
+            label_state = tk.NORMAL
 
         submit_Button.config(bg=bg, fg=fg, text=tk.Button_text)
         status_label.config(bg=bg, fg=fg, text=label_text, state=label_state)
@@ -256,10 +261,9 @@ def run_app_main():
             print(settings)
 
         try:
-            def LARS_comparison_worker(queue, settings):
+            def LARS_comparison_worker(q, settings):
                 print('starting main code')
-                # queue.put((42, 42))
-                queue.put(LARS_Comparison_from_app(settings))
+                q.put(LARS_Comparison_from_app(settings))
 
             result_queue = queue.Queue()
             thread = threading.Thread(target=LARS_comparison_worker, args=(result_queue, settings))
@@ -277,7 +281,7 @@ def run_app_main():
 
                     prev_settings_var.set(settings)
                     running_var.set(False)
-                    with open(log_file_loc_var.get(), 'w') as f:
+                    with open(log_file_loc_var.get(), 'w', encoding="utf-8") as f:
                         f.write(log_var.get())
                     update_status()
                     progress_window.destroy()
@@ -290,7 +294,6 @@ def run_app_main():
 
         except Exception as e:
             progress_window.destroy()
-            import traceback
             print('Error in main analysis code')
             print('Error:', e)
             print(traceback.format_exc())
@@ -301,7 +304,7 @@ def run_app_main():
 
         return
 
-    def import_pickle(mode, *args, **kwargs):
+    def import_pickle(mode, *_, **kwargs):
         paths = []
         if mode == 'settings':
             paths.append(tk.filedialog.askopenfilename(**kwargs, title='Choose settings to import',
@@ -321,7 +324,7 @@ def run_app_main():
             try:
                 with open(path, 'rb') as f:
                     data.append(pickle.load(f))
-            except:
+            except Exception:
                 tk.messagebox.showerror(title='Load Failed', message=f'{mode} import failed.')
                 return
         if data:
@@ -342,13 +345,13 @@ def run_app_main():
         peak_match_window_label2.config(text=txt)
         peak_match_window_infobox.pack(side=tk.LEFT)
 
-    def update_save_tag_label(*args):
+    def update_save_tag_label(*_):
         # Update the label text with the selected option
         txt = "Save filename: data_dict... and peak_results" if save_tag_var.get(
         ) == '' else 'Save filename: data_dict_... and peak_results_'
         save_tag_label.config(text=txt)
 
-    def hide_save_tag(*args):
+    def hide_save_tag(*_):
         # update_status()  # also update submit tk.Button color
         if save_data_var.get() == 'True' or save_results_var.get() == 'True':
             save_tag_dummy_label.pack_forget()

@@ -76,7 +76,7 @@ def log_decorator(func, log_var, log_file_loc_var, running_var):
                 with open(log_file_loc_var.get(), 'a') as f:
                     f.write(inputStr)
             return func(inputStr)
-        except:
+        except Exception:
             print('Error inside log_decorator, doing default print')
             return func(inputStr)
     return inner
@@ -94,7 +94,7 @@ def open_log_window(root, log_var):
     log_text.insert("0.0", log_var.get())
     log_text.pack(side=tk.LEFT, expand=True, fill='both')
 
-    def update_log(*args):
+    def update_log(*_):
         log_text.delete('1.0', tk.END)
         log_text.insert("0.0", log_var.get())
         return
@@ -149,6 +149,7 @@ class ToolTip(object):
         self.tipwindow = None
         self.id = None
         self.x = self.y = 0
+        self.text = ''
 
     def showtip(self, text):
         "Display text in tooltip window"
@@ -256,7 +257,7 @@ def labeled_entry(baseframe, label: str = '', varframe=None, postlabel: str = ''
                   var=None, entry_width: int = 6, vardefault=None, vartype=None, update_status=None, command=None,
                   side=tk.TOP, grid=None, infobox=True, infotext='Placeholder info text.'):
     if command is not None and update_status is not None:
-        raise ("Only one of command and update_status may be specified")
+        raise Exception("Only one of command and update_status may be specified")
     update_status = command if update_status is None else update_status
     varframe = baseframe if varframe is None else varframe
     entry, infolabel = None, None
@@ -443,5 +444,5 @@ def plot_style_widget(baseframe, text: str = '', command=None, padding=padding_s
 
 
 if __name__ == '__main__':
-    from app import run_app
+    from app import run_app # noqa
     run_app()

@@ -228,13 +228,16 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
         elif t == 'Custom Plot':
             action = custom_plot_action_var.get()
             if action == 'Clear All':
-                if (len(canvas.figure.get_children()) != 1
-                        and (custom_plot_clear_var.get()
-                             or tk.messagebox.askokcancel('Clear Plots?',
-                                                                  'Are you sure you want to completely clear the plot?',
-                                                                  parent=window, master=window)
-                             )
-                        ):
+                if (
+                    len(canvas.figure.get_children()) != 1
+                    and (
+                        custom_plot_clear_var.get()
+                        or tk.messagebox.askokcancel('Clear Plots?',
+                                                     'Are you sure you want to completely clear the plot?',
+                                                     parent=window, master=window
+                                                     )
+                    )
+                ):
                     canvas.figure.clear()
             elif 'Add' in action:
                 x, p = data.freq.copy()/1000, data.peaks['positions']/1000

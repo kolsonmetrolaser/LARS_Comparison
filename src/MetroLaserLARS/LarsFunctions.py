@@ -11,7 +11,7 @@ import scipy.signal as sig
 import os
 import os.path as osp
 import pathlib
-from typing import Literal, Iterable
+from typing import Iterable
 from itertools import combinations
 import pickle
 
