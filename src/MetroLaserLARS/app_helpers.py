@@ -4,6 +4,8 @@ Created on Tue Nov 12 13:58:07 2024
 
 @author: KOlson
 """
+import os.path as osp
+import sys
 import tkinter as tk
 from matplotlib.colors import to_hex, to_rgb
 
@@ -23,7 +25,16 @@ active_fg = 'dark goldenrod'
 options_style = ['-', ':', '--', '-.', '.', 'o', 'v', '^', '<', '>', 's', '*', 'd', 'p', 'x']
 options_color = ['C'+str(i) for i in range(10)]
 
-icon_ML = 'MLicon_128.png'
+
+def resource_path(relative_path: str) -> str:
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = osp.abspath('.')
+    return osp.join(base_path, relative_path)
+
+
+icon_ML = resource_path('MLicon_128.png')
 
 
 def clone_widget(widget, master=None):
