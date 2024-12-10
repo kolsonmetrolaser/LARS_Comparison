@@ -2,5 +2,15 @@
 *.pkl
 # ignore test files
 test*
+# ignore older weights
+000.weights.h5
+001.weights.h5
+002.weights.h5
+003.weights.h5
+004.weights.h5
+005.weights.h5
+006.weights.h5
+007.weights.h5
+008.weights.h5
 # ignore pycache folder
 __pycache__
