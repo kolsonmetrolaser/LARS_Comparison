@@ -349,7 +349,7 @@ def make_progress_bar(baseframe, var, text: str = '',
 
 def open_progress_window(root, progress_vars, progress_texts, status_label):
     window = tk.Toplevel(root, bg=background_color)
-    window.grab_set()
+    # window.grab_set()
     window.title("Calculating...")
     window.wm_iconphoto(False, tk.PhotoImage(file=icon_ML))
 

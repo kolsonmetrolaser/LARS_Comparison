@@ -12,6 +12,9 @@ import sys
 from shutil import move as shmove
 import os.path as osp
 import tempfile
+import threading
+import queue
+import time
 
 # Internal imports
 try:
@@ -36,7 +39,6 @@ except ModuleNotFoundError:
     from MetroLaserLARS.app_window_part_matching import open_part_matching_window
     from MetroLaserLARS.app_window_plot import open_plot_window
     from MetroLaserLARS.app_window_results_table import open_results_table_window
-
 
 def run_app_main():
     def make_settings(suppress=False):
@@ -66,6 +68,7 @@ def run_app_main():
             settings['peak_plot_width']           = peak_plot_width_var.get() # noqa
             settings['PRINT_MODE']                = PRINT_MODE_var.get() # noqa
             # PEAK FITTING
+            settings['peak_fitting_strategy']     = peak_fitting_strategy_var.get() # noqa
             # baseline removal
             settings['baseline_smoothness']       = 10**baseline_smoothness_var.get() # noqa
             settings['baseline_polyorder']        = baseline_polyorder_var.get() # noqa
@@ -82,10 +85,12 @@ def run_app_main():
             settings['recursive_noise_reduction'] = True if recursive_noise_reduction_var.get() == 'True' else False  # noqa
             settings['max_noise_reduction_iter']  = max_noise_reduction_iter_var.get() # noqa
             settings['regularization_ratio']      = regularization_ratio_var.get() # noqa
+            # machine learning
+            settings['ml_threshold']              = ml_threshold_var.get() # noqa
             # PEAK MATCHING
             # stretching
             settings['max_stretch']               = max_stretch_var.get() # noqa
-            settings['num_stretches']             = 10**num_stretches_var.get() # noqa
+            settings['num_stretches']             = int(10**num_stretches_var.get()) # noqa
             # settings['stretching_iterations']     = stretching_iterations_var.get() # noqa
             # settings['stretch_iteration_factor']  = stretch_iteration_factor_var.get() # noqa
             # matching
@@ -142,6 +147,7 @@ def run_app_main():
             peak_plot_width_var.set(           settings['peak_plot_width'] if 'peak_plot_width' in settings else 20) # noqa
             PRINT_MODE_var.set(                settings['PRINT_MODE'] if 'PRINT_MODE' in settings else 'sparse') # noqa
             # PEAK FITTING
+            peak_fitting_strategy_var.set(     settings['peak_fitting_strategy'] if 'peak_fitting_strategy' in settings else 'Standard') # noqa
             # baseline removal
             baseline_smoothness_var.set(       log10(settings['baseline_smoothness']) if 'baseline_smoothness' in settings else 12) # noqa
             baseline_polyorder_var.set(        settings['baseline_polyorder'] if 'baseline_polyorder' in settings else 2) # noqa
@@ -158,6 +164,8 @@ def run_app_main():
             recursive_noise_reduction_var.set( ('True' if settings['recursive_noise_reduction'] else 'False') if 'recursive_noise_reduction' in settings else 'True') # noqa
             max_noise_reduction_iter_var.set(  settings['max_noise_reduction_iter'] if 'max_noise_reduction_iter' in settings else 10) # noqa
             regularization_ratio_var.set(      settings['regularization_ratio'] if 'regularization_ratio' in settings else 0.5) # noqa
+            # machine learning
+            ml_threshold_var.set(              settings['ml_threshold'] if 'ml_threshold' in settings else 0.01) # noqa
             # PEAK MATCHING
             # stretching
             max_stretch_var.set(               settings['max_stretch'] if 'max_stretch' in settings else 0.02) # noqa
@@ -231,6 +239,7 @@ def run_app_main():
         return
 
     def submit():
+
         if status_var.get() in ['nodir', 'running']:
             return
 
@@ -247,7 +256,38 @@ def run_app_main():
             print(settings)
 
         try:
-            data_dict, pair_results = LARS_Comparison_from_app(settings)
+            def LARS_comparison_worker(queue, settings):
+                print('starting main code')
+                # queue.put((42, 42))
+                queue.put(LARS_Comparison_from_app(settings))
+
+            result_queue = queue.Queue()
+            thread = threading.Thread(target=LARS_comparison_worker, args=(result_queue, settings))
+            thread.daemon = True
+            print('starting thread')
+            thread.start()
+
+            def check_result():
+                try:
+                    result = result_queue.get(block=False)
+                    print('thread finished and result read')
+                    data_dict, pair_results = result
+                    data_dict_var.set(data_dict)
+                    pair_results_var.set(pair_results)
+
+                    prev_settings_var.set(settings)
+                    running_var.set(False)
+                    with open(log_file_loc_var.get(), 'w') as f:
+                        f.write(log_var.get())
+                    update_status()
+                    progress_window.destroy()
+
+                    root.after(100, check_result)
+                except queue.Empty:
+                    root.after(100, check_result)
+
+            root.after(100, check_result)
+
         except Exception as e:
             progress_window.destroy()
             import traceback
@@ -259,16 +299,6 @@ def run_app_main():
             update_status()
             return
 
-        data_dict_var.set(data_dict)
-        pair_results_var.set(pair_results)
-
-        prev_settings_var.set(settings)
-        running_var.set(False)
-        with open(log_file_loc_var.get(), 'w') as f:
-            f.write(log_var.get())
-        update_status()
-
-        progress_window.destroy()
         return
 
     def import_pickle(mode, *args, **kwargs):
@@ -619,82 +649,144 @@ All pairs of subfolders will be compared.""",
                                                             selection='dir', vardefault='Same as LARS Data Directory',
                                                             infotext=infotext['save_folder'], **common_kwargs)
 
+    def update_peak_fitting_settings(*args):
+        if peak_fitting_strategy_var.get() == 'Machine Learning':
+            # frame_peak_fitl.pack_forget()
+            # heading_noise_reduction.pack_forget()
+            # recursive_noise_reduction_frame.pack_forget()
+            # max_noise_reduction_iter_frame.pack_forget()
+            # regularization_ratio_frame.pack_forget()
+            for o in peak_fitting_objects_std:
+                o.pack_forget()
+            for o in peak_fitting_objects_ml:
+                o.pack()
+        else:
+            # frame_peak_fitl.pack(side=tk.LEFT)
+            # heading_noise_reduction.pack(side=tk.TOP)
+            # recursive_noise_reduction_frame.pack(side=tk.TOP)
+            # max_noise_reduction_iter_frame.pack(side=tk.TOP)
+            # regularization_ratio_frame.pack(side=tk.TOP)
+            for o in peak_fitting_objects_ml:
+                o.pack_forget()
+            for o in peak_fitting_objects_std:
+                o.pack()
+        return
+
     # PEAK FITTING
     frame_peak_fit = tk.Frame(rootr)
     frame_peak_fit.pack(side=tk.TOP)
     heading("Peak Fitting", lvl=1, frame=frame_peak_fit, padding=False)
 
+    peak_fitting_strategy_var, _, _, _, _, _ = labeled_options(frame_peak_fit, 'Peak Fitting Algorithm:',
+                                                               padding=padding_setting, vartype=tk.StringVar,
+                                                               vardefault='Standard',
+                                                               options=['Standard', 'Machine Learning'],
+                                                               infotext=infotext['peak_fitting_strategy'], side=tk.TOP,
+                                                               **common_kwargs)
+    peak_fitting_strategy_var.trace_add("write", update_peak_fitting_settings)
+
     frame_peak_fitl = tk.Frame(frame_peak_fit)
     frame_peak_fitl.pack(side=tk.LEFT)
     frame_peak_fitr = tk.Frame(frame_peak_fit)
     frame_peak_fitr.pack(side=tk.LEFT)
-    heading("Baseline", lvl=2, frame=frame_peak_fitl, padding=False)
-    heading("Smoothing", lvl=2, frame=frame_peak_fitr, padding=False)
+    heading_baseline = heading("Baseline", lvl=2, frame=frame_peak_fitl, padding=False)
+    heading_smoothing = heading("Smoothing", lvl=2, frame=frame_peak_fitr, padding=False)
 
     # baseline_smoothness
-    baseline_smoothness_var, _, _, _, _, _ = labeled_entry(frame_peak_fitl, 'Basline smoothness: 10^',
-                                                           padding=padding_setting, vardefault=12, vartype=tk.DoubleVar,
-                                                           infotext=infotext['baseline_smoothness'], **common_kwargs)
+    baseline_smoothness_var, baseline_smoothness_frame, _, _, _, _ =\
+        labeled_entry(frame_peak_fitl, 'Basline smoothness: 10^',
+                      padding=padding_setting, vardefault=12, vartype=tk.DoubleVar,
+                      infotext=infotext['baseline_smoothness'], **common_kwargs)
 
     # baseline_polyorder
-    baseline_polyorder_var, _, _, _, _, _ = labeled_entry(frame_peak_fitl, 'Basline polyorder:',
-                                                          padding=padding_setting, vardefault=2, vartype=tk.IntVar,
-                                                          infotext=infotext['baseline_polyorder'], **common_kwargs)
+    baseline_polyorder_var, baseline_polyorder_frame, _, _, _, _ =\
+        labeled_entry(frame_peak_fitl, 'Basline polyorder:',
+                      padding=padding_setting, vardefault=2, vartype=tk.IntVar,
+                      infotext=infotext['baseline_polyorder'], **common_kwargs)
 
     # baseline_itermax
-    baseline_itermax_var, _, _, _, _, _ = labeled_entry(frame_peak_fitl, 'Basline itermax:',
-                                                        padding=padding_setting, vardefault=10, vartype=tk.IntVar,
-                                                        infotext=infotext['baseline_itermax'], **common_kwargs)
+    baseline_itermax_var, baseline_itermax_frame, _, _, _, _ =\
+        labeled_entry(frame_peak_fitl, 'Basline itermax:',
+                      padding=padding_setting, vardefault=10, vartype=tk.IntVar,
+                      infotext=infotext['baseline_itermax'], **common_kwargs)
 
     # sgf_windowsize
-    sgf_windowsize_var, _, _, _, _, _ = labeled_entry(frame_peak_fitr, 'SGF Windowsize:',
-                                                      padding=padding_setting, vardefault=101, vartype=tk.IntVar,
-                                                      infotext=infotext['sgf_windowsize'], **common_kwargs)
+    sgf_windowsize_var, sgf_windowsize_frame, _, _, _, _ =\
+        labeled_entry(frame_peak_fitr, 'SGF Windowsize:',
+                      padding=padding_setting, vardefault=101, vartype=tk.IntVar,
+                      infotext=infotext['sgf_windowsize'], **common_kwargs)
 
     # sgf_applications
-    sgf_applications_var, _, _, _, _, _ = labeled_entry(frame_peak_fitr, 'SGF Applications:',
-                                                        padding=padding_setting, vardefault=2, vartype=tk.IntVar,
-                                                        infotext=infotext['sgf_applications'], **common_kwargs)
+    sgf_applications_var, sgf_applications_frame, _, _, _, _ =\
+        labeled_entry(frame_peak_fitr, 'SGF Applications:',
+                      padding=padding_setting, vardefault=2, vartype=tk.IntVar,
+                      infotext=infotext['sgf_applications'], **common_kwargs)
 
     # sgf_polyorder
-    sgf_polyorder_var, _, _, _, _, _ = labeled_entry(frame_peak_fitr, 'SGF polyorder:',
-                                                     padding=padding_setting, vardefault=0, vartype=tk.IntVar,
-                                                     infotext=infotext['sgf_polyorder'], **common_kwargs)
+    sgf_polyorder_var, sgf_polyorder_frame, _, _, _, _ =\
+        labeled_entry(frame_peak_fitr, 'SGF polyorder:',
+                      padding=padding_setting, vardefault=0, vartype=tk.IntVar,
+                      infotext=infotext['sgf_polyorder'], **common_kwargs)
 
     # headings
-    heading("Peak Finding", lvl=2, frame=frame_peak_fitl, padding=False)
-    heading("Noise Reduction", lvl=2, frame=frame_peak_fitr, padding=False)
+    heading_peak_finding = heading("Peak Finding", lvl=2, frame=frame_peak_fitl, padding=False)
+    heading_noise_reduction = heading("Noise Reduction", lvl=2, frame=frame_peak_fitr, padding=False)
 
     # peak_height_min
-    peak_height_min_var, _, _, _, _, _ = labeled_entry(frame_peak_fitl, 'Peak height minimum: noise *',
-                                                       padding=padding_setting, vardefault=1.2, vartype=tk.DoubleVar,
-                                                       infotext=infotext['peak_height_min'], **common_kwargs)
+    peak_height_min_var, peak_height_min_frame, _, _, _, _ =\
+        labeled_entry(frame_peak_fitl, 'Peak height minimum: noise *',
+                      padding=padding_setting, vardefault=1.2, vartype=tk.DoubleVar,
+                      infotext=infotext['peak_height_min'], **common_kwargs)
 
     # peak_prominence_min
-    peak_prominence_min_var, _, _, _, _, _ = labeled_entry(frame_peak_fitl, 'Peak prominence minimum: noise *',
-                                                           padding=padding_setting, vardefault=1.2, vartype=tk.DoubleVar,
-                                                           infotext=infotext['peak_prominence_min'], **common_kwargs)
+    peak_prominence_min_var, peak_prominence_min_frame, _, _, _, _ =\
+        labeled_entry(frame_peak_fitl, 'Peak prominence minimum: noise *',
+                      padding=padding_setting, vardefault=1.2, vartype=tk.DoubleVar,
+                      infotext=infotext['peak_prominence_min'], **common_kwargs)
 
     # peak_ph_ratio_min
-    peak_ph_ratio_min_var, _, _, _, _, _ = labeled_entry(frame_peak_fitl, 'Peak prominence-to-height minimum:',
-                                                         padding=padding_setting, vardefault=0.5, vartype=tk.DoubleVar,
-                                                         infotext=infotext['peak_ph_ratio_min'], **common_kwargs)
+    peak_ph_ratio_min_var, peak_ph_ratio_min_frame, _, _, _, _ =\
+        labeled_entry(frame_peak_fitl, 'Peak prominence-to-height minimum:',
+                      padding=padding_setting, vardefault=0.5, vartype=tk.DoubleVar,
+                      infotext=infotext['peak_ph_ratio_min'], **common_kwargs)
 
     # recursive_noise_reduction
-    recursive_noise_reduction_var, _, _, _, _, _ = labeled_options(frame_peak_fitr, 'Recursively reduce noise:',
-                                                                   padding=padding_setting, vartype=tk.StringVar,
-                                                                   vardefault=bool_options[0],
-                                                                   infotext=infotext['recursive_noise_reduction'], **common_kwargs)
+    recursive_noise_reduction_var, recursive_noise_reduction_frame, _, _, _, _ =\
+        labeled_options(frame_peak_fitr, 'Recursively reduce noise:',
+                        padding=padding_setting, vartype=tk.StringVar,
+                        vardefault=bool_options[0],
+                        infotext=infotext['recursive_noise_reduction'], **common_kwargs)
 
     # max_noise_reduction_iter
-    max_noise_reduction_iter_var, _, _, _, _, _ = labeled_entry(frame_peak_fitr, 'Max noise reduction iterations:',
-                                                                padding=padding_setting, vardefault=10, vartype=tk.IntVar,
-                                                                infotext=infotext['max_noise_reduction_iter'], **common_kwargs)
+    max_noise_reduction_iter_var, max_noise_reduction_iter_frame, _, _, _, _ =\
+        labeled_entry(frame_peak_fitr, 'Max noise reduction iterations:',
+                      padding=padding_setting, vardefault=10, vartype=tk.IntVar,
+                      infotext=infotext['max_noise_reduction_iter'], **common_kwargs)
 
     # regularization_ratio
-    regularization_ratio_var, _, _, _, _, _ = labeled_entry(frame_peak_fitr, 'Noise reduction regularization factor:',
-                                                            padding=padding_setting, vardefault=0.5, vartype=tk.DoubleVar,
-                                                            infotext=infotext['regularization_ratio'], **common_kwargs)
+    regularization_ratio_var, regularization_ratio_frame, _, _, _, _ =\
+        labeled_entry(frame_peak_fitr, 'Noise reduction regularization factor:',
+                      padding=padding_setting, vardefault=0.5, vartype=tk.DoubleVar,
+                      infotext=infotext['regularization_ratio'], **common_kwargs)
+
+    heading_ml_settings = heading("ML Settings", lvl=2, frame=frame_peak_fitl, padding=False)
+    ml_threshold_var, ml_threshold_frame, _, _, _, _ =\
+        labeled_entry(frame_peak_fitl, 'ML confidence threshold:',
+                      padding=padding_setting, vardefault=0.01, vartype=tk.DoubleVar,
+                      infotext=infotext['ml_threshold'], **common_kwargs)
+
+    peak_fitting_objects_std = [heading_baseline,
+                                baseline_smoothness_frame, baseline_polyorder_frame, baseline_itermax_frame,
+                                heading_smoothing,
+                                sgf_windowsize_frame, sgf_applications_frame, sgf_polyorder_frame,
+                                heading_peak_finding,
+                                peak_height_min_frame, peak_prominence_min_frame, peak_ph_ratio_min_frame,
+                                heading_noise_reduction,
+                                recursive_noise_reduction_frame, max_noise_reduction_iter_frame, regularization_ratio_frame]
+    peak_fitting_objects_ml = [heading_ml_settings,
+                               ml_threshold_frame,
+                               heading_smoothing,
+                               sgf_windowsize_frame, sgf_applications_frame, sgf_polyorder_frame]
 
     # PEAK MATCHING
     frame_peak_match = tk.Frame(rootr)
@@ -715,7 +807,7 @@ All pairs of subfolders will be compared.""",
 
     # num_stretches
     num_stretches_var, _, _, _, _, _ = labeled_entry(frame_peak_matchl, 'Number of stretches per iteration: 10^',
-                                                     padding=padding_setting, vardefault=5, vartype=tk.IntVar,
+                                                     padding=padding_setting, vardefault=5, vartype=tk.DoubleVar,
                                                      infotext=infotext['num_stretches'], **common_kwargs)
 
     # # stretching_iterations

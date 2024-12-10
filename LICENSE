@@ -1,1 +1,6 @@
-This code is intended to be for private use by MetroLaser, Inc. employees.
+This code is intended for private use by MetroLaser, Inc. employees.
+
+The convolutional neural network for peak fitting is adapted from:
+Kensert, A., et al. Convolutional neural network for automated peak detection in reversed-phase liquid chromatography. J. chromatography A. 1672, 463005 (2022). doi.org/10.1016/j.chroma.2022.463005
+See also
+github.com/akensert/deep-learning-peak-detection

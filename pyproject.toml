@@ -1,8 +1,10 @@
 [project]
 name = "MetroLaserLARS"
-version = "0.1.7"
+version = "0.2.0"
 authors = [
   { name="Karl Olson", email="kolson@metrolaserinc.com" },
+  { name="Adityan Vairavel", email="avairavel@metrolaserinc.com" },
+  { name="Cecil Hess", email="chess@metrolaserinc.com" }
 ]
 description = "Data analysis for MetroLaser, Inc. Laser Acoustic Resonance Spectroscopy systems"
 readme = "README.md"
@@ -18,6 +20,8 @@ dependencies = [
   ,"scipy>=1.10"
   ,"numba>=0.55.0"
   ,"pytdms"
+  ,"pandas>=2.2.3"
+  ,"tensorflow>=2.18"
 ]
 
 [project.urls]

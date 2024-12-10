@@ -214,6 +214,13 @@ def open_results_table_window(root, data_dict_var, pair_results_var, **common_kw
         canvas.create_text(1/2*5*size*(len(data_dict)+2), 1/2*4*size,
                            text='Measurement', font=fontstr)
 
+        # Make Buffer for scrolling purposes
+        canvas.create_rectangle(5*size*(j+2.6), 2*size*.6, 5*size*(j+3.1), 2*size*(i+4.1), fill=bgc, outline=bgc)
+        canvas.create_rectangle(5*size*(.6), 2*size*(i+3.6), 5*size*(j+3.1), 2*size*(i+4.1), fill=bgc, outline=bgc)
+
+        canvas.configure(scrollregion=canvas.bbox("all"))
+        return
+
     window = tk.Toplevel(root, bg=bgc)
     window.title("Data Tables")
     window.geometry("1600x900")
@@ -233,6 +240,16 @@ def open_results_table_window(root, data_dict_var, pair_results_var, **common_kw
     frame_sheet.pack(side=tk.TOP, expand=True, fill=tk.BOTH)
     canvas_sheet = tk.Canvas(frame_sheet, bg=bgc)
     canvas_sheet.pack(side=tk.TOP, expand=True, fill=tk.BOTH)
+
+    yscrollbar = tk.Scrollbar(canvas_sheet, orient="vertical",
+                              command=canvas_sheet.yview)
+    yscrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+    xscrollbar = tk.Scrollbar(canvas_sheet, orient="horizontal",
+                              command=canvas_sheet.xview)
+    xscrollbar.pack(side=tk.BOTTOM, fill=tk.X)
+
+    canvas_sheet.config(xscrollcommand=xscrollbar.set)
+    canvas_sheet.config(yscrollcommand=yscrollbar.set)
 
     font_size_var, _, _, font_size_entry, _, _ = labeled_entry(frame_options, 'Font Size:', padding=padding_setting,
                                                                side=tk.LEFT,

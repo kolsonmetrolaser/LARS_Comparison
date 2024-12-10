@@ -122,6 +122,13 @@ Level of detail in console print outputs. "full" is useful for
 debugging. "sparse" gives a sense of calculation progress.
 """
 
+peak_fitting_strategy = """
+Algorithm to use for peak fitting. "Standard" uses a typical
+peak fitting strategy with settings for a threshold as a
+multiple of the noise level. "Machine Learning" uses a trained
+model to fit peaks and is generally less dependent on settings.
+"""
+
 baseline_smoothness = """
 Smoothing parameter for airpls baseline calculation.
 """
@@ -229,6 +236,12 @@ In each iteration of the noise reduction algorithm, the new noise is actually
 This should take a value between 0 and 1. Lower values are more stable, but
 require more iterations. Higher values may introduce instabilities.
 Has no effect if "Recursively reduce noise" is False.
+"""
+
+ml_threshold = """
+Confidence threshold for machine learning peak finding. Sections of the
+spectrum with peak confidence levels above this threshold will be marked
+as a peak.
 """
 
 max_stretch = """
@@ -349,6 +362,7 @@ infotext = {
     'save_plots': save_plots,
     'peak_plot_width': peak_plot_width,
     'PRINT_MODE': PRINT_MODE,
+    'peak_fitting_strategy': peak_fitting_strategy,
     'baseline_smoothness': baseline_smoothness,
     'baseline_polyorder': baseline_polyorder,
     'baseline_itermax': baseline_itermax,
@@ -361,6 +375,7 @@ infotext = {
     'recursive_noise_reduction': recursive_noise_reduction,
     'max_noise_reduction_iter': max_noise_reduction_iter,
     'regularization_ratio': regularization_ratio,
+    'ml_threshold': ml_threshold,
     'max_stretch': max_stretch,
     'num_stretches': num_stretches,
     'stretching_iterations': stretching_iterations,

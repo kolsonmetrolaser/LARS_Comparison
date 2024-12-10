@@ -1317,7 +1317,10 @@ def cylinder_plot(R, Z, T, c, tlims=(0, 180), rlims=(0, 1), zlims=(0, 1), clims=
         cbar.set_ticks(c_ticks)
         # cbar.set_ticklabels(c_ticks)
     plt.tight_layout()
-    from settings import CLUSTERMODE as _CLUSTERMODE
+    try:
+        from settings import CLUSTERMODE as _CLUSTERMODE
+    except ModuleNotFoundError:
+        _CLUSTERMODE = True
     if fname is not None:
         if save_folder is None:
             if not _CLUSTERMODE:

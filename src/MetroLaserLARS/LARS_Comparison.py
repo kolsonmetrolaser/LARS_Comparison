@@ -15,11 +15,13 @@ from os import path as osp
 try:
     import plotfunctions as pf
     from LarsFunctions import analyze_each_pair_of_folders
+    import ml_functions as ml
+    from helpers import can_skip_calculation
 except ModuleNotFoundError:
     import MetroLaserLARS.plotfunctions as pf
     from MetroLaserLARS.LarsFunctions import analyze_each_pair_of_folders
-
-np.set_printoptions(precision=3)
+    import MetroLaserLARS.ml_functions as ml
+    from MetroLaserLARS.helpers import can_skip_calculation
 
 
 def parts_match(pr, **settings):
@@ -44,14 +46,21 @@ def parts_match(pr, **settings):
                 return True
         return False
     elif part_matching_strategy == 'custom' and part_matching_text != '':
-        salt = str(int(np.random.rand()*1e16))
-        custom_function_text = ''
-        custom_function_text = 'def part_matching_function_'+salt+'(name0, name1):\n'
-        for line in [ln for ln in part_matching_text.split('\n') if ln != '']:
-            custom_function_text += '    '+line+'\n'
-        custom_function_text += '    return result'
-        exec(custom_function_text)
-        return eval('part_matching_function_'+salt+'(name0, name1)')
+        try:
+            salt = str(int(np.random.rand()*1e16))
+            custom_function_text = ''
+            custom_function_text = 'def part_matching_function_'+salt+'(name0, name1):\n'
+            for line in [ln for ln in part_matching_text.split('\n') if ln != '']:
+                custom_function_text += '    '+line+'\n'
+            custom_function_text += '    return result'
+            exec(custom_function_text)
+            return eval('part_matching_function_'+salt+'(name0, name1)')
+        except Exception as e:
+            import traceback
+            print('Error in custom part matching function, assuming all parts are unique...')
+            print('Error:', e)
+            print(traceback.format_exc())
+            return False
 
     return False
 
@@ -174,108 +183,40 @@ def analyze_pair_results(pair_results, data_dict, settings):
                      x_label='Frequency (kHz)', y_label='Intensity (arb.)', y_ticks=[])
 
 
-def same_fit_and_matching_settings(settings):
-    pickled_data_path = settings['pickled_data_path'] if 'pickled_data_path' in settings else None
-    plot_detail = settings['plot_detail'] if 'plot_detail' in settings else False
-    save_data = settings['save_data'] if 'save_data' in settings else False
-    save_results = settings['save_results'] if 'save_results' in settings else False
-    plot_recursive_noise = settings['plot_recursive_noise'] if 'plot_recursive_noise' in settings else False
-    recursive_noise_reduction = settings['recursive_noise_reduction'] if 'recursive_noise_reduction' in settings else False
-
-    skip_fitting_and_matching = True
-    pair_results, data_dict = None, None
-
-    if pickled_data_path:
-        settings_path = osp.join(osp.split(pickled_data_path)[0], 'settings.pkl')
-        pr_path = osp.join(osp.split(pickled_data_path)[0],
-                           osp.split(pickled_data_path)[1].replace('data_dict', 'pair_results'))
-        if osp.isfile(settings_path) and osp.isfile(pr_path):
-            try:
-                with open(settings_path, 'rb') as f:
-                    settings_saved = pickle.load(f)
-            except:
-                skip_fitting_and_matching = False
-                return skip_fitting_and_matching, pair_results, data_dict
-
-            settings_to_compare = settings.copy()
-            settings_to_compare.pop('status_label', None)
-            settings_to_compare.pop('progress_bars', None)
-            diff_keys = [key for key in set(settings_to_compare.keys()).union(settings_saved.keys())
-                         if settings.get(key) != settings_saved.get(key)]
-            skip_fitting_and_matching = skip_fitting_and_matching and not (
-                'directory' in diff_keys
-                or 'frange' in diff_keys
-                or 'combine' in diff_keys
-                or 'grouped_folders' in diff_keys
-                or 'plot_detail' in diff_keys
-                or ('plot_recursive_noise' in diff_keys and recursive_noise_reduction)
-                or ('plot' in diff_keys and plot_detail)
-                or ('plot' in diff_keys and plot_recursive_noise)
-                or ('show_plots' in diff_keys and plot_detail)
-                or ('show_plots' in diff_keys and plot_recursive_noise and recursive_noise_reduction)
-                or ('save_plots' in diff_keys and plot_detail)
-                or ('save_plots' in diff_keys and plot_recursive_noise and recursive_noise_reduction)
-                or ('peak_plot_width' in diff_keys and plot_detail)
-                or ('peak_plot_width' in diff_keys and plot_recursive_noise and recursive_noise_reduction)
-                or 'PRINT_MODE' in diff_keys
-                or 'baseline_smoothness' in diff_keys
-                or 'baseline_polyorder' in diff_keys
-                or 'baseline_itermax' in diff_keys
-                or 'sgf_applications' in diff_keys
-                or 'sgf_windowsize' in diff_keys
-                or 'sgf_polyorder' in diff_keys
-                or 'peak_height_min' in diff_keys
-                or 'peak_prominence_min' in diff_keys
-                or 'peak_ph_ratio_min' in diff_keys
-                or 'recursive_noise_reduction' in diff_keys
-                or ('max_noise_reduction_iter' in diff_keys and recursive_noise_reduction)
-                or ('regularization_ratio' in diff_keys and recursive_noise_reduction)
-                or 'max_stretch' in diff_keys
-                or 'num_stretches' in diff_keys
-                or 'stretching_iterations' in diff_keys
-                or 'stretch_iteration_factor' in diff_keys
-                or 'peak_match_window' in diff_keys
-                or 'matching_penalty_order' in diff_keys
-                or 'nw_normalized' in diff_keys
-                or 'num_stretches' in diff_keys
-                or (save_data and 'save_data' in diff_keys)
-                or (save_results and 'save_results' in diff_keys)
-                or 'save_tag' in diff_keys
-                or 'save_folder' in diff_keys)
-
-            if skip_fitting_and_matching:
-                try:
-                    with open(pr_path, 'rb') as f:
-                        pair_results = pickle.load(f)
-                except:
-                    skip_fitting_and_matching = False
-            if skip_fitting_and_matching:
-                try:
-                    with open(pickled_data_path, 'rb') as f:
-                        data_dict = pickle.load(f)
-                except:
-                    skip_fitting_and_matching = False
-    else:
-        skip_fitting_and_matching = False
-    return skip_fitting_and_matching, pair_results, data_dict
-
-
 def run_analysis(folders, settings):
     time0 = time()
-
-    skip_fit_and_match, pair_results, data_dict = same_fit_and_matching_settings(settings)
-
-    if not skip_fit_and_match:
-        pair_results, data_dict = analyze_each_pair_of_folders(folders, **settings)
-    else:
-        print('skipped peak fitting and matching')
-
-    analyze_pair_results(pair_results, data_dict, settings)
+    np.set_printoptions(precision=4)
 
     save_settings = settings['save_settings'] if 'save_settings' in settings else False
     save_folder = settings['save_folder']
     save_tag = settings['save_tag']
     PRINT_MODE = settings['PRINT_MODE'] if 'PRINT_MODE' in settings else 'sparse'
+
+    skip_fit_and_match = can_skip_calculation('matching', **settings)
+
+    pickled_data_path = settings['pickled_data_path'] if 'pickled_data_path' in settings else None
+    pr_path = osp.join(osp.split(pickled_data_path)[0],
+                       osp.split(pickled_data_path)[1].replace('data_dict', 'pair_results'))
+    if skip_fit_and_match:
+        try:
+            with open(pr_path, 'rb') as f:
+                pair_results = pickle.load(f)
+            with open(pickled_data_path, 'rb') as f:
+                data_dict = pickle.load(f)
+        except Exception:
+            skip_fit_and_match = False
+
+    if not skip_fit_and_match:
+        peak_fitting_strategy = 'Standard' if 'peak_fitting_strategy' not in settings else settings['peak_fitting_strategy']
+        if peak_fitting_strategy == 'Machine Learning':
+            settings['model'], settings['label_encoder'] = ml.load_model(**settings)
+        pair_results, data_dict = analyze_each_pair_of_folders(folders, **settings)
+    else:
+        print('skipped peak fitting and matching')
+
+    analyze_pair_results(pair_results, data_dict, settings)
+    settings.pop('model', None)
+    settings.pop('label_encoder', None)
 
     if save_settings:
         if PRINT_MODE in ['sparse', 'full']:
@@ -287,7 +228,6 @@ def run_analysis(folders, settings):
             settings_to_save.pop('status_label', None)
             settings_to_save.pop('progress_bars', None)
             pickle.dump(settings_to_save, outp, pickle.HIGHEST_PROTOCOL)
-
     print(f"""
 
 

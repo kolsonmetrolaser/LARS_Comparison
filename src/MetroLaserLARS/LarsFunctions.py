@@ -21,15 +21,17 @@ try:
     from LarsDataClass import LarsData
     import plotfunctions as pf
     from filters import airpls, sgf
-    from helpers import group
+    from helpers import group, can_skip_calculation
     from needlemanwunsch import find_matches
+    import ml_functions as ml
 except ModuleNotFoundError:
     from MetroLaserLARS import LarsDataClass
     from MetroLaserLARS.LarsDataClass import LarsData
     import MetroLaserLARS.plotfunctions as pf
     from MetroLaserLARS.filters import airpls, sgf
-    from MetroLaserLARS.helpers import group
+    from MetroLaserLARS.helpers import group, can_skip_calculation
     from MetroLaserLARS.needlemanwunsch import find_matches
+    import MetroLaserLARS.ml_functions as ml
 
 
 def remove_baseline(y: ArrayLike, **settings) -> tuple[ArrayLike, ArrayLike]:
@@ -59,7 +61,7 @@ def remove_baseline(y: ArrayLike, **settings) -> tuple[ArrayLike, ArrayLike]:
     return y-baseline, baseline
 
 
-def remove_noise(y: ArrayLike, normalize: bool = True, noise: Literal[None, ArrayLike] = None)\
+def remove_noise(y: ArrayLike, normalize: bool = True, noise: None | ArrayLike = None)\
         -> tuple[ArrayLike, float]:
     """
     Removes the noise, either supplied as `noise` or the root mean square of `y`, from `y`.
@@ -182,26 +184,27 @@ def detailed_plots(folder, name, peaks, freqs, vels, vels_baseline_removed, vels
 #         mean = np.mean(vels_peaks_removed_baseline_removed)
 #         print(f"""mean: {mean}    rms: {rms}    stdev: {stdev}
 # ratio: {rms/stdev}""")
-#         span = np.linspace(-rms, rms*4, 200)
+#         num_bins = 200
+#         span = np.linspace(-rms, rms*4, num_bins)
 #         h = plt.hist(y, color='gray', bins=span, density=True)
 #         x = np.linspace(span[0], span[-1], 1000)
 #         # plt.plot(x, st.norm.pdf(x, noise/(2), noise/2))
-#         plt.plot(x, st.halfnorm.pdf(x, 0, rms), '-r')
-#         plt.plot(x, st.halfnorm.pdf(x, 0, stdev), '-b')
-#         plt.plot(x, st.foldnorm.pdf(x, mean, 0, stdev), '-g')
-#         plt.plot(x, st.norm.pdf(x, mean, stdev), '-c')
+#         # plt.plot(x, st.halfnorm.pdf(x, 0, rms), '-r')
+#         # plt.plot(x, st.halfnorm.pdf(x, 0, stdev), '-b')
+#         # plt.plot(x, st.foldnorm.pdf(x, mean, 0, stdev), '-g')
+#         plt.plot(x, st.norm.pdf(x, mean, stdev), '-y')
 
 #         hx = (h[1][:-1]+h[1][1:])/2
 #         hy = h[0]
-#         plt.plot(hx, hy, '-k')
-#         def fitfunc(p, x): return 1/np.sqrt(2*np.pi*p[1]**2)*np.exp(-0.5*((x-p[0])/p[1])**2)
-#         def errfunc(p, x, y): return (y - fitfunc(p, x))
+#         plt.plot(hx, hy, ':k')
+#         fitfunc = lambda p, x: 1/np.sqrt(2*np.pi*p[1]**2)*np.exp(-0.5*((x-p[0])/p[1])**2)
+#         fitdifffunc = lambda p, x, y: y-fitfunc(p, x)
 #         init = [mean, stdev]
-#         out = leastsq(errfunc, init, args=(hx, hy))
+#         out = leastsq(fitdifffunc, init, args=(hx, hy))
 #         print(out[0])
-#         plt.plot(hx, fitfunc(out[0], hx), '-y')
+#         plt.plot(hx, fitfunc(out[0], hx), '-r')
 
-#         plt.title('noise histogram')
+#         plt.title(f'noise histogram iteration {iteration}')
 #         plt.xlim(span[0], span[-1])
 #         plt.show()
     pf.line_plot(freqs/1000, [vels_baseline_removed], style='.', x_lim=xlim,
@@ -408,14 +411,12 @@ def Load_LARS_data(folder: str = '', **settings):
     return result
 
 
-def LARS_analysis(folder: str = '', previously_loaded_data: Literal[None, LarsData] = None, **settings)\
+def LARS_analysis(folder: str = '', previously_loaded_data: None | LarsData = None, **settings)\
         -> tuple[tuple[ArrayLike, ArrayLike, ArrayLike, ArrayLike, ArrayLike], LarsData]:
     """
-    Caches LARS data locally, if appropriate and handles walking through file structures within `folder`.
-
     Combines data in `folder`
 
-    Largely a wrapper for `analyze_data`, see that function for more detail about `frange` and `plot`.
+    Largely a wrapper for `analyze_data`.
 
     Parameters
     ----------
@@ -436,6 +437,8 @@ def LARS_analysis(folder: str = '', previously_loaded_data: Literal[None, LarsDa
             LarsData object corresponding to `folder` with mode `combine`.
 
     """
+    peak_fitting_strategy = 'Standard' if 'peak_fitting_strategy' not in settings else settings['peak_fitting_strategy']
+
     if folder == '':
         return None
 
@@ -453,75 +456,17 @@ def LARS_analysis(folder: str = '', previously_loaded_data: Literal[None, LarsDa
     else:
         print(f'Using previously loaded data for {previously_loaded_data.name}')
         data_to_analyze = previously_loaded_data
-    analysis = analyze_data(data_to_analyze, **settings)
+    if peak_fitting_strategy == 'Machine Learning':
+        analysis = ml.analyze_data(data_to_analyze, **settings)
+    elif peak_fitting_strategy == 'Standard':
+        analysis = analyze_data(data_to_analyze, **settings)
+    else:
+        analysis = analyze_data(data_to_analyze, **settings)
     data_to_analyze.newvel = analysis[3]
     data_to_analyze.peaks = analysis[0]
     data_to_analyze.analyzed_this_session = True
 
     return analysis, data_to_analyze
-
-
-def same_fit_settings(settings):
-    pickled_data_path = settings['pickled_data_path'] if 'pickled_data_path' in settings else None
-    plot_detail = settings['plot_detail'] if 'plot_detail' in settings else False
-    save_data = settings['save_data'] if 'save_data' in settings else False
-    save_results = settings['save_results'] if 'save_results' in settings else False
-    plot_recursive_noise = settings['plot_recursive_noise'] if 'plot_recursive_noise' in settings else False
-    recursive_noise_reduction = settings['recursive_noise_reduction'] if 'recursive_noise_reduction' in settings else False
-
-    skip_fitting = True
-
-    if pickled_data_path:
-        settings_path = osp.join(osp.split(pickled_data_path)[0], 'settings.pkl')
-        pr_path = osp.join(osp.split(pickled_data_path)[0],
-                           osp.split(pickled_data_path)[1].replace('data_dict', 'pair_results'))
-        if osp.isfile(settings_path) and osp.isfile(pr_path):
-            try:
-                with open(settings_path, 'rb') as f:
-                    settings_saved = pickle.load(f)
-            except:
-                skip_fitting = False
-                return skip_fitting
-
-            settings_to_compare = settings.copy()
-            settings_to_compare.pop('status_label', None)
-            diff_keys = [key for key in set(settings_to_compare.keys()).union(settings_saved.keys())
-                         if settings.get(key) != settings_saved.get(key)]
-            skip_fitting = skip_fitting and not (
-                'directory' in diff_keys
-                or 'frange' in diff_keys
-                or 'combine' in diff_keys
-                or 'grouped_folders' in diff_keys
-                or 'plot_detail' in diff_keys
-                or ('plot_recursive_noise' in diff_keys and recursive_noise_reduction)
-                or ('plot' in diff_keys and plot_detail)
-                or ('plot' in diff_keys and plot_recursive_noise)
-                or ('show_plots' in diff_keys and plot_detail)
-                or ('show_plots' in diff_keys and plot_recursive_noise and recursive_noise_reduction)
-                or ('save_plots' in diff_keys and plot_detail)
-                or ('save_plots' in diff_keys and plot_recursive_noise and recursive_noise_reduction)
-                or ('peak_plot_width' in diff_keys and plot_detail)
-                or ('peak_plot_width' in diff_keys and plot_recursive_noise and recursive_noise_reduction)
-                or 'PRINT_MODE' in diff_keys
-                or 'baseline_smoothness' in diff_keys
-                or 'baseline_polyorder' in diff_keys
-                or 'baseline_itermax' in diff_keys
-                or 'sgf_applications' in diff_keys
-                or 'sgf_windowsize' in diff_keys
-                or 'sgf_polyorder' in diff_keys
-                or 'peak_height_min' in diff_keys
-                or 'peak_prominence_min' in diff_keys
-                or 'peak_ph_ratio_min' in diff_keys
-                or 'recursive_noise_reduction' in diff_keys
-                or ('max_noise_reduction_iter' in diff_keys and recursive_noise_reduction)
-                or ('regularization_ratio' in diff_keys and recursive_noise_reduction)
-                or (save_data and 'save_data' in diff_keys)
-                or (save_results and 'save_results' in diff_keys)
-                or 'save_tag' in diff_keys
-                or 'save_folder' in diff_keys)
-    else:
-        skip_fitting = False
-    return skip_fitting
 
 
 def compare_LARS_measurements(folders: Iterable = [], previously_analyzed_data: tuple = (None, None), **settings)\
@@ -589,20 +534,15 @@ def compare_LARS_measurements(folders: Iterable = [], previously_analyzed_data: 
     newvels = []
     datas = []
     for i, f in enumerate(folders):
-        if previously_analyzed_data[i] is None:
+        if (hasattr(previously_analyzed_data[i], 'analyzed_this_session')
+                and previously_analyzed_data[i].analyzed_this_session) or can_skip_calculation('fitting', **settings):
             if PRINT_MODE in ['sparse', 'full']:
-                print(f'Loading and analyzing data from {f}')
-            (peaks, freq, vel, newvel, name), data = LARS_analysis(folder=f, **settings)
+                print(f'Using previously analyzed data for {previously_analyzed_data[i].name}')
+            pad = previously_analyzed_data[i]
+            (peaks, freq, vel, newvel, name), data = (pad.peaks, pad.freq, pad.vel, pad.newvel, pad.name), pad
         else:
-            if (hasattr(previously_analyzed_data[i], 'analyzed_this_session')
-                    and previously_analyzed_data[i].analyzed_this_session) or same_fit_settings(settings):
-                if PRINT_MODE in ['sparse', 'full']:
-                    print(f'Using previously analyzed data for {previously_analyzed_data[i].name}')
-                pad = previously_analyzed_data[i]
-                (peaks, freq, vel, newvel, name), data = (pad.peaks, pad.freq, pad.vel, pad.newvel, pad.name), pad
-            else:
-                (peaks, freq, vel, newvel, name), data =\
-                    LARS_analysis(folder=f, previously_loaded_data=previously_analyzed_data[i], **settings)
+            (peaks, freq, vel, newvel, name), data =\
+                LARS_analysis(folder=f, previously_loaded_data=previously_analyzed_data[i], **settings)
         positions.append(peaks['positions'])
         names.append(name)
         freqs.append(freq)
@@ -621,17 +561,26 @@ def compare_LARS_measurements(folders: Iterable = [], previously_analyzed_data: 
     # print results
     if 'PRINT_MODE' in settings and settings['PRINT_MODE'] == 'full':
         print(f'Best matches found with quality {best_quality:.5f} at stretch {best_stretch:.5f} ± {search_space_delta:.5f}')
-        for x, y in zip(bestrx, bestry):
-            print(f'{x:7.1f}  {best_stretch*y:7.1f}')
+        # for x, y in zip(bestrx, bestry):
+        #     print(f'{x:7.1f}  {best_stretch*y:7.1f}')
+        print('Peak matches:')
+        print('Reference')
+        for x in bestrx:
+            print(f'{x:7.1f}', end='  ')
+        print('')
+        print('Measurement')
+        for y in bestry:
+            print(f'{best_stretch*y:7.1f}', end='  ')
+        print('')
     unmatched_X = [x/1000 for x, y in zip(bestrx, bestry) if y == -1]
     unmatched_Y = [y/1000 for x, y in zip(bestrx, bestry) if x == -1]
     matched = [(x+y)/2/1000 for x, y in zip(bestrx, bestry) if x != -1 and y != -1]
     best_quality += peak_match_window*(len(unmatched_X)+len(unmatched_Y))/2
     best_quality /= -len(matched)
     if 'PRINT_MODE' in settings and settings['PRINT_MODE'] == 'full':
-        print(f'{len(unmatched_X)} unmatched peaks in reference at {unmatched_X} kHz')
-        print(f'{len(unmatched_Y)} unmatched peaks in measurement at {unmatched_Y} kHz')
-        print(f'{len(matched)} matched peaks at {matched} kHz, with average mistmatch of {best_quality} Hz')
+        print(f'{len(unmatched_X)} unmatched peaks in reference at {np.array(unmatched_X)} kHz')
+        print(f'{len(unmatched_Y)} unmatched peaks in measurement at {np.array(unmatched_Y)} kHz')
+        print(f'{len(matched)} matched peaks at {np.array(matched)} kHz, with average mistmatch of {best_quality:.2f} Hz')
 
     # Plot results
     if plot and plot_detail:
@@ -691,7 +640,7 @@ def analyze_each_pair_of_folders(folders: Iterable = [], **settings) -> tuple[li
             with open(settings['pickled_data_path'], 'rb') as inp:
                 data_dict = pickle.load(inp)
             settings['progress_bars'][0].set(len(data_dict)/len(folders))
-        except:
+        except Exception:
             print('Loading from data pickle failed, proceeding without loading data...')
             data_dict = {}
     else:
