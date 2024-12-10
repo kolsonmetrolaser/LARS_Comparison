@@ -15,11 +15,13 @@ try:
     from filters import sgf
     from cnn.models import ConvNet
     from cnn.preprocessing import LabelEncoder
+    from app_helpers import resource_path
 except ModuleNotFoundError:
     from MetroLaserLARS.LarsDataClass import LarsData  # type: ignore
     from MetroLaserLARS.filters import sgf  # type: ignore
     from MetroLaserLARS.cnn.models import ConvNet  # type: ignore
     from MetroLaserLARS.cnn.preprocessing import LabelEncoder  # type: ignore
+    from MetroLaserLARS.app_helpers import resource_path  # type: ignore
 
 
 def load_model(**settings):
@@ -40,7 +42,7 @@ def load_model(**settings):
         output_shape=(ml_peak_fit_windows, ml_peak_fit_classes),
         residual=False
     )
-    model.load_weights(ml_peak_fit_model_path)
+    model.load_weights(resource_path(ml_peak_fit_model_path))
     return model, label_encoder
 
 
