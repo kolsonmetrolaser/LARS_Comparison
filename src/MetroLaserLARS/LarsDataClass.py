@@ -16,7 +16,7 @@ import pathlib
 try:
     from helpers import are_equal
 except ModuleNotFoundError:
-    from MetroLaserLARS.helpers import are_equal
+    from MetroLaserLARS.helpers import are_equal  # type: ignore
 
 
 class LarsData:
@@ -51,7 +51,7 @@ class LarsData:
         return False
 
     @classmethod
-    def from_file(cls, path: str, permanent_path: Literal[None, str] = None, **settings):
+    def from_file(cls, path: str, permanent_path: None | str = None, **settings):
         """
         Loads LARS data from `path`. Expects files with 5 columns, corresponding to:
             0: time

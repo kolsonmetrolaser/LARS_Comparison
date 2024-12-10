@@ -68,7 +68,6 @@ def whittaker_smooth(x, w, lam, differences=1):
     '''
     X = np.matrix(x)
     m = X.size
-#    D = csc_matrix(np.diff(np.eye(m), differences))
     D = sparse.eye(m, format='csc')
     for i in range(differences):
         D = D[1:] - D[:-1]  # numpy.diff() does not work with sparse matrix. This is a workaround.

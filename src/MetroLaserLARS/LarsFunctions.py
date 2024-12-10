@@ -25,13 +25,13 @@ try:
     from needlemanwunsch import find_matches
     import ml_functions as ml
 except ModuleNotFoundError:
-    from MetroLaserLARS import LarsDataClass
-    from MetroLaserLARS.LarsDataClass import LarsData
-    import MetroLaserLARS.plotfunctions as pf
-    from MetroLaserLARS.filters import airpls, sgf
-    from MetroLaserLARS.helpers import group, can_skip_calculation
-    from MetroLaserLARS.needlemanwunsch import find_matches
-    import MetroLaserLARS.ml_functions as ml
+    from MetroLaserLARS import LarsDataClass  # type: ignore
+    from MetroLaserLARS.LarsDataClass import LarsData  # type: ignore
+    import MetroLaserLARS.plotfunctions as pf  # type: ignore
+    from MetroLaserLARS.filters import airpls, sgf  # type: ignore
+    from MetroLaserLARS.helpers import group, can_skip_calculation  # type: ignore
+    from MetroLaserLARS.needlemanwunsch import find_matches  # type: ignore
+    import MetroLaserLARS.ml_functions as ml  # type: ignore
 
 
 def remove_baseline(y: ArrayLike, **settings) -> tuple[ArrayLike, ArrayLike]:
@@ -308,7 +308,6 @@ def analyze_data(data: LarsData, **settings) -> tuple[dict, NDArray, NDArray, ND
             vels_peaks_removed[np.logical_and(freqs > left, freqs < right)] = np.nan
             vels_peaks_removed_for_baseline[np.logical_and(
                 freqs > left, freqs < right)] = baseline[np.logical_and(freqs > left, freqs < right)]
-        # freqs_peaks_removed = freqs[np.logical_not(np.isnan(vels_peaks_removed))]
         indices_nonpeak = np.logical_not(np.isnan(vels_peaks_removed))
         if not np.any(indices_nonpeak):
             print("""Removed all the data during iterative noise calculations.

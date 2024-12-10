@@ -100,7 +100,6 @@ def open_log_window(root, log_var):
         return
 
     traceid = log_var.trace_add("write", update_log)
-    # update_log()
 
     def on_closing():
         log_var.trace_remove("write", traceid)

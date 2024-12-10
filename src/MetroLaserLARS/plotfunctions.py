@@ -912,7 +912,7 @@ def radial_plot(x, y, legend=None, x_lim=None, y_lim=None, fig_size=(12, 9),
     plt.draw()
 
     try:
-        from settings import CLUSTERMODE as _CLUSTERMODE
+        from settings import CLUSTERMODE as _CLUSTERMODE  # type: ignore
     except ModuleNotFoundError:
         _CLUSTERMODE = True
 
@@ -1318,7 +1318,7 @@ def cylinder_plot(R, Z, T, c, tlims=(0, 180), rlims=(0, 1), zlims=(0, 1), clims=
         # cbar.set_ticklabels(c_ticks)
     plt.tight_layout()
     try:
-        from settings import CLUSTERMODE as _CLUSTERMODE
+        from settings import CLUSTERMODE as _CLUSTERMODE  # type: ignore
     except ModuleNotFoundError:
         _CLUSTERMODE = True
     if fname is not None:

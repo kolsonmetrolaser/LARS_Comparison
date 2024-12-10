@@ -29,16 +29,16 @@ try:
     from app_window_plot import open_plot_window
     from app_window_results_table import open_results_table_window
 except ModuleNotFoundError:
-    from MetroLaserLARS.infotext import infotext
-    from MetroLaserLARS.LARS_Comparison import LARS_Comparison_from_app
-    from MetroLaserLARS.app_helpers import heading, labeled_options, labeled_file_select, labeled_entry
-    from MetroLaserLARS.app_helpers import padding_none, padding_setting, padding_option, padding_heading
-    from MetroLaserLARS.app_helpers import bool_options, CustomVar, make_button, log_decorator, open_log_window
-    from MetroLaserLARS.app_helpers import button_color, active_bg, active_fg, icon_ML, open_progress_window
-    from MetroLaserLARS.app_helpers import background_color as bgc
-    from MetroLaserLARS.app_window_part_matching import open_part_matching_window
-    from MetroLaserLARS.app_window_plot import open_plot_window
-    from MetroLaserLARS.app_window_results_table import open_results_table_window
+    from MetroLaserLARS.infotext import infotext  # type: ignore
+    from MetroLaserLARS.LARS_Comparison import LARS_Comparison_from_app  # type: ignore
+    from MetroLaserLARS.app_helpers import heading, labeled_options, labeled_file_select, labeled_entry  # type: ignore
+    from MetroLaserLARS.app_helpers import padding_none, padding_setting, padding_option, padding_heading  # type: ignore
+    from MetroLaserLARS.app_helpers import bool_options, CustomVar, make_button, log_decorator, open_log_window  # type: ignore
+    from MetroLaserLARS.app_helpers import button_color, active_bg, active_fg, icon_ML, open_progress_window  # type: ignore
+    from MetroLaserLARS.app_helpers import background_color as bgc  # type: ignore
+    from MetroLaserLARS.app_window_part_matching import open_part_matching_window  # type: ignore
+    from MetroLaserLARS.app_window_plot import open_plot_window  # type: ignore
+    from MetroLaserLARS.app_window_results_table import open_results_table_window  # type: ignore
 
 
 def run_app_main():
@@ -654,21 +654,11 @@ All pairs of subfolders will be compared.""",
 
     def update_peak_fitting_settings(*args):
         if peak_fitting_strategy_var.get() == 'Machine Learning':
-            # frame_peak_fitl.pack_forget()
-            # heading_noise_reduction.pack_forget()
-            # recursive_noise_reduction_frame.pack_forget()
-            # max_noise_reduction_iter_frame.pack_forget()
-            # regularization_ratio_frame.pack_forget()
             for o in peak_fitting_objects_std:
                 o.pack_forget()
             for o in peak_fitting_objects_ml:
                 o.pack()
         else:
-            # frame_peak_fitl.pack(side=tk.LEFT)
-            # heading_noise_reduction.pack(side=tk.TOP)
-            # recursive_noise_reduction_frame.pack(side=tk.TOP)
-            # max_noise_reduction_iter_frame.pack(side=tk.TOP)
-            # regularization_ratio_frame.pack(side=tk.TOP)
             for o in peak_fitting_objects_ml:
                 o.pack_forget()
             for o in peak_fitting_objects_std:
@@ -813,18 +803,6 @@ All pairs of subfolders will be compared.""",
                                                      padding=padding_setting, vardefault=5, vartype=tk.DoubleVar,
                                                      infotext=infotext['num_stretches'], **common_kwargs)
 
-    # # stretching_iterations
-    # stretching_iterations_var, _, _, _, _, _ = labeled_entry(frame_peak_matchl, 'Number of stretching iterations:',
-    #                                                          padding=padding_setting, vardefault=10, vartype=tk.IntVar,
-    #                                                          infotext=infotext['stretching_iterations'], **common_kwargs)
-
-    # # stretch_iteration_factor
-    # stretch_iteration_factor_var, _, _, _, _, _ = labeled_entry(frame_peak_matchl,
-    #                                                             'Factor to reduce stretch space each iteration:',
-    #                                                             padding=padding_setting, vardefault=5,
-    #                                                             vartype=tk.DoubleVar,
-    #                                                             infotext=infotext['stretch_iteration_factor'], **common_kwargs)
-
     # nw_normalized
     nw_normalized_var, _, _, _, _, _ = labeled_options(frame_peak_matchr, 'Normalize frequency for peak matching:',
                                                        padding=padding_setting, vartype=tk.StringVar,
@@ -912,10 +890,8 @@ All pairs of subfolders will be compared.""",
     log_var = tk.StringVar(root, value='')
     sys.stdout.write = log_decorator(sys.stdout.write, log_var, log_file_loc_var, running_var)
 
-    # sys.stdout.write = log_decorator(sys.stdout.write, log_var, osp.join(directory_var.get(), 'LARSAnalysisLog.log'))
     print('opened app')
 
-    # print(1*[]+'s')
     canvas.update()
     canvas_frame = canvas.nametowidget(canvas.itemcget("frame_canvas", "window"))
     min_width = canvas_frame.winfo_reqwidth()

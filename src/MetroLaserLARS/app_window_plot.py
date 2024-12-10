@@ -14,8 +14,8 @@ try:
     from plotfunctions import line_plot, make_legend_interactive
     from app_helpers import CustomVar, padding_setting, plot_style_widget, icon_ML, edit_name_menu_bar
 except ModuleNotFoundError:
-    from MetroLaserLARS.plotfunctions import line_plot, make_legend_interactive
-    from MetroLaserLARS.app_helpers import CustomVar, padding_setting, plot_style_widget, icon_ML, edit_name_menu_bar
+    from MetroLaserLARS.plotfunctions import line_plot, make_legend_interactive  # type: ignore
+    from MetroLaserLARS.app_helpers import CustomVar, padding_setting, plot_style_widget, icon_ML, edit_name_menu_bar  # type: ignore
 
 
 def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, frange_max_var, **common_kwargs):
@@ -259,8 +259,6 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
             elif 'Remove' in action:
                 removed_lines = False
                 lines = [line for axis in canvas.figure.axes for line in axis.get_lines()]
-                # lines = ([line for axis in canvas.figure.axes for line in axis.get_lines()]
-                #          + [line for legend in canvas.figure.legends for line in legend.get_lines()])
                 line_names = [line.get_label() for line in lines]
                 for line, name in zip(lines, line_names):
                     if action == 'Remove':
@@ -358,7 +356,6 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
     data_selection2_var_traceid_var = tk.StringVar()
     plot_type_var.trace_add("write", update_plot_contents_wrapper)
     data_selection_var.trace_add("write", update_plot_contents_wrapper)
-    # data_selection2_var.trace_add("write", lambda *args: update_plot_contents(canvas, name_to_key, **common_kwargs))
     traceid = data_selection2_var.trace_add("write", update_plot_contents_wrapper)
     data_selection2_var_traceid_var.set(traceid)
     custom_plot_action_var.trace_add("write", update_plot_contents_wrapper)

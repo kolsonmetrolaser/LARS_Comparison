@@ -14,9 +14,9 @@ try:
     from app_helpers import labeled_widget_label
     from app_helpers import background_color as bgc
 except ModuleNotFoundError:
-    from MetroLaserLARS.app_helpers import labeled_options, labeled_entry, padding_setting, icon_ML, edit_name_menu_bar
-    from MetroLaserLARS.app_helpers import labeled_widget_label
-    from MetroLaserLARS.app_helpers import background_color as bgc
+    from MetroLaserLARS.app_helpers import labeled_options, labeled_entry, padding_setting, icon_ML, edit_name_menu_bar  # type: ignore
+    from MetroLaserLARS.app_helpers import labeled_widget_label  # type: ignore
+    from MetroLaserLARS.app_helpers import background_color as bgc  # type: ignore
 
 
 def get_curr_screen_geometry():

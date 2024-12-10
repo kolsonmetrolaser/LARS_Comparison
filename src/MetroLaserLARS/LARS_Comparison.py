@@ -18,10 +18,10 @@ try:
     import ml_functions as ml
     from helpers import can_skip_calculation
 except ModuleNotFoundError:
-    import MetroLaserLARS.plotfunctions as pf
-    from MetroLaserLARS.LarsFunctions import analyze_each_pair_of_folders
-    import MetroLaserLARS.ml_functions as ml
-    from MetroLaserLARS.helpers import can_skip_calculation
+    import MetroLaserLARS.plotfunctions as pf  # type: ignore
+    from MetroLaserLARS.LarsFunctions import analyze_each_pair_of_folders  # type: ignore
+    import MetroLaserLARS.ml_functions as ml  # type: ignore
+    from MetroLaserLARS.helpers import can_skip_calculation  # type: ignore
 
 
 def parts_match(pr, **settings):

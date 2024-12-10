@@ -16,10 +16,10 @@ try:
     from cnn.models import ConvNet
     from cnn.preprocessing import LabelEncoder
 except ModuleNotFoundError:
-    from MetroLaserLARS.LarsDataClass import LarsData
-    from MetroLaserLARS.filters import sgf
-    from MetroLaserLARS.cnn.models import ConvNet
-    from MetroLaserLARS.cnn.preprocessing import LabelEncoder
+    from MetroLaserLARS.LarsDataClass import LarsData  # type: ignore
+    from MetroLaserLARS.filters import sgf  # type: ignore
+    from MetroLaserLARS.cnn.models import ConvNet  # type: ignore
+    from MetroLaserLARS.cnn.preprocessing import LabelEncoder  # type: ignore
 
 
 def load_model(**settings):

@@ -10,8 +10,8 @@ try:
     from infotext import infotext
     from app_helpers import labeled_options, labeled_entry, icon_ML
 except ModuleNotFoundError:
-    from MetroLaserLARS.infotext import infotext
-    from MetroLaserLARS.app_helpers import labeled_options, labeled_entry, icon_ML
+    from MetroLaserLARS.infotext import infotext  # type: ignore
+    from MetroLaserLARS.app_helpers import labeled_options, labeled_entry, icon_ML  # type: ignore
 
 
 def open_part_matching_window(root, grouped_folders_var, part_matching_text_var,
