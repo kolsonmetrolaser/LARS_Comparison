@@ -39,7 +39,7 @@ icon_ML = resource_path('MLicon_128.png')
 
 def clone_widget(widget, master=None):
     """
-    Create a cloned version o a widget
+    Create a cloned version of a widget
 
     Parameters
     ----------
