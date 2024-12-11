@@ -666,6 +666,7 @@ def analyze_each_pair_of_folders(folders: Iterable = [], **settings) -> tuple[li
             label_text = f'Analyzing pair {i+1} of {len(folder_pairs)}'
             settings['status_label'].config(text=label_text, state=tkinter.NORMAL)
             settings['status_label'].update()
+            settings['progress_bars'][0].set(len(data_dict)/len(folders))
             settings['progress_bars'][1].set((i)/len(folder_pairs))
         data_0 = data_dict[fpair[0]] if fpair[0] in data_dict.keys() else None
         data_1 = data_dict[fpair[1]] if fpair[1] in data_dict.keys() else None

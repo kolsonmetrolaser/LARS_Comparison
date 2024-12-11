@@ -488,9 +488,11 @@ All pairs of subfolders will be compared.""",
                                                      vardefault='auto', options=['auto', '.all', '.csv', '.tdms', '.npz'],
                                                      infotext=infotext['data_format'], side=tk.LEFT, **common_kwargs)
     # new_data_format
-    new_data_format_var, _, _, _, _, _ = labeled_options(frame_data_format, 'Save data to different format (does not work with .all):',
+    new_data_format_var, _, _, _, _, _ = labeled_options(frame_data_format, 'Save data to different format (does not work when loading .all):',
                                                          padding=padding_setting, vartype=tk.StringVar,
-                                                         vardefault='none', options=['none', '.csv', '.npz', 'both'],
+                                                         vardefault='none',
+                                                         options=['none', '.csv', '.npz', '.all', '.csv and .npz',
+                                                                  '.all and .npz', 'all of the above'],
                                                          infotext=infotext['new_data_format'], **common_kwargs)
 
     # pickled_data_path
@@ -767,6 +769,7 @@ All pairs of subfolders will be compared.""",
         labeled_entry(frame_peak_fitl, 'ML confidence threshold:',
                       padding=padding_setting, vardefault=0.01, vartype=tk.DoubleVar,
                       infotext=infotext['ml_threshold'], **common_kwargs)
+    ml_threshold_frame.pack_forget()
 
     peak_fitting_objects_std = [heading_baseline,
                                 baseline_smoothness_frame, baseline_polyorder_frame, baseline_itermax_frame,

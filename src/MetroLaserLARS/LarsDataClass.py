@@ -123,9 +123,10 @@ class LarsData:
             raise f"""Tried to load LARS data form an {ext} file, which is an invalid file type.
 Only load .npz, .tdms, .all, or .csv files. Full path: {permanent_path}"""
         if ext != '.all':
-            if new_data_format in ['.npz', 'both']:
+            if new_data_format in ['.npz', '.csv and .npz',
+                                   '.all and .npz', 'all of the above', 'both']:
                 np.savez_compressed(path_no_ext+'.npz', **data)
-            if new_data_format in ['.csv', 'both']:
+            if new_data_format in ['.csv', '.csv and .npz', 'all of the above', 'both']:
                 dataout = data.copy()
                 pop = False
                 for k, v in list(dataout.items()):
@@ -144,13 +145,24 @@ Only load .npz, .tdms, .all, or .csv files. Full path: {permanent_path}"""
                 for i, (k, v) in enumerate(dataout.items()):
                     npheader += k if npheader == '' else ','+k
                     npout[:len(v), i] = v
-                np.savetxt(path_no_ext+'.csv', npout, delimiter=',', comments='', header=npheader)
-                # replace 'nan' with ''
-                with open(path_no_ext+'.csv', 'r') as f:
-                    fdata = f.read()
-                fdata = fdata.replace('nan', '')
-                with open(path_no_ext+'.csv', 'w') as f:
-                    f.write(fdata)
+                npout = npout.astype(str)
+                npout[npout == 'nan'] = ''
+                np.savetxt(path_no_ext+'.csv', npout, delimiter=',', comments='', header=npheader, fmt='%s')
+
+            if new_data_format in ['.all', '.all and .npz', 'all of the above']:
+                dataout = data.copy()
+                if nn['v'] in dataout and data[nn['v']].ndim > 1:
+                    dataout[nn['v']] = dataout[nn['v']][-1]
+
+                maxsize = 0
+                for k, v in dataout.items():
+                    maxsize = max(maxsize, len(v))
+                npout = np.nan*np.ones((maxsize, 5), dtype=np.float64)
+                for idx, col_indicator in enumerate(['t', 'v', 'p', 'f', 'a']):
+                    v = dataout[nn[col_indicator]]
+                    npout[:len(v), idx] = v
+                npout[np.isnan(npout)] = 0
+                np.savetxt(path_no_ext+'.all', npout, delimiter='\t', comments='', fmt='%.5f')
 
             unrecognized_columns = False
             for v in nn.values():
@@ -172,7 +184,7 @@ Only load .npz, .tdms, .all, or .csv files. Full path: {permanent_path}"""
                 return cls(name=osp.basename(permanent_path), path=permanent_path, time=data_list[0], pztV=data_list[1],
                            ldvV=data_list[2], freq=data_list[3], vel=data_list[4])
             else:
-                raise ("Successfully loaded and saved data to new formats, but its contents are not in a recognized format")
+                raise Exception("Successfully loaded and saved data to new formats, but its contents are not in a recognized format")
 
     @classmethod
     def from_subdata(cls, c):

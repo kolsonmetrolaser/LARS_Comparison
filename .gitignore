@@ -16,5 +16,7 @@ test*
 __pycache__
 # ignore zip files
 *.zip
+# ignore vscode files
+.vscode
 # ignore misc files
 *.egg-info
