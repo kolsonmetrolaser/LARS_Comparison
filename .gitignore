@@ -14,3 +14,7 @@ test*
 008.weights.h5
 # ignore pycache folder
 __pycache__
+# ignore zip files
+*.zip
+# ignore misc files
+*.egg-info
