@@ -161,6 +161,10 @@ Only load .npz, .tdms, .all, or .csv files. Full path: {permanent_path}"""
                 for idx, col_indicator in enumerate(['t', 'v', 'p', 'f', 'a']):
                     v = dataout[nn[col_indicator]]
                     npout[:len(v), idx] = v
+                    if col_indicator == 'f' and len(v) < maxsize:
+                        fill_length = len(npout[:, idx])-len(v)
+                        spacing = v[1]-v[0]
+                        npout[len(v):, idx] = np.linspace(v[-1]+spacing, v[-1]+fill_length*spacing, fill_length)
                 npout[np.isnan(npout)] = 0
                 np.savetxt(path_no_ext+'.all', npout, delimiter='\t', comments='', fmt='%.5f')
 
