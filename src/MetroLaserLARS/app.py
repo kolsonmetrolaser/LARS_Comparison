@@ -632,7 +632,7 @@ All pairs of subfolders will be compared.""",
 
     # save_data
     save_data_var, _, _, _, _, _ = labeled_options(rootl, 'Save data to .pkl file:', padding=padding_setting,
-                                                   vartype=tk.StringVar, vardefault=bool_options[1], command=hide_save_tag,
+                                                   vartype=tk.StringVar, vardefault=bool_options[0], command=hide_save_tag,
                                                    infotext=infotext['save_data'], **common_kwargs)
 
     # save_results
