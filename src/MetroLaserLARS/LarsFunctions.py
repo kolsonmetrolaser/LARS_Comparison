@@ -136,11 +136,14 @@ def fit_peaks(x: ArrayLike, y: ArrayLike, **settings) -> dict:
                              enumerate(zip(peaks[1]['peak_heights'], peaks[1]['prominences']))
                              if p/h > peak_ph_ratio_min])
     d['count'] = len(d['indices'])
-    d['positions'], d['heights'], d['widths'] =\
-        x[peaks[0][d['indices']]], peaks[1]['peak_heights'][d['indices']], peak_widths[0][d['indices']]*(x[1]-x[0])
-
-    d['rights'] = d['positions'] + d['widths']/2
-    d['lefts'] = d['positions']-d['widths']/2
+    if d['count']:
+        d['positions'], d['heights'], d['widths'] =\
+            x[peaks[0][d['indices']]], peaks[1]['peak_heights'][d['indices']], peak_widths[0][d['indices']]*(x[1]-x[0])
+        d['rights'] = d['positions'] + d['widths']/2
+        d['lefts'] = d['positions']-d['widths']/2
+    else:
+        for k in ['positions', 'heights', 'widths', 'rights', 'lefts']:
+            d[k] = np.array([])
     return d
 
 
@@ -595,8 +598,11 @@ def compare_LARS_measurements(folders: Iterable = [], previously_analyzed_data: 
     unmatched_X = [x/1000 for x, y in zip(bestrx, bestry) if y == -1]
     unmatched_Y = [y/1000 for x, y in zip(bestrx, bestry) if x == -1]
     matched = [(x+y)/2/1000 for x, y in zip(bestrx, bestry) if x != -1 and y != -1]
-    best_quality += peak_match_window*(len(unmatched_X)+len(unmatched_Y))/2
-    best_quality /= -len(matched)
+    if len(matched) > 0:
+        best_quality += peak_match_window*(len(unmatched_X)+len(unmatched_Y))/2
+        best_quality /= -len(matched)
+    else:
+        best_quality = np.nan
     if 'PRINT_MODE' in settings and settings['PRINT_MODE'] == 'full':
         print(f'{len(unmatched_X)} unmatched peaks in reference at {np.array(unmatched_X)} kHz')
         print(f'{len(unmatched_Y)} unmatched peaks in measurement at {np.array(unmatched_Y)} kHz')
@@ -618,9 +624,13 @@ def compare_LARS_measurements(folders: Iterable = [], previously_analyzed_data: 
                          fname=osp.join(save_folder, fname) if save_plots else None,
                          show_plot_in_spyder=show_plots)
 
+    if len(matched) == 0 and len(unmatched_X) == 0 and len(unmatched_Y) == 0:
+        match_probability = np.nan
+    else:
+        match_probability = 2*len(matched)/(2*len(matched)+len(unmatched_X)+len(unmatched_Y))
     matching_analysis = {'stretch': best_stretch, 'quality': best_quality, 'names': names, 'matched': matched,
                          'unmatched': [unmatched_X, unmatched_Y],
-                         'match_probability': 2*len(matched)/(2*len(matched)+len(unmatched_X)+len(unmatched_Y)),
+                         'match_probability': match_probability,
                          'folders': folders}
 
     return matching_analysis, datas

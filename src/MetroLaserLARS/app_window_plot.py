@@ -33,7 +33,7 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
     common_kwargs['line_width'] = 4
     common_kwargs['show_plot_in_spyder'] = False
     common_kwargs['font_settings'] = {'weight': 'bold', 'size': 16}
-    common_kwargs['x_slice'] = (1, np.inf)
+    common_kwargs['x_slice'] = (1e-10, np.inf)
     common_kwargs['legend_interactive'] = True
     common_kwargs['autoconvert_to_vlines'] = True
 
