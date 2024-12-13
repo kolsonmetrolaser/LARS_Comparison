@@ -16,12 +16,14 @@ try:
     from cnn.models import ConvNet
     from cnn.preprocessing import LabelEncoder
     from app_helpers import resource_path
+    from helpers import peaks_dict_from_array
 except ModuleNotFoundError:
     from MetroLaserLARS.LarsDataClass import LarsData  # type: ignore
     from MetroLaserLARS.filters import sgf  # type: ignore
     from MetroLaserLARS.cnn.models import ConvNet  # type: ignore
     from MetroLaserLARS.cnn.preprocessing import LabelEncoder  # type: ignore
     from MetroLaserLARS.app_helpers import resource_path  # type: ignore
+    from MetroLaserLARS.helpers import peaks_dict_from_array  # type: ignore
 
 
 def load_model(**settings):
@@ -93,17 +95,9 @@ def analyze_data(data: LarsData, **settings) -> tuple[dict, NDArray, NDArray, ND
 
     newvels = sgf(vels, n=sgf_applications, w=sgf_windowsize, p=sgf_polyorder)
 
-    peaks = {}
-
     probs, locs, areas = predict(freqs, newvels, **settings)
-    peaks['count'] = len(locs)
-    peaks['positions'] = locs
-    peaks['indices'] = [np.where(freqs > loc)[0][0]-1 for loc in locs]
-    peaks['heights'] = np.nan*np.zeros_like(locs)
-    peaks['widths'] = np.nan*np.zeros_like(locs)
-    peaks['lefts'] = np.nan*np.zeros_like(locs)
-    peaks['rights'] = np.nan*np.zeros_like(locs)
 
+    peaks = peaks_dict_from_array(locs)
     return peaks, freqs, vels, newvels, name
 
 

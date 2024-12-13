@@ -35,6 +35,7 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
     common_kwargs['font_settings'] = {'weight': 'bold', 'size': 16}
     common_kwargs['x_slice'] = (1, np.inf)
     common_kwargs['legend_interactive'] = True
+    common_kwargs['autoconvert_to_vlines'] = True
 
     data_dict, pair_results = data_dict_var.get(), pair_results_var.get()
     keys = list(data_dict.keys())

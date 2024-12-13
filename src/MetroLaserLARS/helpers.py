@@ -146,3 +146,15 @@ def group(a: ArrayLike, maxsize: int = 1) -> list[ArrayLike]:
             a = a[1:]
         return_list.append(next_array)
     return return_list
+
+
+def peaks_dict_from_array(locs):
+    peaks = {}
+    peaks['count'] = len(locs)
+    peaks['positions'] = locs
+    peaks['indices'] = np.nan*np.zeros_like(locs)
+    peaks['heights'] = np.nan*np.zeros_like(locs)
+    peaks['widths'] = np.nan*np.zeros_like(locs)
+    peaks['lefts'] = np.nan*np.zeros_like(locs)
+    peaks['rights'] = np.nan*np.zeros_like(locs)
+    return peaks

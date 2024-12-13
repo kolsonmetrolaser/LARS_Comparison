@@ -443,13 +443,32 @@ def line_plot(x: ArrayLike, y: ArrayLike, legend=None, x_lim: tuple[float, float
               v_line_legend=None,
               y_norm: Literal[None, 'global', 'each'] = None, fig=None,
               x_slice: tuple[float, float] = (-np.inf, np.inf), legend_interactive: bool = False,
-              clear_fig: bool = True):
+              clear_fig: bool = True, autoconvert_to_vlines: bool = False):
 
     if not show_plot_in_spyder and fname is None and fig is None:
         return None
 
     x = x.copy()
     y = y.copy()
+
+    if v_line_pos is None:
+        v_line_pos = []
+
+    if autoconvert_to_vlines:
+        if isinstance(x, list) and isinstance(y, list):
+            for i, (xel, yel) in enumerate(zip(x, y)):
+                if len(xel) > 0 and len(yel) == 0:
+                    v_line_pos += list(xel)
+                    y[i] = np.nan*np.ones_like(xel)
+        elif not isinstance(y, list):
+            if len(y) == 0:
+                if isinstance(x, list):
+                    for xel in x:
+                        v_line_pos += list(xel)
+                    y = [np.nan*np.ones_like(xel) for xel in x]
+                else:
+                    v_line_pos += list(x)
+                    y = np.nan*np.ones_like(x)
 
     if isinstance(x, list) and isinstance(y, list):
         for i, (xel, yel) in enumerate(zip(x, y)):
@@ -558,7 +577,7 @@ def line_plot(x: ArrayLike, y: ArrayLike, legend=None, x_lim: tuple[float, float
                 linelist.append(line)
 
     v_line_legend_used = [False for vll in v_line_legend] if v_line_legend is not None else None
-    if v_line_pos is not None:
+    if v_line_pos:
         if can_iter(v_line_pos):  # multiple vlines?
             if can_iter(v_line_pos[0]):  # multiple sets of vlines?
                 if can_iter(v_line_color) and not isinstance(v_line_color, str):  # multiple colors?

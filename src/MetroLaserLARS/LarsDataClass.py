@@ -119,6 +119,10 @@ class LarsData:
                     else:
                         data[nn['v']] = np.vstack((data[nn['v']], data.pop(k)))
 
+        elif ext == '.LARSsim':
+            data = {}
+            data[nn['f']] = np.loadtxt(path)
+
         else:
             raise f"""Tried to load LARS data form an {ext} file, which is an invalid file type.
 Only load .npz, .tdms, .all, or .csv files. Full path: {permanent_path}"""
@@ -187,6 +191,9 @@ Only load .npz, .tdms, .all, or .csv files. Full path: {permanent_path}"""
                     data_list.append(v)
                 return cls(name=osp.basename(permanent_path), path=permanent_path, time=data_list[0], pztV=data_list[1],
                            ldvV=data_list[2], freq=data_list[3], vel=data_list[4])
+            elif unrecognized_columns and ext == '.LARSsim':
+                return cls(name=osp.basename(permanent_path), path=permanent_path, time=np.array([]), pztV=np.array([]),
+                           ldvV=np.array([]), freq=data[nn['f']], vel=np.array([]))
             else:
                 raise Exception("Successfully loaded and saved data to new formats, but its contents are not in a recognized format")
 

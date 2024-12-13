@@ -21,7 +21,7 @@ try:
     from LarsDataClass import LarsData
     import plotfunctions as pf
     from filters import airpls, sgf
-    from helpers import group, can_skip_calculation
+    from helpers import group, can_skip_calculation, peaks_dict_from_array
     from needlemanwunsch import find_matches
     import ml_functions as ml
 except ModuleNotFoundError:
@@ -29,7 +29,7 @@ except ModuleNotFoundError:
     from MetroLaserLARS.LarsDataClass import LarsData  # type: ignore
     import MetroLaserLARS.plotfunctions as pf  # type: ignore
     from MetroLaserLARS.filters import airpls, sgf  # type: ignore
-    from MetroLaserLARS.helpers import group, can_skip_calculation  # type: ignore
+    from MetroLaserLARS.helpers import group, can_skip_calculation, peaks_dict_from_array  # type: ignore
     from MetroLaserLARS.needlemanwunsch import find_matches  # type: ignore
     import MetroLaserLARS.ml_functions as ml  # type: ignore
 
@@ -278,13 +278,27 @@ def analyze_data(data: LarsData, **settings) -> tuple[dict, NDArray, NDArray, ND
     save_folder = settings['save_folder']
     save_plots = settings['save_plots'] if 'save_plots' in settings else False
     show_plots = settings['show_plots'] if 'show_plots' in settings else False
+    PRINT_MODE = settings['PRINT_MODE'] if 'PRINT_MODE' in settings else 'none'
 
     freqs = data.freq
     slc = np.logical_and(freqs > slc_limits[0], freqs < slc_limits[1])
     freqs = freqs[slc]
-    vels = data.vel[slc]
-    name = data.name
     folder = pathlib.Path(data.path).parts[-2]
+    name = data.name
+
+    if PRINT_MODE == 'full':
+        print(f'For {folder}/{name}:')
+
+    if len(data.freq) > 0 and len(data.vel) == 0:  # has freqs but not vels, it is a simulation file with the peaks listed in freqs
+        peaks = peaks_dict_from_array(freqs)
+        if PRINT_MODE == 'full':
+            peaklist = peaks['positions'][np.logical_and(peaks['positions'] > frange[0]*1000,
+                                                         peaks['positions'] < frange[1]*1000)]
+            print(f"""For {folder}/{name}:
+              simulated peaks at:     {peaklist/1000} kHz""")
+        return peaks, freqs, data.vel, data.vel, data.name
+
+    vels = data.vel[slc]
 
     vels_baseline_removed, baseline = remove_baseline(vels, **settings)
 
@@ -298,6 +312,12 @@ def analyze_data(data: LarsData, **settings) -> tuple[dict, NDArray, NDArray, ND
                  or (recursive_noise_reduction and plot_recursive_noise)):
         detailed_plots(folder, name, peaks, freqs, vels, vels_baseline_removed,
                        vels_rms_norm_zeroed, vels_filtered, **settings)
+
+    if PRINT_MODE == 'full':
+        if recursive_noise_reduction:
+            print('Starting recursive noise reduction...')
+        else:
+            print(f'Found {peaks['count']} peaks without noise reduction.')
 
     recursive_noise_iterations = 0
     while recursive_noise_reduction:
@@ -335,13 +355,13 @@ def analyze_data(data: LarsData, **settings) -> tuple[dict, NDArray, NDArray, ND
 
         peaks_updated = fit_peaks(freqs, vels_filtered, **settings)
 
-        if 'PRINT_MODE' in settings and settings['PRINT_MODE'] == 'full':
+        if PRINT_MODE == 'full':
             pc, puc = peaks['count'], peaks_updated['count']
             print(f'{pc} peaks to {puc} peaks')
 
         recursive_noise_iterations += 1
         if recursive_noise_iterations >= max_noise_reduction_iter:
-            if 'PRINT_MODE' in settings and settings['PRINT_MODE'] in ['sparse', 'full']:
+            if PRINT_MODE in ['sparse', 'full']:
                 print('Reached maximum recursive noise iterations for', name)
             recursive_noise_reduction = False
         if peaks['count'] == peaks_updated['count']:
@@ -363,11 +383,10 @@ def analyze_data(data: LarsData, **settings) -> tuple[dict, NDArray, NDArray, ND
 
     newvels = vels_filtered
 
-    if 'PRINT_MODE' in settings and settings['PRINT_MODE'] == 'full':
+    if PRINT_MODE == 'full':
         peaklist = peaks['positions'][np.logical_and(peaks['positions'] > frange[0]*1000,
                                                      peaks['positions'] < frange[1]*1000)]
-        print(f"""for {folder}/{name}
-              peaks at:     {peaklist/1000} kHz""")
+        print(f"""    peaks at:     {peaklist/1000} kHz""")
 
     if plot and plot_detail:
         peak_groups = group(peaks['positions'][np.logical_and(peaks['positions'] > frange[0]
@@ -396,7 +415,7 @@ def Load_LARS_data(folder: str = '', **settings):
 
     result = []
     if data_format == 'auto':
-        possible_formats = ['.npz', '.tdms', '.all', '.csv']
+        possible_formats = ['.npz', '.tdms', '.all', '.csv', '.LARSsim']
         for subdir, dirs, files in os.walk(folder):
             for file in [f for f in files if any([ext in f for ext in possible_formats])]:
                 format_exists = [osp.isfile(osp.splitext(osp.join(subdir, file))[0]+fmt) for fmt in possible_formats]
