@@ -104,8 +104,8 @@ class LarsData:
             if np.all(data[:, 3] == 0):
                 print(f'WARNING: frequency data from {path} is missing. Assuming frequency is spaced by 0.5 Hz.')
                 data[:, 3] = np.linspace(0, 0.5*(len(data[:, 3])-1), len(data[:, 3]))
-            return cls(name=osp.basename(permanent_path), path=permanent_path, time=data[:, 0], pztV=data[:, 1],
-                       ldvV=data[:, 2], freq=data[:, 3], vel=data[:, 4])
+            return cls(name=osp.basename(permanent_path), path=permanent_path, time=np.array([]), pztV=np.array([]),
+                       ldvV=np.array([]), freq=data[:, 3], vel=data[:, 4])
         elif ext == '.csv':
             header = np.loadtxt(path, max_rows=1, delimiter=',', dtype=str)
             datain = np.genfromtxt(path, delimiter=',', skip_header=1, unpack=True, dtype=np.float64,
@@ -178,19 +178,19 @@ Only load .npz, .tdms, .all, or .csv files. Full path: {permanent_path}"""
                     unrecognized_columns = True
 
             if not unrecognized_columns:
-                if data[nn['v']].ndim > 1:
-                    ldvV = np.mean(data[nn['v']], axis=0)
-                else:
-                    ldvV = data[nn['v']]
+                # if data[nn['v']].ndim > 1:
+                #     ldvV = np.mean(data[nn['v']], axis=0)
+                # else:
+                #     ldvV = data[nn['v']]
 
-                return cls(name=osp.basename(permanent_path), path=permanent_path, time=data[nn['t']], pztV=data[nn['p']],
-                           ldvV=ldvV, freq=data[nn['f']], vel=data[nn['a']])
-            elif unrecognized_columns and len(data) == 5:  # in a .all style format
-                data_list = []
-                for v in data.values():
-                    data_list.append(v)
-                return cls(name=osp.basename(permanent_path), path=permanent_path, time=data_list[0], pztV=data_list[1],
-                           ldvV=data_list[2], freq=data_list[3], vel=data_list[4])
+                return cls(name=osp.basename(permanent_path), path=permanent_path, time=np.array([]), pztV=np.array([]),
+                           ldvV=np.array([]), freq=data[nn['f']], vel=data[nn['a']])
+            # elif unrecognized_columns and len(data) == 5:  # in a .all style format
+            #     data_list = []
+            #     for v in data.values():
+            #         data_list.append(v)
+            #     return cls(name=osp.basename(permanent_path), path=permanent_path, time=np.array([]), pztV=np.array([]),
+            #                ldvV=np.array([]), freq=data_list[3], vel=data_list[4])
             elif unrecognized_columns and ext == '.LARSsim':
                 return cls(name=osp.basename(permanent_path), path=permanent_path, time=np.array([]), pztV=np.array([]),
                            ldvV=np.array([]), freq=data[nn['f']], vel=np.array([]))

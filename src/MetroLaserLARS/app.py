@@ -106,6 +106,7 @@ def run_app_main():
             settings['save_settings']             = settings['save_data'] # True if save_settings_var.get() == 'True' else False # noqa
             # APP INTERACTION
             settings['status_label']              = status_label # noqa
+            settings['app_version']               = (0, 2, 2)  # noqa
 
             try:
                 settings['progress_bars']         = progress_vars.get() # noqa

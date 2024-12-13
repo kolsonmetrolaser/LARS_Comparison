@@ -189,7 +189,7 @@ def run_analysis(folders, settings):
 
     save_settings = settings['save_settings'] if 'save_settings' in settings else False
     save_folder = settings['save_folder']
-    save_tag = settings['save_tag']
+    save_tag = '_'+settings['save_tag'] if 'save_tag' in settings and settings['save_tag'] != '' else ''
     PRINT_MODE = settings['PRINT_MODE'] if 'PRINT_MODE' in settings else 'sparse'
 
     skip_fit_and_match = can_skip_calculation('matching', **settings)
