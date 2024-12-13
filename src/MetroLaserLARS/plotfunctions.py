@@ -577,7 +577,7 @@ def line_plot(x: ArrayLike, y: ArrayLike, legend=None, x_lim: tuple[float, float
                 linelist.append(line)
 
     v_line_legend_used = [False for vll in v_line_legend] if v_line_legend is not None else None
-    if v_line_pos:
+    if len(v_line_pos) > 0:
         if can_iter(v_line_pos):  # multiple vlines?
             if can_iter(v_line_pos[0]):  # multiple sets of vlines?
                 if can_iter(v_line_color) and not isinstance(v_line_color, str):  # multiple colors?

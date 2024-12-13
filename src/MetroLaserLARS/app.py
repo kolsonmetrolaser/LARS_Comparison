@@ -28,6 +28,7 @@ try:
     from app_window_part_matching import open_part_matching_window
     from app_window_plot import open_plot_window
     from app_window_results_table import open_results_table_window
+    from app_window_peak_list import open_peak_list_window
 except ModuleNotFoundError:
     from MetroLaserLARS.infotext import infotext  # type: ignore
     from MetroLaserLARS.LARS_Comparison import LARS_Comparison_from_app  # type: ignore
@@ -39,6 +40,7 @@ except ModuleNotFoundError:
     from MetroLaserLARS.app_window_part_matching import open_part_matching_window  # type: ignore
     from MetroLaserLARS.app_window_plot import open_plot_window  # type: ignore
     from MetroLaserLARS.app_window_results_table import open_results_table_window  # type: ignore
+    from MetroLaserLARS.app_window_peak_list import open_peak_list_window  # type: ignore
 
 
 def run_app_main():
@@ -862,6 +864,10 @@ All pairs of subfolders will be compared.""",
     make_button(rootbuttons, text="Results Table",
                 command=lambda: open_results_table_window(root, data_dict_var,
                                                           pair_results_var),
+                padding=padding_heading)
+
+    make_button(rootbuttons, text="Peak List",
+                command=lambda: open_peak_list_window(root, data_dict_var),
                 padding=padding_heading)
 
     make_button(rootbuttons, text="Log",

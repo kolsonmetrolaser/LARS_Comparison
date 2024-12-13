@@ -297,6 +297,8 @@ def labeled_options(baseframe, label: str = '', varframe=None, postlabel: str = 
     optionmenu, infolabel = None, None
     frame = labeled_widget_frame(baseframe, padding, side, grid)
     label1 = labeled_widget_label(frame, label)
+    if vartype is None and var is None:
+        raise Exception('No variable or variable type provided.')
     if vartype is not None or var is not None:
         if var is not None and vardefault is not None:
             var.set(vardefault)
@@ -454,5 +456,5 @@ def plot_style_widget(baseframe, text: str = '', command=None, padding=padding_s
 
 
 if __name__ == '__main__':
-    from app import run_app # noqa
+    from app import run_app  # noqa
     run_app()

@@ -15,12 +15,10 @@ from os import path as osp
 try:
     import plotfunctions as pf
     from LarsFunctions import analyze_each_pair_of_folders
-    import ml_functions as ml
     from helpers import can_skip_calculation
 except ModuleNotFoundError:
     import MetroLaserLARS.plotfunctions as pf  # type: ignore
     from MetroLaserLARS.LarsFunctions import analyze_each_pair_of_folders  # type: ignore
-    import MetroLaserLARS.ml_functions as ml  # type: ignore
     from MetroLaserLARS.helpers import can_skip_calculation  # type: ignore
 
 
@@ -209,6 +207,10 @@ def run_analysis(folders, settings):
     if not skip_fit_and_match:
         peak_fitting_strategy = 'Standard' if 'peak_fitting_strategy' not in settings else settings['peak_fitting_strategy']
         if peak_fitting_strategy == 'Machine Learning':
+            try:
+                import ml_functions as ml
+            except ModuleNotFoundError:
+                import MetroLaserLARS.ml_functions as ml  # type: ignore
             settings['model'], settings['label_encoder'] = ml.load_model(**settings)
         pair_results, data_dict = analyze_each_pair_of_folders(folders, **settings)
     else:

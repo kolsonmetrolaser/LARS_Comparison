@@ -23,7 +23,6 @@ try:
     from filters import airpls, sgf
     from helpers import group, can_skip_calculation, peaks_dict_from_array
     from needlemanwunsch import find_matches
-    import ml_functions as ml
 except ModuleNotFoundError:
     from MetroLaserLARS import LarsDataClass  # type: ignore
     from MetroLaserLARS.LarsDataClass import LarsData  # type: ignore
@@ -31,7 +30,6 @@ except ModuleNotFoundError:
     from MetroLaserLARS.filters import airpls, sgf  # type: ignore
     from MetroLaserLARS.helpers import group, can_skip_calculation, peaks_dict_from_array  # type: ignore
     from MetroLaserLARS.needlemanwunsch import find_matches  # type: ignore
-    import MetroLaserLARS.ml_functions as ml  # type: ignore
 
 
 def remove_baseline(y: ArrayLike, **settings) -> tuple[ArrayLike, ArrayLike]:
@@ -475,6 +473,10 @@ def LARS_analysis(folder: str = '', previously_loaded_data: None | LarsData = No
         print(f'Using previously loaded data for {previously_loaded_data.name}')
         data_to_analyze = previously_loaded_data
     if peak_fitting_strategy == 'Machine Learning':
+        try:
+            import ml_functions as ml
+        except ModuleNotFoundError:
+            import MetroLaserLARS.ml_functions as ml  # type: ignore
         analysis = ml.analyze_data(data_to_analyze, **settings)
     elif peak_fitting_strategy == 'Standard':
         analysis = analyze_data(data_to_analyze, **settings)
