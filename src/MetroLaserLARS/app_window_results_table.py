@@ -91,6 +91,7 @@ def open_results_table_window(root, data_dict_var, pair_results_var, **common_kw
         canvas.delete('all')
 
         default_font_name = tk.font.nametofont('TkTextFont').actual()['family']
+        default_font_name = ''.join(default_font_name.split())
 
         if data is None:
             data = table_options_var.get()
@@ -134,28 +135,58 @@ def open_results_table_window(root, data_dict_var, pair_results_var, **common_kw
         if data in ['stretch']:
             lp = np.median(np.abs(1-np.array(vals))/max(np.abs(1-min_val), np.abs(1-max_val)))
 
+        def determine_size(font_size, autosize: bool = True):
+            tw = 0
+            for d in data_dict.values():
+                w_spacing, h_spacing = 5*10/12*font_size, 2*10/12*font_size
+                t = canvas.create_text(50, 50, text=d.name, font=f"{default_font_name} {int(font_size)}")
+                bbox = canvas.bbox(t)
+                canvas.delete(t)
+                tw = max(tw, bbox[2]-bbox[0])
+
+            if tw > w_spacing:
+                w_spacing = tw
+            # if tw <= w_spacing:
+            #     pass
+            # elif tw > w_spacing and tw < 2*w_spacing:
+            #     w_spacing = tw
+            # elif tw > 2*w_spacing:
+            #     return determine_size(font_size-1, autosize)
+
+            if autosize:
+                canvas.update()
+                table_size_limit = canvas.winfo_width(), canvas.winfo_height()
+                full_table_size = w_spacing*(len(data_dict)+1.5), h_spacing*(len(data_dict)+2.5)
+                if full_table_size[0] > table_size_limit[0] or full_table_size[1] > table_size_limit[1]:
+                    return determine_size(font_size-1, autosize)
+
+            return font_size, w_spacing, h_spacing
+
         if font_size is None:
-            canvas.update()
-            sizelimit = min(canvas.winfo_width()/5/(len(data_dict)+2), canvas.winfo_height()/2/(len(data_dict)+2))
-            size = min(sizelimit, 1/48*min(get_curr_screen_geometry()))
-            font_size = int(12/10*size)
-            font_size_var.set(font_size)
+            font_size = 30
+            font_size, w_spacing, h_spacing = determine_size(font_size, autosize=True)
         else:
             font_size = int(font_size)
+            font_size, w_spacing, h_spacing = determine_size(font_size, autosize=False)
+
+        font_size_var.set(font_size)
+        # full_table_size = w_spacing*(len(data_dict)+1.5), h_spacing*(len(data_dict)+2.5)
+        # while table_size[0] > table_size_limit[0] or table_size[1] > table_size_limit[1]:
+        #     font_size -= 1
+        #     font_size, w_spacing, h_spacing = determine_size(font_size)
+        #     table_size =
 
         for i, d1 in enumerate(data_dict.values()):
             if reference:
                 if d1.name != reference:
                     continue
                 i = 0
-            default_font_name = ''.join(default_font_name.split())
-            size = 10/12*font_size
-            canvas.create_text(5*size, 2*size*(i+3), text=d1.name, font=f"{default_font_name} {int(font_size)}")
+            canvas.create_text(w_spacing, h_spacing*(i+3), text=d1.name, font=f"{default_font_name} {int(font_size)}")
             for j, d2 in enumerate(data_dict.values()):
                 pair = [p for p in pair_results if d1.name in p['names'] and d2.name in p['names']]
                 if not pair:
                     continue
-                canvas.create_text(5*size*(j+2), 4*size, text=d2.name, font=f"{default_font_name} {int(font_size)}")
+                canvas.create_text(w_spacing*(j+2), 2*h_spacing, text=d2.name, font=f"{default_font_name} {int(font_size)}")
                 same_part = 1. if d1.name == d2.name else (
                     np.array(pair[0]['same_part']).astype(dtype)
                 )
@@ -198,25 +229,25 @@ def open_results_table_window(root, data_dict_var, pair_results_var, **common_kw
                              )
                             )
                 cmap_val *= -1 if data in ['quality'] else 1
-                canvas.create_rectangle(5*size*(j+1.5), 2*size*(i+2.5), 5*size*(j+2.5), 2*size*(i+3.5),
+                canvas.create_rectangle(w_spacing*(j+1.5), h_spacing*(i+2.5), w_spacing*(j+2.5), h_spacing*(i+3.5),
                                         fill=_from_cmap(_cmap(
                                             cmap_val if data not in ['stretch'] else
                                             (1 - (1 + (((1-cmap_val)*lp)/(cmap_val*(1-lp)))**2)**-1
-                                             if cmap_val != 0 and cmap_val != 1 else 1-cmap_val
+                                             if cmap_val != 0 and cmap_val != 1 and lp != 1 else 1-cmap_val
                                              )
                                         )))
                 fontstr = f"{default_font_name} {int(font_size)}{' bold' if d1.name == d2.name else ''}"
-                canvas.create_text(5*size*(j+2), 2*size*(i+3), text=textvars[i][j].get(),
+                canvas.create_text(w_spacing*(j+2), h_spacing*(i+3), text=textvars[i][j].get(),
                                    font=fontstr)
         fontstr = f"{default_font_name} {int(font_size)} bold"
-        canvas.create_text(1/2*5*size, 1/2*2*size*(len(data_dict)+3) if not reference else 5.5*size,
+        canvas.create_text(h_spacing, max(w_spacing, 1/2*h_spacing*(len(data_dict)+5)) if not reference else w_spacing/2 + h_spacing,
                            text='Reference', angle=90, font=fontstr)
-        canvas.create_text(1/2*5*size*(len(data_dict)+2), 1/2*4*size,
+        canvas.create_text(1/2*w_spacing*(len(data_dict)+3), h_spacing,
                            text='Measurement', font=fontstr)
 
         # Make Buffer for scrolling purposes
-        canvas.create_rectangle(5*size*(j+2.6), 2*size*.6, 5*size*(j+3.1), 2*size*(i+4.1), fill=bgc, outline=bgc)
-        canvas.create_rectangle(5*size*(.6), 2*size*(i+3.6), 5*size*(j+3.1), 2*size*(i+4.1), fill=bgc, outline=bgc)
+        canvas.create_rectangle(w_spacing*(j+2.6), h_spacing*.6, w_spacing*(j+3.1), h_spacing*(i+4.1), fill=bgc, outline=bgc)
+        canvas.create_rectangle(w_spacing*(.6), h_spacing*(i+3.6), w_spacing*(j+3.1), h_spacing*(i+4.1), fill=bgc, outline=bgc)
 
         canvas.configure(scrollregion=canvas.bbox("all"))
         return
