@@ -177,8 +177,12 @@ def find_matches(x: NDArray, y: NDArray, max_stretch: float = 0.02, num_stretche
         qs = find_matches_inner_serial(x, y, search_space[0], search_space[-1], search_space_delta,
                                        penalty_order, gap, nw_normalized)
 
-    # find the stretch with the best quality
-    best_stretch = search_space[np.where(qs == np.max(qs))[0][0]]
+    # find the stretch with the best quality, choosing stretches closer to 1 on ties
+    if len(np.where(qs == np.max(qs))[0]) > 1:
+        best_stretch = search_space[np.where(qs == np.max(qs))[0]]
+        best_stretch = best_stretch[(np.abs(best_stretch-1)).argmin()]
+    else:
+        best_stretch = search_space[np.where(qs == np.max(qs))[0][0]]
 
     # full calculation for the best stretch
     bestrx, bestry, bestq = needleman_wunsch(x, best_stretch*y, penalty_order=penalty_order, gap=gap, nw_normalized=nw_normalized)

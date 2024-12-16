@@ -13,7 +13,7 @@ import os.path as osp
 import tempfile
 import threading
 import queue
-import traceback
+# import traceback
 from numpy import log10
 
 # Internal imports
@@ -263,47 +263,50 @@ def run_app_main():
         if settings['PRINT_MODE'] in ['full']:
             print(settings)
 
-        try:
-            def LARS_comparison_worker(q, settings):
-                print('starting main code')
-                q.put(LARS_Comparison_from_app(settings))
+        def LARS_comparison_worker(q, settings):
+            print('starting main code')
+            q.put(LARS_Comparison_from_app(settings))
 
-            result_queue = queue.Queue()
-            thread = threading.Thread(target=LARS_comparison_worker, args=(result_queue, settings))
-            thread.daemon = True
-            print('starting thread')
-            thread.start()
+        result_queue = queue.Queue()
+        thread = threading.Thread(target=LARS_comparison_worker, args=(result_queue, settings))
+        thread.daemon = True
+        print('starting thread')
+        thread.start()
 
-            def check_result():
-                try:
-                    result = result_queue.get(block=False)
-                    print('thread finished and result read')
-                    data_dict, pair_results = result
-                    data_dict_var.set(data_dict)
-                    pair_results_var.set(pair_results)
-
-                    prev_settings_var.set(settings)
-                    running_var.set(False)
-                    with open(log_file_loc_var.get(), 'w', encoding="utf-8") as f:
-                        f.write(log_var.get())
-                    update_status()
+        def check_result():
+            try:
+                result = result_queue.get(block=False)
+                if result[0] == -1:
+                    e, tb = result[1]
                     progress_window.destroy()
+                    print('Error in main analysis code')
+                    print(tb)
+                    tk.messagebox.showerror('Error',
+                                            f"""Error in analysis, exiting. Error:
+{e}
 
-                    root.after(100, check_result)
-                except queue.Empty:
-                    root.after(100, check_result)
+See the log for more detail, available in the log window or
+{log_file_loc_var.get()}""")
+                    running_var.set(False)
+                    update_status()
+                    return
+                print('thread finished and result read')
+                data_dict, pair_results = result
+                data_dict_var.set(data_dict)
+                pair_results_var.set(pair_results)
 
-            root.after(100, check_result)
+                prev_settings_var.set(settings)
+                running_var.set(False)
+                with open(log_file_loc_var.get(), 'w', encoding="utf-8") as f:
+                    f.write(log_var.get())
+                update_status()
+                progress_window.destroy()
 
-        except Exception as e:
-            progress_window.destroy()
-            print('Error in main analysis code')
-            print('Error:', e)
-            print(traceback.format_exc())
-            tk.messagebox.showerror('Error', f'Error in analysis, exiting. See {log_file_loc_var.get()} for more detail.')
-            running_var.set(False)
-            update_status()
-            return
+                root.after(100, check_result)
+            except queue.Empty:
+                root.after(100, check_result)
+
+        root.after(100, check_result)
 
         return
 

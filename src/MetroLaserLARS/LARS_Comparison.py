@@ -254,11 +254,15 @@ def get_subfolders(folder, grouped_folders=False):
 
 
 def LARS_Comparison_from_app(settings):
-    grouped_folders = settings['grouped_folders'] if 'grouped_folders' in settings else False
+    try:
+        grouped_folders = settings['grouped_folders'] if 'grouped_folders' in settings else False
 
-    folders = get_subfolders(settings['directory'], grouped_folders)
+        folders = get_subfolders(settings['directory'], grouped_folders)
 
-    data_dict, pair_results = run_analysis(folders, settings)
+        data_dict, pair_results = run_analysis(folders, settings)
+    except Exception as e:
+        import traceback
+        return -1, (e, traceback.format_exc())
 
     return data_dict, pair_results
 

@@ -658,7 +658,7 @@ def analyze_each_pair_of_folders(folders: Iterable = [], **settings) -> tuple[li
 
     """
     if len(folders) < 2:
-        return False
+        raise Exception('Attempted to compare less than two folders of data.')
 
     pickled_data_path = settings['pickled_data_path'] if 'pickled_data_path' in settings else ''
     reference = settings['reference'] if 'reference' in settings else ''
