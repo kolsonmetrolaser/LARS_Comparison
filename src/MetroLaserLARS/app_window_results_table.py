@@ -128,7 +128,7 @@ def open_results_table_window(root, data_dict_var, pair_results_var, **common_kw
         dtype = np.float64
         printformat = ':.3f' if data in ['match_probability', 'stretch'] else ':.0f'
 
-        min_val, max_val = ((np.min(vals).astype(dtype), np.max(vals).astype(dtype))
+        min_val, max_val = ((np.nanmin(vals).astype(dtype), np.nanmax(vals).astype(dtype))
                             if data not in ['same_part'] else
                             (0.0, 1.0))
 
@@ -228,7 +228,7 @@ def open_results_table_window(root, data_dict_var, pair_results_var, **common_kw
                              (np.abs(val-1)/max(np.abs(max_val-1), np.abs(min_val-1)))
                              )
                             )
-                cmap_val *= -1 if data in ['quality'] else 1
+                cmap_val = 1-cmap_val if data in ['quality'] else cmap_val
                 canvas.create_rectangle(w_spacing*(j+1.5), h_spacing*(i+2.5), w_spacing*(j+2.5), h_spacing*(i+3.5),
                                         fill=_from_cmap(_cmap(
                                             cmap_val if data not in ['stretch'] else
