@@ -253,11 +253,30 @@ def get_subfolders(folder, grouped_folders=False):
     return subfolders
 
 
+def pare_folders(folders, settings):
+    data_format = settings['data_format'] if 'data_format' in settings else 'auto'
+    if data_format == 'auto':
+        data_format = ['.all', '.npz', '.tdms', '.csv']
+    else:
+        data_format = [data_format]
+
+    for folder in folders[::-1]:
+        folder_has_data = False
+        for item in listdir(folder):
+            item_path = osp.join(folder, item)
+            if osp.isfile(item_path) and osp.splitext(item_path)[1] in data_format:
+                folder_has_data = True
+        if not folder_has_data:
+            folders.remove(folder)
+    return folders
+
+
 def LARS_Comparison_from_app(settings):
     try:
         grouped_folders = settings['grouped_folders'] if 'grouped_folders' in settings else False
 
         folders = get_subfolders(settings['directory'], grouped_folders)
+        folders = pare_folders(folders, settings)
 
         data_dict, pair_results = run_analysis(folders, settings)
     except Exception as e:
