@@ -178,8 +178,11 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
         # Make Plots
         if t == 'Raw Data':
             x, y = data.freq.copy()/1000, data.vel.copy()
+            y_lower = min(0, np.min(y[np.logical_and(x > kwargs['x_lim'][0], x < kwargs['x_lim'][1])]))
+            y_lim = (y_lower,
+                     max(y_lower+1e-10, np.max(y[np.logical_and(x > kwargs['x_lim'][0], x < kwargs['x_lim'][1])])))
             _ = line_plot(x, y, legend=[n], x_label='Frequency (kHz)', y_label='Intensity (µm/s)',
-                          title='Raw Data', **kwargs)
+                          y_lim=y_lim, title='Raw Data', **kwargs)
         elif t == 'Peak Fits':
             data_selection2_label.pack_forget()
             data_selection2_menu.pack_forget()
@@ -195,6 +198,11 @@ def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, fran
             data_selection2_menu.pack(side=tk.LEFT)
             x, y = data.freq.copy()/1000, data.vel.copy()
             x2, y2 = data2.freq.copy()/1000, data2.vel.copy()
+            y_lower = min(0, np.min(y[np.logical_and(x > kwargs['x_lim'][0], x < kwargs['x_lim'][1])]))
+            y_lower = min(y_lower, np.min(y2[np.logical_and(x > kwargs['x_lim'][0], x < kwargs['x_lim'][1])]))
+            y_upper = max(y_lower+1e-10, np.max(y[np.logical_and(x > kwargs['x_lim'][0], x < kwargs['x_lim'][1])]))
+            y_upper = max(y_upper, np.max(y2[np.logical_and(x > kwargs['x_lim'][0], x < kwargs['x_lim'][1])]))
+            y_lim = (y_lower, y_upper)
             _ = line_plot([x, x2], [y, y2], x_label='Frequency (kHz)', y_label='Intensity (µm/s)',
                           legend=[n, n2], legend_location='upper right', title='Peak Fits', **kwargs)
         elif t == 'Matched Peaks':
