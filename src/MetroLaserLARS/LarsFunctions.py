@@ -262,7 +262,7 @@ def analyze_data(data: LarsData, **settings) -> tuple[dict, NDArray, NDArray, ND
         Name of the data.
 
     """
-    slc_limits = settings['slc_limits'] if 'slc_limits' in settings else (12000, 60000)
+    slc_limits = settings['slc_limits'] if 'slc_limits' in settings else (10000, 60000)
     plot = settings['plot'] if 'plot' in settings else False
     plot_detail = settings['plot_detail'] if 'plot_detail' in settings else True
     plot_recursive_noise = settings['plot_recursive_noise'] if 'plot_recursive_noise' in settings else True
@@ -416,7 +416,7 @@ def Load_LARS_data(folder: str = '', **settings):
 
     result = []
     if data_format == 'auto':
-        possible_formats = ['.npz', '.tdms', '.all', '.csv', '.LARSsim']
+        possible_formats = ['.npz', '.tdms', '.all', '.csv', '.LARSsim', '.LARSspectrum']
         for subdir, dirs, files in os.walk(folder):
             for file in [f for f in files if any([ext in f for ext in possible_formats])]:
                 format_exists = [osp.isfile(osp.splitext(osp.join(subdir, file))[0]+fmt) for fmt in possible_formats]
@@ -467,14 +467,15 @@ def LARS_analysis(folder: str = '', previously_loaded_data: None | LarsData = No
 
         # Analyze data
         combine = settings['combine'] if 'combine' in settings else 'max'
-        if combine is not None:
+        if len(alldata) > 1:
             data_to_analyze = LarsDataClass.combine(alldata, combine)
             # analysis = analyze_data(combined_data,frange=frange,plot=plot)
         else:
-            return None
+            data_to_analyze = alldata[0]
     else:
         print(f'Using previously loaded data for {previously_loaded_data.name}')
         data_to_analyze = previously_loaded_data
+
     if peak_fitting_strategy == 'Machine Learning':
         try:
             import ml_functions as ml

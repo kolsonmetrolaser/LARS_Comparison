@@ -7,6 +7,7 @@ Created on Mon Dec  9 13:29:15 2024
 # External imports
 import numpy as np
 import scipy
+import pathlib
 from numpy.typing import NDArray
 
 # Internal imports
@@ -83,15 +84,28 @@ def analyze_data(data: LarsData, **settings) -> tuple[dict, NDArray, NDArray, ND
 
     """
     slc_limits = settings['slc_limits'] if 'slc_limits' in settings else (12000, 60000)
+    frange = settings['frange'] if 'frange' in settings else (0, 200)
     sgf_applications = settings['sgf_applications'] if 'sgf_applications' in settings else 2
     sgf_windowsize = settings['sgf_windowsize'] if 'sgf_windowsize' in settings else 101
     sgf_polyorder = settings['sgf_polyorder'] if 'sgf_polyorder' in settings else 0
+    PRINT_MODE = settings['PRINT_MODE'] if 'PRINT_MODE' in settings else 'none'
 
     freqs = data.freq
     slc = np.logical_and(freqs > slc_limits[0], freqs < slc_limits[1])
+    folder = pathlib.Path(data.path).parts[-2]
     freqs = freqs[slc]
-    vels = data.vel[slc]
     name = data.name
+
+    if len(data.freq) > 0 and len(data.vel) == 0:  # has freqs but not vels, it is a simulation file with the peaks listed in freqs
+        peaks = peaks_dict_from_array(freqs)
+        if PRINT_MODE == 'full':
+            peaklist = peaks['positions'][np.logical_and(peaks['positions'] > frange[0]*1000,
+                                                         peaks['positions'] < frange[1]*1000)]
+            print(f"""For {folder}/{name}:
+              simulated peaks at:     {peaklist/1000} kHz""")
+        return peaks, freqs, data.vel, data.vel, data.name
+
+    vels = data.vel[slc]
 
     newvels = sgf(vels, n=sgf_applications, w=sgf_windowsize, p=sgf_polyorder)
 

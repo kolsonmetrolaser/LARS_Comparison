@@ -256,7 +256,7 @@ def get_subfolders(folder, grouped_folders=False):
 def pare_folders(folders, settings):
     data_format = settings['data_format'] if 'data_format' in settings else 'auto'
     if data_format == 'auto':
-        data_format = ['.all', '.npz', '.tdms', '.csv']
+        data_format = ['.all', '.npz', '.tdms', '.csv', '.LARSsim', '.LARSspectrum']
     else:
         data_format = [data_format]
 

@@ -54,6 +54,7 @@ def run_app_main():
             settings['data_format']               = data_format_var.get() # noqa
             settings['new_data_format']           = new_data_format_var.get() # noqa
             settings['pickled_data_path']         = pickled_data_path_var.get() # noqa
+            settings['interpolate_raw_spectra']   = True # noqa
             # DATA DEFINITIONS
             settings['frange']                    = (frange_min_var.get()/1000, frange_max_var.get()/1000) # noqa
             settings['slc_limits']                = (frange_min_var.get(), frange_max_var.get()) # noqa

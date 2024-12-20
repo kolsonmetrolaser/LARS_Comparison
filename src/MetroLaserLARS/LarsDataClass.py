@@ -78,6 +78,8 @@ class LarsData:
         """
 
         new_data_format = settings['new_data_format'] if 'new_data_format' in settings else 'none'
+        interpolate_raw_spectra = settings['interpolate_raw_spectra'] if 'interpolate_raw_spectra' in settings else True
+        slc_limits = settings['slc_limits'] if 'slc_limits' in settings else (10000, 60000)
         permanent_path = path if permanent_path is None else permanent_path
 
         nn = {'f': 'Frequency (Hz)', 'a': 'FT Amplitude (um/s)', 'v': 'LDV Amplitude (um/s)',
@@ -129,8 +131,12 @@ class LarsData:
         elif ext == '.LARSspectrum':
             data = {}
             datain = np.loadtxt(path)
-            data[nn['f']] = datain[:, 0]
-            data[nn['a']] = datain[:, 1]
+            if interpolate_raw_spectra:
+                data[nn['f']] = np.linspace(slc_limits[0], slc_limits[1], int((slc_limits[1]-slc_limits[0])/0.5+1))
+                data[nn['a']] = np.interp(data[nn['f']], datain[:, 0], datain[:, 1])
+            else:
+                data[nn['f']] = datain[:, 0]
+                data[nn['a']] = datain[:, 1]
 
         else:
             raise f"""Tried to load LARS data form an {ext} file, which is an invalid file type.
@@ -192,7 +198,8 @@ Only load .npz, .tdms, .all, or .csv files. Full path: {permanent_path}"""
                 # else:
                 #     ldvV = data[nn['v']]
 
-                return cls(name=osp.basename(permanent_path), path=permanent_path, time=np.array([]), pztV=np.array([]),
+                return cls(name=pathlib.Path(permanent_path).parts[-2], path=osp.split(permanent_path)[0],
+                           time=np.array([]), pztV=np.array([]),
                            ldvV=np.array([]), freq=data[nn['f']], vel=data[nn['a']])
             # elif unrecognized_columns and len(data) == 5:  # in a .all style format
             #     data_list = []
@@ -201,7 +208,8 @@ Only load .npz, .tdms, .all, or .csv files. Full path: {permanent_path}"""
             #     return cls(name=osp.basename(permanent_path), path=permanent_path, time=np.array([]), pztV=np.array([]),
             #                ldvV=np.array([]), freq=data_list[3], vel=data_list[4])
             elif unrecognized_columns and ext == '.LARSsim':
-                return cls(name=osp.basename(permanent_path), path=permanent_path, time=np.array([]), pztV=np.array([]),
+                return cls(name=pathlib.Path(permanent_path).parts[-2], path=osp.split(permanent_path)[0],
+                           time=np.array([]), pztV=np.array([]),
                            ldvV=np.array([]), freq=data[nn['f']], vel=np.array([]))
             else:
                 raise Exception("Successfully loaded and saved data to new formats, but its contents are not in a recognized format")
