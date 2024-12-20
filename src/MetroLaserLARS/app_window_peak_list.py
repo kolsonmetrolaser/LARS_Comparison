@@ -25,8 +25,6 @@ def open_peak_list_window(root, data_dict_var):
     window.wm_iconphoto(False, tk.PhotoImage(file=icon_ML))
     edit_name_menu_bar(window)
 
-    print('opened log window')
-
     def write_text(*_):
         if not data_dict:
             return

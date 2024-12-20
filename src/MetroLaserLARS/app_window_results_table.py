@@ -11,11 +11,11 @@ from copy import copy
 # Internal imports
 try:
     from app_helpers import labeled_options, labeled_entry, padding_setting, icon_ML, edit_name_menu_bar
-    from app_helpers import labeled_widget_label
+    from app_helpers import labeled_widget_label, make_button
     from app_helpers import background_color as bgc
 except ModuleNotFoundError:
     from MetroLaserLARS.app_helpers import labeled_options, labeled_entry, padding_setting, icon_ML, edit_name_menu_bar  # type: ignore
-    from MetroLaserLARS.app_helpers import labeled_widget_label  # type: ignore
+    from MetroLaserLARS.app_helpers import labeled_widget_label, make_button  # type: ignore
     from MetroLaserLARS.app_helpers import background_color as bgc  # type: ignore
 
 
@@ -176,17 +176,23 @@ def open_results_table_window(root, data_dict_var, pair_results_var, **common_kw
         #     font_size, w_spacing, h_spacing = determine_size(font_size)
         #     table_size =
 
+        table_string = np.empty((len(data_dict)+1, len(data_dict)+1), dtype='U256')
+
         for i, d1 in enumerate(data_dict.values()):
             if reference:
                 if d1.name != reference:
                     continue
                 i = 0
             canvas.create_text(w_spacing, h_spacing*(i+3), text=d1.name, font=f"{default_font_name} {int(font_size)}")
+            table_string[i+1, 0] = d1.name
+
             for j, d2 in enumerate(data_dict.values()):
                 pair = [p for p in pair_results if d1.name in p['names'] and d2.name in p['names']]
                 if not pair:
                     continue
                 canvas.create_text(w_spacing*(j+2), 2*h_spacing, text=d2.name, font=f"{default_font_name} {int(font_size)}")
+                table_string[0, j+1] = d2.name
+
                 same_part = 1. if d1.name == d2.name else (
                     np.array(pair[0]['same_part']).astype(dtype)
                 )
@@ -239,17 +245,32 @@ def open_results_table_window(root, data_dict_var, pair_results_var, **common_kw
                 fontstr = f"{default_font_name} {int(font_size)}{' bold' if d1.name == d2.name else ''}"
                 canvas.create_text(w_spacing*(j+2), h_spacing*(i+3), text=textvars[i][j].get(),
                                    font=fontstr)
+                table_string[i+1, j+1] = textvars[i][j].get()
+
         fontstr = f"{default_font_name} {int(font_size)} bold"
         canvas.create_text(h_spacing, max(w_spacing, 1/2*h_spacing*(len(data_dict)+5)) if not reference else w_spacing/2 + h_spacing,
                            text='Reference', angle=90, font=fontstr)
         canvas.create_text(1/2*w_spacing*(len(data_dict)+3), h_spacing,
                            text='Measurement', font=fontstr)
 
+        table_string_out = ''
+        for tsrow in table_string:
+            for ts in tsrow[:-1]:
+                table_string_out += ts + '\t'
+            table_string_out += tsrow[-1] + '\n'
+        table_string_var.set(table_string_out)
+
         # Make Buffer for scrolling purposes
         canvas.create_rectangle(w_spacing*(j+2.6), h_spacing*.6, w_spacing*(j+3.1), h_spacing*(i+4.1), fill=bgc, outline=bgc)
         canvas.create_rectangle(w_spacing*(.6), h_spacing*(i+3.6), w_spacing*(j+3.1), h_spacing*(i+4.1), fill=bgc, outline=bgc)
 
         canvas.configure(scrollregion=canvas.bbox("all"))
+        return
+
+    def table_string_to_clipboard(*args):
+        ts = table_string_var.get()
+        root.clipboard_clear()
+        root.clipboard_append(ts)
         return
 
     window = tk.Toplevel(root, bg=bgc)
@@ -282,6 +303,8 @@ def open_results_table_window(root, data_dict_var, pair_results_var, **common_kw
     canvas_sheet.config(xscrollcommand=xscrollbar.set)
     canvas_sheet.config(yscrollcommand=yscrollbar.set)
 
+    table_string_var = tk.StringVar(window)
+
     font_size_var, _, _, font_size_entry, _, _ = labeled_entry(frame_options, 'Font Size:', padding=padding_setting,
                                                                side=tk.LEFT,
                                                                vardefault=tk.font.nametofont('TkTextFont').actual()['size'],
@@ -307,6 +330,11 @@ def open_results_table_window(root, data_dict_var, pair_results_var, **common_kw
                                                                                     data_dict=data_dict,
                                                                                     pair_results=pair_results),
                                                    infobox=False, options=reference_options)
+
+    make_button(frame_options, 'Copy Table to Clipboard', command=table_string_to_clipboard,
+                side=tk.LEFT, infobox=True,
+                infotext="""Copies the table to the clipboard so it can be
+pasted, for example, in Excel""")
 
     explainer_label = labeled_widget_label(frame_explainer, '')
 
