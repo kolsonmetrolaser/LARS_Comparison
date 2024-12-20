@@ -86,6 +86,7 @@ class LarsData:
         path_no_ext, ext = osp.splitext(path)
         if ext == '.npz':
             data = dict(np.load(path))
+
         elif ext == '.tdms':
             data = {}
             _, rawdata = pytdms.read(path)
@@ -99,6 +100,7 @@ class LarsData:
                         data[nn['v']] = np.vstack((data[nn['v']], v))
                 else:
                     data[k] = v
+
         elif ext == '.all':
             data = np.loadtxt(path)
             if np.all(data[:, 3] == 0):
@@ -106,6 +108,7 @@ class LarsData:
                 data[:, 3] = np.linspace(0, 0.5*(len(data[:, 3])-1), len(data[:, 3]))
             return cls(name=osp.basename(permanent_path), path=permanent_path, time=np.array([]), pztV=np.array([]),
                        ldvV=np.array([]), freq=data[:, 3], vel=data[:, 4])
+
         elif ext == '.csv':
             header = np.loadtxt(path, max_rows=1, delimiter=',', dtype=str)
             datain = np.genfromtxt(path, delimiter=',', skip_header=1, unpack=True, dtype=np.float64,
@@ -122,6 +125,12 @@ class LarsData:
         elif ext == '.LARSsim':
             data = {}
             data[nn['f']] = np.loadtxt(path)
+
+        elif ext == '.LARSspectrum':
+            data = {}
+            datain = np.loadtxt(path)
+            data[nn['f']] = datain[:, 0]
+            data[nn['a']] = datain[:, 1]
 
         else:
             raise f"""Tried to load LARS data form an {ext} file, which is an invalid file type.
@@ -173,7 +182,7 @@ Only load .npz, .tdms, .all, or .csv files. Full path: {permanent_path}"""
                 np.savetxt(path_no_ext+'.all', npout, delimiter='\t', comments='', fmt='%.5f')
 
             unrecognized_columns = False
-            for v in nn.values():
+            for v in [nn['f'], nn['a']]:  # nn.values()
                 if v not in data:
                     unrecognized_columns = True
 
