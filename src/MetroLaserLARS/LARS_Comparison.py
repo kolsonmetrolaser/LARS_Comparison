@@ -277,6 +277,15 @@ def LARS_Comparison_from_app(settings):
 
         folders = get_subfolders(settings['directory'], grouped_folders)
         folders = pare_folders(folders, settings)
+        if not folders and grouped_folders:
+            print("WARNING: Ignoring grouped folders because the grouped folder structure was not recognized.")
+
+            settings['grouped_folders'] = False
+            if 'part_matching_strategy' in settings and settings['part_matching_strategy'] == 'folder':
+                settings['part_matching_strategy'] = 'list'
+                settings['part_matching_text'] = ''
+            folders = get_subfolders(settings['directory'], False)
+            folders = pare_folders(folders, settings)
 
         data_dict, pair_results = run_analysis(folders, settings)
     except Exception as e:

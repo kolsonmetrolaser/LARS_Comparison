@@ -8,10 +8,10 @@ import tkinter as tk
 
 try:
     from infotext import infotext
-    from app_helpers import labeled_options, labeled_entry, icon_ML
+    from app_helpers import labeled_options, labeled_entry, make_window
 except ModuleNotFoundError:
     from MetroLaserLARS.infotext import infotext  # type: ignore
-    from MetroLaserLARS.app_helpers import labeled_options, labeled_entry, icon_ML  # type: ignore
+    from MetroLaserLARS.app_helpers import labeled_options, labeled_entry, make_window  # type: ignore
 
 
 def open_part_matching_window(root, grouped_folders_var, part_matching_text_var,
@@ -81,10 +81,8 @@ Group2PartA, Group2PartB""", font=("Courier New", 9), justify='left')
         part_matching_text_var.set(part_matching_text.get("0.0", tk.END))
         return
 
-    window = tk.Toplevel(root)
+    window = make_window(root, "Define Known Part Matching")
     window.grab_set()
-    window.title("Define Known Part Matching")
-    window.wm_iconphoto(False, tk.PhotoImage(file=icon_ML))
 
     label1 = tk.Label(window,
                       text="""
