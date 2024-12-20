@@ -93,12 +93,19 @@ def log_decorator(func, log_var, log_file_loc_var, running_var):
     return inner
 
 
-def open_log_window(root, log_var):
-    window = tk.Toplevel(root, bg=background_color)
-    window.title("Log")
-    window.geometry("800x450")
+def make_window(parent, title: str = '', size: tuple[int, int] | None = None):
+    window = tk.Toplevel(parent, bg=background_color)
+    window.title(title)
+    if size is not None:
+        window.geometry(str(size[0])+"x"+str(size[1]))
     window.wm_iconphoto(False, tk.PhotoImage(file=icon_ML))
+    window.focus_force()
+    edit_name_menu_bar(window)
+    return window
 
+
+def open_log_window(root, log_var):
+    window = make_window(root, "Log", (800, 450))
     print('opened log window')
 
     log_text = tk.Text(window, bg='white')
@@ -361,10 +368,7 @@ def make_progress_bar(baseframe, var, text: str = '',
 
 
 def open_progress_window(root, progress_vars, progress_texts, status_label):
-    window = tk.Toplevel(root, bg=background_color)
-    # window.grab_set()
-    window.title("Calculating...")
-    window.wm_iconphoto(False, tk.PhotoImage(file=icon_ML))
+    window = make_window(root, "Calculating...")
 
     for pvar, ptext in zip(progress_vars[::-1], progress_texts[::-1]):
         make_progress_bar(window, pvar, text=ptext, side=tk.BOTTOM)

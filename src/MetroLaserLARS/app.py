@@ -11,10 +11,11 @@ import sys
 from shutil import move as shmove
 import os.path as osp
 import tempfile
-import threading
+# import threading
 import queue
 # import traceback
 from numpy import log10
+from PyThreadKiller import PyThreadKiller
 
 # Internal imports
 try:
@@ -268,17 +269,36 @@ def run_app_main():
             q.put(LARS_Comparison_from_app(settings))
 
         result_queue = queue.Queue()
-        thread = threading.Thread(target=LARS_comparison_worker, args=(result_queue, settings))
+        thread = PyThreadKiller(target=LARS_comparison_worker, args=(result_queue, settings))
         thread.daemon = True
         print('starting thread')
         thread.start()
+
+        def progress_window_cleanup():
+            running_var.set(False)
+            with open(log_file_loc_var.get(), 'w', encoding="utf-8") as f:
+                f.write(log_var.get())
+            update_status()
+            progress_window.destroy()
+
+        def on_progress_window_closing():
+            if tk.messagebox.askokcancel("Stop code?", "Closing this window will stop the analysis code. Are you sure?", parent=progress_window):
+                thread.kill()
+                progress_window_cleanup()
+                print("""
+    ==============================
+    User forcefully stopped thread
+    ==============================
+    """)
+            return
+
+        progress_window.protocol("WM_DELETE_WINDOW", on_progress_window_closing)
 
         def check_result():
             try:
                 result = result_queue.get(block=False)
                 if result[0] == -1:
                     e, tb = result[1]
-                    progress_window.destroy()
                     print('Error in main analysis code')
                     print(tb)
                     tk.messagebox.showerror('Error',
@@ -287,8 +307,8 @@ def run_app_main():
 
 See the log for more detail, available in the log window or
 {log_file_loc_var.get()}""")
-                    running_var.set(False)
-                    update_status()
+                    progress_window_cleanup()
+
                     return
                 print('thread finished and result read')
                 data_dict, pair_results = result
@@ -296,11 +316,7 @@ See the log for more detail, available in the log window or
                 pair_results_var.set(pair_results)
 
                 prev_settings_var.set(settings)
-                running_var.set(False)
-                with open(log_file_loc_var.get(), 'w', encoding="utf-8") as f:
-                    f.write(log_var.get())
-                update_status()
-                progress_window.destroy()
+                progress_window_cleanup()
 
                 root.after(100, check_result)
             except queue.Empty:
@@ -387,8 +403,8 @@ See the log for more detail, available in the log window or
 
     # Create the main window
     def _quit():
-        for t in log_var.trace_vinfo():
-            log_var.trace_vdelete(*t)
+        for t in log_var.trace_info():
+            log_var.trace_remove(*t)
         root.quit()
         root.destroy()
     root = tk.Tk()

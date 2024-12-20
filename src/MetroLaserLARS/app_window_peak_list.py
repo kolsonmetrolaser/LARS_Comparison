@@ -10,20 +10,16 @@ from copy import copy
 
 # Internal imports
 try:
-    from app_helpers import labeled_options, icon_ML, edit_name_menu_bar
-    from app_helpers import background_color as bgc
+    from app_helpers import labeled_options
+    from app_helpers import make_window
 except ModuleNotFoundError:
-    from MetroLaserLARS.app_helpers import labeled_options, icon_ML, edit_name_menu_bar  # type: ignore
-    from MetroLaserLARS.app_helpers import background_color as bgc  # type: ignore
+    from MetroLaserLARS.app_helpers import labeled_options  # type: ignore
+    from MetroLaserLARS.app_helpers import make_window  # type: ignore
 
 
 def open_peak_list_window(root, data_dict_var):
 
-    window = tk.Toplevel(root, bg=bgc)
-    window.title("Peak List")
-    window.geometry("800x450")
-    window.wm_iconphoto(False, tk.PhotoImage(file=icon_ML))
-    edit_name_menu_bar(window)
+    window = make_window(root, "Peak List", (800, 450))
 
     def write_text(*_):
         if not data_dict:
