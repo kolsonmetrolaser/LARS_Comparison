@@ -45,6 +45,24 @@ class LarsData:
         self.peaks = {}
         return
 
+    def __repr__(self):
+        cls = self.__class__.__name__
+        return f"""{cls}(name={self.name},
+    path={self.path}
+    Data:
+        time   = {self.time}
+        pztV   = {self.pztV}
+        ldvV   = {self.ldvV}
+        freq   = {self.freq}
+        vel    = {self.vel}
+        newvel = {self.newvel}
+        peaks  = {self.peaks}
+)"""
+
+    def __str__(self):
+        cls = self.__class__.__name__
+        return f"{cls}(name={self.name}, path={self.path})"
+
     def __eq__(self, other):
         if isinstance(other, LarsData):
             return are_equal(vars(self), vars(other))

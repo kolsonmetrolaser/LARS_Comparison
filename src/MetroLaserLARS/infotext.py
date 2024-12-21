@@ -67,7 +67,7 @@ The file data_dict.pkl is created if the setting
 "Save data to .pkl file" is set to True.
 """
 
-frange = """
+slc_limits = """
 Select the maximum and minimum frequencies (in Hz) to be
 considered during data analysis. This does NOT need to
 match the frequencies available in the input data.
@@ -352,7 +352,7 @@ infotext = {
     'data_format': data_format,
     'new_data_format': new_data_format,
     'pickled_data_path': pickled_data_path,
-    'frange': frange,
+    'slc_limits': slc_limits,
     'combine': combine,
     'plot': plot,
     'plot_detail': plot_detail,
