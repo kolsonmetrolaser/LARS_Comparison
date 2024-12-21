@@ -56,7 +56,6 @@ def run_app_main():
             settings['pickled_data_path']         = pickled_data_path_var.get() # noqa
             settings['interpolate_raw_spectra']   = True # noqa
             # DATA DEFINITIONS
-            settings['frange']                    = (frange_min_var.get()/1000, frange_max_var.get()/1000) # noqa
             settings['slc_limits']                = (frange_min_var.get(), frange_max_var.get()) # noqa
             settings['combine']                   = combine_var.get() # noqa
             settings['grouped_folders']           = True if grouped_folders_var.get() == 'True' else False # noqa

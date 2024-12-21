@@ -84,7 +84,6 @@ def analyze_data(data: LarsData, **settings) -> tuple[dict, NDArray, NDArray, ND
 
     """
     slc_limits = settings['slc_limits'] if 'slc_limits' in settings else (12000, 60000)
-    frange = settings['frange'] if 'frange' in settings else (0, 200)
     sgf_applications = settings['sgf_applications'] if 'sgf_applications' in settings else 2
     sgf_windowsize = settings['sgf_windowsize'] if 'sgf_windowsize' in settings else 101
     sgf_polyorder = settings['sgf_polyorder'] if 'sgf_polyorder' in settings else 0
@@ -99,8 +98,8 @@ def analyze_data(data: LarsData, **settings) -> tuple[dict, NDArray, NDArray, ND
     if len(data.freq) > 0 and len(data.vel) == 0:  # has freqs but not vels, it is a simulation file with the peaks listed in freqs
         peaks = peaks_dict_from_array(freqs)
         if PRINT_MODE == 'full':
-            peaklist = peaks['positions'][np.logical_and(peaks['positions'] > frange[0]*1000,
-                                                         peaks['positions'] < frange[1]*1000)]
+            peaklist = peaks['positions'][np.logical_and(peaks['positions'] > slc_limits[0],
+                                                         peaks['positions'] < slc_limits[1])]
             print(f"""For {folder}/{name}:
               simulated peaks at:     {peaklist/1000} kHz""")
         return peaks, freqs, data.vel, data.vel, data.name

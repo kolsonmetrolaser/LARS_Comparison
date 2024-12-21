@@ -269,7 +269,6 @@ def analyze_data(data: LarsData, **settings) -> tuple[dict, NDArray, NDArray, ND
     recursive_noise_reduction = settings['recursive_noise_reduction'] if\
         'recursive_noise_reduction' in settings else True
     max_noise_reduction_iter = settings['max_noise_reduction_iter'] if 'max_noise_reduction_iter' in settings else 10
-    frange = settings['frange'] if 'frange' in settings else (0, 200)
     sgf_applications = settings['sgf_applications'] if 'sgf_applications' in settings else 2
     sgf_windowsize = settings['sgf_windowsize'] if 'sgf_windowsize' in settings else 101
     sgf_polyorder = settings['sgf_polyorder'] if 'sgf_polyorder' in settings else 0
@@ -293,8 +292,8 @@ def analyze_data(data: LarsData, **settings) -> tuple[dict, NDArray, NDArray, ND
     if len(data.freq) > 0 and len(data.vel) == 0:  # has freqs but not vels, it is a simulation file with the peaks listed in freqs
         peaks = peaks_dict_from_array(freqs)
         if PRINT_MODE == 'full':
-            peaklist = peaks['positions'][np.logical_and(peaks['positions'] > frange[0]*1000,
-                                                         peaks['positions'] < frange[1]*1000)]
+            peaklist = peaks['positions'][np.logical_and(peaks['positions'] > slc_limits[0],
+                                                         peaks['positions'] < slc_limits[1])]
             print(f"""For {folder}/{name}:
               simulated peaks at:     {peaklist/1000} kHz""")
         return peaks, freqs, data.vel, data.vel, data.name
@@ -385,15 +384,15 @@ def analyze_data(data: LarsData, **settings) -> tuple[dict, NDArray, NDArray, ND
     newvels = vels_filtered
 
     if PRINT_MODE == 'full':
-        peaklist = peaks['positions'][np.logical_and(peaks['positions'] > frange[0]*1000,
-                                                     peaks['positions'] < frange[1]*1000)]
+        peaklist = peaks['positions'][np.logical_and(peaks['positions'] > slc_limits[0],
+                                                     peaks['positions'] < slc_limits[1])]
         print(f"""    peaks at:     {peaklist/1000} kHz""")
 
     if plot and plot_detail:
-        peak_groups = group(peaks['positions'][np.logical_and(peaks['positions'] > frange[0]
-                            * 1000, peaks['positions'] < frange[1]*1000)]/1000, peak_plot_width)
+        peak_groups = group(peaks['positions'][np.logical_and(peaks['positions'] > slc_limits[0],
+                                                              peaks['positions'] < slc_limits[1])]/1000, peak_plot_width)
 
-        pf.line_plot(freqs/1000, [vels, newvels], style='.', x_lim=frange, v_line_pos=peaks['positions']/1000,
+        pf.line_plot(freqs/1000, [vels, newvels], style='.', x_lim=[slc_limits[0]/1000, slc_limits[1]/1000], v_line_pos=peaks['positions']/1000,
                      v_line_width=1, title=f'{folder}{name} peak fit', y_norm='each',
                      fname=osp.join(save_folder, f'{folder}{name} peak fit'+save_tag) if save_plots else None,
                      show_plot_in_spyder=show_plots)
@@ -469,7 +468,6 @@ def LARS_analysis(folder: str = '', previously_loaded_data: None | LarsData = No
         combine = settings['combine'] if 'combine' in settings else 'max'
         if len(alldata) > 1:
             data_to_analyze = LarsDataClass.combine(alldata, combine)
-            # analysis = analyze_data(combined_data,frange=frange,plot=plot)
         else:
             data_to_analyze = alldata[0]
     else:
@@ -533,7 +531,7 @@ def compare_LARS_measurements(folders: Iterable = [], previously_analyzed_data: 
     if len(folders) != 2:
         return False
 
-    frange = settings['frange'] if 'frange' in settings else (10, 60)
+    slc_limits = settings['slc_limits'] if 'slc_limits' in settings else (10000, 60000)
     peak_plot_width = settings['peak_plot_width'] if 'peak_plot_width' in settings else 20
     max_stretch = settings['max_stretch'] if 'max_stretch' in settings else 0.02
     num_stretches = settings['num_stretches'] if 'num_stretches' in settings else 1000
@@ -611,10 +609,10 @@ def compare_LARS_measurements(folders: Iterable = [], previously_analyzed_data: 
 
     # Plot results
     if plot and plot_detail:
-        xlims = [[frange[0], frange[1]]] +\
-            [[min(frange[0]+(i-1)*peak_plot_width, frange[1]-peak_plot_width),
-              min(frange[0]+(i)*peak_plot_width, frange[1])]
-             for i in range(int(np.ceil((frange[1]-frange[0])/peak_plot_width)))]
+        xlims = [[slc_limits[0]/1000, slc_limits[1]/1000]] +\
+            [[min(slc_limits[0]/1000+(i-1)*peak_plot_width, slc_limits[1]/1000-peak_plot_width),
+              min(slc_limits[0]/1000+(i)*peak_plot_width, slc_limits[1]/1000)]
+             for i in range(int(np.ceil((slc_limits[1]-slc_limits[0])/1000/peak_plot_width)))]
 
         for plotnum, xlim in enumerate(xlims):
             fname = f'{names[0]} and {names[1]} Stretched peak matches raw_{plotnum+1}'+save_tag if plotnum != 0 else\
@@ -714,3 +712,8 @@ def analyze_each_pair_of_folders(folders: Iterable = [], **settings) -> tuple[li
     for datapath in data_dict:
         data_dict[datapath].analyzed_this_session = False
     return results, data_dict
+
+
+if __name__ == '__main__':
+    from app import run_app
+    run_app()
