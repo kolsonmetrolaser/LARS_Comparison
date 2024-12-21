@@ -18,13 +18,13 @@ except ModuleNotFoundError:
     from MetroLaserLARS.app_helpers import CustomVar, padding_setting, plot_style_widget, make_window  # type: ignore
 
 
-def open_plot_window(root, data_dict_var, pair_results_var, frange_min_var, frange_max_var, **common_kwargs):
+def open_plot_window(root, data_dict_var, pair_results_var, slc_limits_min_var, slc_limits_max_var, **common_kwargs):
 
     window = make_window(root, 'Plots', (1600, 900))
 
     color_vars, style_vars = CustomVar(), CustomVar()
 
-    f0, f1 = frange_min_var.get(), frange_max_var.get()
+    f0, f1 = slc_limits_min_var.get(), slc_limits_max_var.get()
     common_kwargs['x_lim'] = (f0/1000, f1/1000)
     common_kwargs['line_width'] = 4
     common_kwargs['show_plot_in_spyder'] = False

@@ -56,7 +56,7 @@ def run_app_main():
             settings['pickled_data_path']         = pickled_data_path_var.get() # noqa
             settings['interpolate_raw_spectra']   = True # noqa
             # DATA DEFINITIONS
-            settings['slc_limits']                = (frange_min_var.get(), frange_max_var.get()) # noqa
+            settings['slc_limits']                = (slc_limits_min_var.get(), slc_limits_max_var.get()) # noqa
             settings['combine']                   = combine_var.get() # noqa
             settings['grouped_folders']           = True if grouped_folders_var.get() == 'True' else False # noqa
             settings['part_matching_text']        = part_matching_text_var.get() # noqa
@@ -135,8 +135,8 @@ def run_app_main():
             new_data_format_var.set(           settings['new_data_format'] if 'new_data_format' in settings else 'none') # noqa
             pickled_data_path_var.set(         settings['pickled_data_path'] if 'pickled_data_path' in settings else '') # noqa
             # DATA DEFINITIONS
-            frange_min_var.set(                settings['slc_limits'][0] if 'slc_limits' in settings else 10000) # noqa
-            frange_max_var.set(                settings['slc_limits'][1] if 'slc_limits' in settings else 60000) # noqa
+            slc_limits_min_var.set(            settings['slc_limits'][0] if 'slc_limits' in settings else 10000) # noqa
+            slc_limits_max_var.set(            settings['slc_limits'][1] if 'slc_limits' in settings else 60000) # noqa
             combine_var.set(                   settings['combine'] if 'combine' in settings else 'max') # noqa
             grouped_folders_var.set(           ('True' if settings['grouped_folders'] else 'False') if 'grouped_folders' in settings else 'False') # noqa
             part_matching_text_var.set(        settings['part_matching_text'] if 'part_matching_text' in settings else '') # noqa
@@ -537,17 +537,17 @@ All pairs of subfolders will be compared.""",
 
     heading("Data", lvl=1, frame=rootl, side=tk.TOP)
 
-    # frange and slc limits
-    frame_frange = tk.Frame(rootl)
-    frame_frange.pack(**padding_setting, side=tk.TOP)
-    frange_min_var, _, _, _, _, _ = labeled_entry(frame_frange, 'Data minimum and maximum frequency:',
-                                                  padding=padding_none,
-                                                  vardefault=10000, vartype=tk.DoubleVar, side=tk.LEFT,
-                                                  infobox=False, **common_kwargs)
-    frange_max_var, _, _, _, _, _ = labeled_entry(frame_frange, '-',
-                                                  postlabel='Hz', padding=padding_none,
-                                                  vardefault=60000, vartype=tk.DoubleVar, side=tk.LEFT,
-                                                  infotext=infotext['frange'], **common_kwargs)
+    # slc_limits and slc limits
+    frame_slc_limits = tk.Frame(rootl)
+    frame_slc_limits.pack(**padding_setting, side=tk.TOP)
+    slc_limits_min_var, _, _, _, _, _ = labeled_entry(frame_slc_limits, 'Data minimum and maximum frequency:',
+                                                      padding=padding_none,
+                                                      vardefault=10000, vartype=tk.DoubleVar, side=tk.LEFT,
+                                                      infobox=False, **common_kwargs)
+    slc_limits_max_var, _, _, _, _, _ = labeled_entry(frame_slc_limits, '-',
+                                                      postlabel='Hz', padding=padding_none,
+                                                      vardefault=60000, vartype=tk.DoubleVar, side=tk.LEFT,
+                                                      infotext=infotext['slc_limits'], **common_kwargs)
 
     # combine
     combine_var, _, _, _, _, _ = labeled_options(rootl, 'How data within a folder should be combined:',
@@ -876,8 +876,8 @@ All pairs of subfolders will be compared.""",
     make_button(rootbuttons, text="View Plots",
                 command=lambda: open_plot_window(root, data_dict_var,
                                                  pair_results_var,
-                                                 frange_min_var,
-                                                 frange_max_var),
+                                                 slc_limits_min_var,
+                                                 slc_limits_max_var),
                 padding=padding_heading)
 
     make_button(rootbuttons, text="Results Table",
