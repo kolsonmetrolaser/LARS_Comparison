@@ -5,15 +5,17 @@ Created on Mon Nov 18 15:52:07 2024
 @author: KOlson
 """
 import tkinter as tk
-# import numpy as np
+import numpy as np
+import pathlib
+import os.path as osp
 from copy import copy
 
 # Internal imports
 try:
-    from app_helpers import labeled_options
+    from app_helpers import labeled_options, make_button
     from app_helpers import make_window
 except ModuleNotFoundError:
-    from MetroLaserLARS.app_helpers import labeled_options  # type: ignore
+    from MetroLaserLARS.app_helpers import labeled_options, make_button  # type: ignore
     from MetroLaserLARS.app_helpers import make_window  # type: ignore
 
 
@@ -69,6 +71,27 @@ def open_peak_list_window(root, data_dict_var):
                                                options=['Hz', 'kHz'], vardefault='Hz',
                                                infotext='The units of the peak list.',
                                                side=tk.LEFT, command=write_text)
+
+    def save_peak_lists(*args):
+        dd = data_dict_var.get()
+        maxlen = 0
+        for v in dd.values():
+            maxlen = max(maxlen, len(v.peaks['positions']))
+        dataout = np.nan*np.ones((len(dd), maxlen))
+        header = ''
+        for i, v in enumerate(dd.values()):
+            dataout[i, :len(v.peaks['positions'])] = v.peaks['positions']
+            header += v.name + ','
+        header = header[:-1]
+        f = osp.join(pathlib.Path(list(dd.keys())[0]).parent, 'peak_list.csv')
+        np.savetxt(f, dataout.T, delimiter=',', header=header)
+        print(f'Saved peak list to {f}')
+
+    make_button(options_frame, 'Save Peak Lists', command=save_peak_lists,
+                side=tk.LEFT, infobox=True,
+                infotext="""Saves the peak lists in a .csv so that it
+can be used in other programs (e.g., Excel)""")
+
     write_text()
     return
 

@@ -317,7 +317,7 @@ def analyze_data(data: LarsData, **settings) -> tuple[dict, NDArray, NDArray, ND
         if recursive_noise_reduction:
             print('Starting recursive noise reduction...')
         else:
-            print(f'Found {peaks['count']} peaks without noise reduction.')
+            print(f'Found {peaks["count"]} peaks without noise reduction.')
 
     recursive_noise_iterations = 0
     while recursive_noise_reduction:
