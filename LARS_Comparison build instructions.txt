@@ -1,0 +1,45 @@
+Fresh:
+install miniconda (or any other form of anaconda)
+conda create -n lars
+conda activate lars
+conda install git pip
+python3 -m pip install git+https://github.com/kolsonmetrolaser/LARS_Comparison
+
+Updating:
+python3 -m pip install git+https://github.com/kolsonmetrolaser/LARS_Comparison --no-deps --force-reinstall --upgrade
+
+Advanced:
+install the package from https://github.com/kolsonmetrolaser/LARS_Comparison
+using any preferred method
+
+
+
+
+Making an exe file:
+
+fresh environment:
+conda create -n *env_name* python=3.10 pip git
+conda activate *env_name*
+# conda install pip git
+pip install git+https://github.com/kolsonmetrolaser/LARS_Comparison
+pip install pyinstaller
+cd **.py file directory**
+pyinstaller --onefile **.py
+
+current:
+conda activate larsexe
+pip install --upgrade git+https://github.com/kolsonmetrolaser/LARS_Comparison
+	if "CredentialHelperSelector" popup, install the .exe from 
+	https://github.com/microsoft/Git-Credential-Manager-for-Windows/releases
+cd **.py file directory**
+pyinstaller --onefile --add-data "MLicon_128.png:." --icon "MLicon.ico" **.py
+adding `-w` is nice in theory to not open the console, but it breaks the logging as currently implemented (and maybe all printing?)
+
+For some reason only files of the form
+from MetroLaserLARS.app import run_app
+run_app()
+
+work and not
+
+import MetroLaserLARS
+MetroLaserLARS.app.run_app()
