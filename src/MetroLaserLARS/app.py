@@ -174,7 +174,7 @@ def run_app_main():
             # PEAK MATCHING
             # stretching
             max_stretch_var.set(               settings['max_stretch'] if 'max_stretch' in settings else 0.02) # noqa
-            num_stretches_var.set(             log10(settings['num_stretches']) if 'num_stretches' in settings else 5) # noqa
+            num_stretches_var.set(             log10(settings['num_stretches']) if 'num_stretches' in settings else 4) # noqa
             # stretching_iterations_var.set(     settings['stretching_iterations'] if 'stretching_iterations' in settings else 10) # noqa
             # stretch_iteration_factor_var.set(  settings['stretch_iteration_factor'] if 'stretch_iteration_factor' in settings else 5) # noqa
             # matching
@@ -825,7 +825,7 @@ All pairs of subfolders will be compared.""",
 
     # num_stretches
     num_stretches_var, _, _, _, _, _ = labeled_entry(frame_peak_matchl, 'Number of stretches per iteration: 10^',
-                                                     padding=padding_setting, vardefault=5, vartype=tk.DoubleVar,
+                                                     padding=padding_setting, vardefault=4, vartype=tk.DoubleVar,
                                                      infotext=infotext['num_stretches'], **common_kwargs)
 
     # nw_normalized
