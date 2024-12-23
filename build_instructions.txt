@@ -2,7 +2,7 @@ Fresh:
 install miniconda (or any other form of anaconda)
 conda create -n lars
 conda activate lars
-conda install git pip
+conda install git pip python=3.10
 python3 -m pip install git+https://github.com/kolsonmetrolaser/LARS_Comparison
 
 Updating:
