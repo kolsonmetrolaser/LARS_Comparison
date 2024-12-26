@@ -201,10 +201,10 @@ def run_analysis(folders, settings):
                 pair_results = pickle.load(f)
             with open(pickled_data_path, 'rb') as f:
                 data_dict = pickle.load(f)
+            print('skipped peak fitting and matching')
         except Exception:
             skip_fit_and_match = False
-
-    if not skip_fit_and_match:
+    else:
         peak_fitting_strategy = 'Standard' if 'peak_fitting_strategy' not in settings else settings['peak_fitting_strategy']
         if peak_fitting_strategy == 'Machine Learning':
             try:
@@ -213,8 +213,6 @@ def run_analysis(folders, settings):
                 import MetroLaserLARS.ml_functions as ml  # type: ignore
             settings['model'], settings['label_encoder'] = ml.load_model(**settings)
         pair_results, data_dict = analyze_each_pair_of_folders(folders, **settings)
-    else:
-        print('skipped peak fitting and matching')
 
     analyze_pair_results(pair_results, data_dict, settings)
     settings.pop('model', None)

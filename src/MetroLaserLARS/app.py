@@ -261,19 +261,6 @@ def run_app_main():
 
         settings = make_settings()
 
-        if settings['PRINT_MODE'] in ['full']:
-            print(settings)
-
-        def LARS_comparison_worker(q, settings):
-            print('starting main code')
-            q.put(LARS_Comparison_from_app(settings))
-
-        result_queue = queue.Queue()
-        thread = PyThreadKiller(target=LARS_comparison_worker, args=(result_queue, settings))
-        thread.daemon = True
-        print('starting thread')
-        thread.start()
-
         def progress_window_cleanup():
             running_var.set(False)
             with open(log_file_loc_var.get(), 'w', encoding="utf-8") as f:
@@ -281,48 +268,69 @@ def run_app_main():
             update_status()
             progress_window.destroy()
 
-        def on_progress_window_closing():
-            if tk.messagebox.askokcancel("Stop code?", "Closing this window will stop the analysis code. Are you sure?", parent=progress_window):
-                thread.kill()
-                progress_window_cleanup()
-                print("""
-    ==============================
-    User forcefully stopped thread
-    ==============================
-    """)
-            return
+        if settings['PRINT_MODE'] in ['full']:
+            print(settings)
 
-        progress_window.protocol("WM_DELETE_WINDOW", on_progress_window_closing)
+        # Unthreaded
+        if not threaded_var.get():
+            data_dict, pair_results = LARS_Comparison_from_app(settings)
+            data_dict_var.set(data_dict)
+            pair_results_var.set(pair_results)
+        else:
+            # Threaded
 
-        def check_result():
-            try:
-                result = result_queue.get(block=False)
-                if result[0] == -1:
-                    e, tb = result[1]
-                    print('Error in main analysis code')
-                    print(tb)
-                    tk.messagebox.showerror('Error',
-                                            f"""Error in analysis, exiting. Error:
-{e}
+            def LARS_comparison_worker(q, settings):
+                print('starting main code')
+                q.put(LARS_Comparison_from_app(settings))
 
-See the log for more detail, available in the log window or
-{log_file_loc_var.get()}""")
+            result_queue = queue.Queue()
+            thread = PyThreadKiller(target=LARS_comparison_worker, args=(result_queue, settings))
+            thread.daemon = True
+            print('starting thread')
+            thread.start()
+
+            def on_progress_window_closing():
+                if tk.messagebox.askokcancel("Stop code?", "Closing this window will stop the analysis code. Are you sure?", parent=progress_window):
+                    thread.kill()
+                    progress_window_cleanup()
+                    print("""
+        ==============================
+        User forcefully stopped thread
+        ==============================
+        """)
+                return
+
+            progress_window.protocol("WM_DELETE_WINDOW", on_progress_window_closing)
+
+            def check_result():
+                try:
+                    result = result_queue.get(block=False)
+                    if result[0] == -1:
+                        e, tb = result[1]
+                        print('Error in main analysis code')
+                        print(tb)
+                        tk.messagebox.showerror('Error',
+                                                f"""Error in analysis, exiting. Error:
+    {e}
+
+    See the log for more detail, available in the log window or
+    {log_file_loc_var.get()}""")
+                        progress_window_cleanup()
+
+                        return
+                    print('thread finished and result read')
+                    data_dict, pair_results = result
+                    data_dict_var.set(data_dict)
+                    pair_results_var.set(pair_results)
+
+                    prev_settings_var.set(settings)
                     progress_window_cleanup()
 
-                    return
-                print('thread finished and result read')
-                data_dict, pair_results = result
-                data_dict_var.set(data_dict)
-                pair_results_var.set(pair_results)
+                    root.after(100, check_result)
+                except queue.Empty:
+                    root.after(100, check_result)
 
-                prev_settings_var.set(settings)
-                progress_window_cleanup()
-
-                root.after(100, check_result)
-            except queue.Empty:
-                root.after(100, check_result)
-
-        root.after(100, check_result)
+            root.after(100, check_result)
 
         return
 
@@ -488,6 +496,8 @@ See the log for more detail, available in the log window or
                           'activebackground': active_bg, 'activeforeground': active_fg}
 
     common_kwargs = {'update_status': update_status, 'varframe': root}
+    threaded_var = tk.BooleanVar(root, value=True)  # TODO: implement unthreaded running
+    # TODO: better error handling if package missing, etc.
 
     # Start building App
 
