@@ -273,9 +273,22 @@ def run_app_main():
 
         # Unthreaded
         if not threaded_var.get():
-            data_dict, pair_results = LARS_Comparison_from_app(settings)
-            data_dict_var.set(data_dict)
-            pair_results_var.set(pair_results)
+            result = LARS_Comparison_from_app(settings)
+            if result[0] == -1:
+                e, tb = result[1]
+                print('Error in main analysis code')
+                print(tb)
+                tk.messagebox.showerror('Error',
+                                        f"""Error in analysis, exiting. Error:
+{e}
+
+See the log for more detail, available in the log window or
+{log_file_loc_var.get()}""")
+                progress_window_cleanup()
+                return
+            else:
+                data_dict_var.set(result[0])
+                pair_results_var.set(result[1])
         else:
             # Threaded
 
@@ -496,8 +509,7 @@ def run_app_main():
                           'activebackground': active_bg, 'activeforeground': active_fg}
 
     common_kwargs = {'update_status': update_status, 'varframe': root}
-    threaded_var = tk.BooleanVar(root, value=True)  # TODO: implement unthreaded running
-    # TODO: better error handling if package missing, etc.
+    threaded_var = tk.BooleanVar(root, value=True)
 
     # Start building App
 
@@ -562,7 +574,7 @@ All pairs of subfolders will be compared.""",
     # combine
     combine_var, _, _, _, _, _ = labeled_options(rootl, 'How data within a folder should be combined:',
                                                  padding=padding_setting, vartype=tk.StringVar,
-                                                 vardefault='max', options=['max', 'mean'],
+                                                 vardefault='max', options=['max', 'mean', 'none', 'all'],
                                                  infotext=infotext['combine'], **common_kwargs)
 
     # grouped_folders

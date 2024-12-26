@@ -478,7 +478,10 @@ def LARS_analysis(folder: str = '', previously_loaded_data: None | LarsData = No
         try:
             import ml_functions as ml
         except ModuleNotFoundError:
-            import MetroLaserLARS.ml_functions as ml  # type: ignore
+            try:
+                import MetroLaserLARS.ml_functions as ml  # type: ignore
+            except Exception as e:
+                raise e
         analysis = ml.analyze_data(data_to_analyze, **settings)
     elif peak_fitting_strategy == 'Standard':
         analysis = analyze_data(data_to_analyze, **settings)
