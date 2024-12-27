@@ -32,7 +32,9 @@ pip install --upgrade git+https://github.com/kolsonmetrolaser/LARS_Comparison
 	if "CredentialHelperSelector" popup, install the .exe from 
 	https://github.com/microsoft/Git-Credential-Manager-for-Windows/releases
 cd **.py file directory**
-pyinstaller --onefile --add-data "MLicon_128.png:." --icon "MLicon.ico" **.py
+pyinstaller --onefile --add-data "MLicon_128.png:." --add-data "output\weights\009.weights.h5:output\weights" --icon "MLicon.ico" **.py
+
+
 adding `-w` is nice in theory to not open the console, but it breaks the logging as currently implemented (and maybe all printing?)
 
 For some reason only files of the form

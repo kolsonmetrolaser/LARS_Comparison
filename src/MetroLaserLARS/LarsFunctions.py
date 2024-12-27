@@ -22,14 +22,14 @@ try:
     import plotfunctions as pf
     from filters import airpls, sgf
     from helpers import group, can_skip_calculation, peaks_dict_from_array
-    from needlemanwunsch import find_matches
+    import needlemanwunsch as nw
 except ModuleNotFoundError:
     from MetroLaserLARS import LarsDataClass  # type: ignore
     from MetroLaserLARS.LarsDataClass import LarsData  # type: ignore
     import MetroLaserLARS.plotfunctions as pf  # type: ignore
     from MetroLaserLARS.filters import airpls, sgf  # type: ignore
     from MetroLaserLARS.helpers import group, can_skip_calculation, peaks_dict_from_array  # type: ignore
-    from MetroLaserLARS.needlemanwunsch import find_matches  # type: ignore
+    import MetroLaserLARS.needlemanwunsch as nw  # type: ignore
 
 
 def remove_baseline(y: ArrayLike, **settings) -> tuple[ArrayLike, ArrayLike]:
@@ -430,7 +430,7 @@ def Load_LARS_data(folder: str = '', **settings):
 
 
 def LARS_analysis(folder: str = '', previously_loaded_data: None | LarsData = None, **settings)\
-        -> tuple[tuple[ArrayLike, ArrayLike, ArrayLike, ArrayLike, ArrayLike], LarsData]:
+        -> tuple[list[tuple[ArrayLike, ArrayLike, ArrayLike, ArrayLike, ArrayLike]], list[LarsData]]:
     """
     Combines data in `folder`
 
@@ -447,12 +447,11 @@ def LARS_analysis(folder: str = '', previously_loaded_data: None | LarsData = No
 
     Returns
     -------
-    tuple[tuple[ArrayLike,ArrayLike,ArrayLike,ArrayLike,ArrayLike],LarsData]
-        tuple[ArrayLike,ArrayLike,ArrayLike,ArrayLike,ArrayLike]
-            See `analyze_data()` for the first return values.
-            The final return value is the LarsData object corresponding to `folder` with mode `combine`.
-        LarsData
-            LarsData object corresponding to `folder` with mode `combine`.
+    tuple[list[tuple[ArrayLike,ArrayLike,ArrayLike,ArrayLike,ArrayLike]],list[LarsData]]
+        list[tuple[ArrayLike,ArrayLike,ArrayLike,ArrayLike,ArrayLike]]
+            List of results from `analyze_data()`. See `analyze_data()` for return values.
+        list[LarsData]
+            List of LarsData object corresponding to `folder` with mode `combine`.
 
     """
     peak_fitting_strategy = 'Standard' if 'peak_fitting_strategy' not in settings else settings['peak_fitting_strategy']
@@ -467,12 +466,12 @@ def LARS_analysis(folder: str = '', previously_loaded_data: None | LarsData = No
         # Analyze data
         combine = settings['combine'] if 'combine' in settings else 'max'
         if len(alldata) > 1:
-            data_to_analyze = LarsDataClass.combine(alldata, combine)
+            data_to_analyze_list = LarsDataClass.combine(alldata, combine)
         else:
-            data_to_analyze = alldata[0]
+            data_to_analyze_list = [alldata[0]]
     else:
         print(f'Using previously loaded data for {previously_loaded_data.name}')
-        data_to_analyze = previously_loaded_data
+        data_to_analyze_list = [previously_loaded_data]
 
     if peak_fitting_strategy == 'Machine Learning':
         try:
@@ -482,16 +481,18 @@ def LARS_analysis(folder: str = '', previously_loaded_data: None | LarsData = No
                 import MetroLaserLARS.ml_functions as ml  # type: ignore
             except Exception as e:
                 raise e
-        analysis = ml.analyze_data(data_to_analyze, **settings)
-    elif peak_fitting_strategy == 'Standard':
-        analysis = analyze_data(data_to_analyze, **settings)
+        analysis_func = ml.analyze_data
     else:
-        analysis = analyze_data(data_to_analyze, **settings)
-    data_to_analyze.newvel = analysis[3]
-    data_to_analyze.peaks = analysis[0]
-    data_to_analyze.analyzed_this_session = True
+        analysis_func = analyze_data
+    analysis_list = []
+    for data_to_analyze in data_to_analyze_list:
+        analysis = analysis_func(data_to_analyze, **settings)
+        analysis_list.append(analysis)
+        data_to_analyze.newvel = analysis[3]
+        data_to_analyze.peaks = analysis[0]
+        data_to_analyze.analyzed_this_session = True
 
-    return analysis, data_to_analyze
+    return analysis_list, data_to_analyze_list
 
 
 def compare_LARS_measurements(folders: Iterable = [], previously_analyzed_data: tuple = (None, None), **settings)\
@@ -550,6 +551,7 @@ def compare_LARS_measurements(folders: Iterable = [], previously_analyzed_data: 
     plot = settings['plot'] if 'plot' in settings else False
     plot_detail = settings['plot_detail'] if 'plot' in settings else False
     PRINT_MODE = settings['PRINT_MODE'] if 'PRINT_MODE' in settings else 'sparse'
+    combine = settings['combine'] if 'combine' in settings else 'max'
 
     # collect peak positions, and the frequency, raw velocity, and smoothed velocity vectors from each folder
     positions = []
@@ -566,8 +568,17 @@ def compare_LARS_measurements(folders: Iterable = [], previously_analyzed_data: 
             pad = previously_analyzed_data[i]
             (peaks, freq, vel, newvel, name), data = (pad.peaks, pad.freq, pad.vel, pad.newvel, pad.name), pad
         else:
-            (peaks, freq, vel, newvel, name), data =\
+            analysis, data =\
                 LARS_analysis(folder=f, previously_loaded_data=previously_analyzed_data[i], **settings)
+            (peaks, freq, vel, newvel, name) = zip(*analysis)
+            if combine in ['none', 'all']:
+                peaks = nw.combine_peaks(peaks)
+                freq, vel, newvel, name = freq[-1], vel[-1], newvel[-1], name[-1]
+                data = LarsData(name=name, path=data[-1].path, time=data[-1].time, pztV=data[-1].pztV,
+                                ldvV=data[-1].ldvV, freq=freq, vel=vel, newvel=newvel, peaks=peaks)
+                data.analyzed_this_session = True
+            else:
+                peaks, freq, vel, newvel, name, data = peaks[0], freq[0], vel[0], newvel[0], name[0], data[0]
         positions.append(peaks['positions'])
         names.append(name)
         freqs.append(freq)
@@ -580,7 +591,7 @@ def compare_LARS_measurements(folders: Iterable = [], previously_analyzed_data: 
                            'stretch_iteration_factor': stretch_iteration_factor,
                            'penalty_order': matching_penalty_order,
                            'gap': peak_match_window/2, 'nw_normalized': nw_normalized}
-    bestrx, bestry, best_quality, best_stretch, search_space_delta = find_matches(
+    bestrx, bestry, best_quality, best_stretch, search_space_delta = nw.find_matches(
         positions[0], positions[1], **kwargs_find_matches)
 
     # print results

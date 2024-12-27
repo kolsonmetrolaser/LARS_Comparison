@@ -289,6 +289,8 @@ See the log for more detail, available in the log window or
             else:
                 data_dict_var.set(result[0])
                 pair_results_var.set(result[1])
+                prev_settings_var.set(settings)
+                progress_window_cleanup()
         else:
             # Threaded
 
@@ -509,7 +511,7 @@ See the log for more detail, available in the log window or
                           'activebackground': active_bg, 'activeforeground': active_fg}
 
     common_kwargs = {'update_status': update_status, 'varframe': root}
-    threaded_var = tk.BooleanVar(root, value=True)
+    threaded_var = tk.BooleanVar(root, value=False)
 
     # Start building App
 

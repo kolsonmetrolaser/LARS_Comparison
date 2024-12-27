@@ -11,6 +11,7 @@ import pytdms
 import os.path as osp
 from typing import Literal
 import pathlib
+from copy import deepcopy
 
 # Internal imports
 try:
@@ -33,7 +34,8 @@ class LarsData:
     analyzed_this_session: bool
 
     def __init__(self, name: str = None, path: str = None, time: NDArray = None, pztV: NDArray = None,
-                 ldvV: NDArray = None, freq: NDArray = None, vel: NDArray = None):
+                 ldvV: NDArray = None, freq: NDArray = None, vel: NDArray = None, newvel: NDArray = None,
+                 peaks: dict = {}):
         self.name = name
         self.path = path
         self.time = time
@@ -41,8 +43,8 @@ class LarsData:
         self.ldvV = ldvV
         self.freq = freq
         self.vel = vel
-        self.newvel = np.zeros_like(vel)
-        self.peaks = {}
+        self.newvel = (None if vel is None else np.zeros_like(vel)) if newvel is None else newvel
+        self.peaks = peaks
         return
 
     def __repr__(self):
@@ -259,7 +261,7 @@ def all_equal(li: list[ArrayLike]) -> bool:
     return True
 
 
-def combine(alldata: list[LarsData], combine: Literal['max', 'mean'] = 'max') -> LarsData:
+def combine(alldata: list[LarsData], combine: Literal['max', 'mean', 'none', 'all'] = 'max') -> LarsData:
     """
     Generates a combined LarsData class from a list of LarsData classes.
     `combine` defines how the velocity data should be combined.
@@ -287,7 +289,14 @@ def combine(alldata: list[LarsData], combine: Literal['max', 'mean'] = 'max') ->
         combined_data.vel = np.mean([data.vel for data in alldata], axis=0)
     elif combine == 'max':
         combined_data.vel = np.maximum.reduce([data.vel for data in alldata])
+    elif combine == 'none':
+        return alldata
+    elif combine == 'all':
+        combined_mean = deepcopy(combined_data)
+        combined_mean.vel = np.mean([data.vel for data in alldata], axis=0)
+        combined_data.vel = np.maximum.reduce([data.vel for data in alldata])
+        return alldata + [combined_mean, combined_data]
     else:  # default to max
         combined_data.vel = np.maximum.reduce([data.vel for data in alldata])
 
-    return combined_data
+    return [combined_data]
