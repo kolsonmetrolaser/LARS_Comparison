@@ -1,6 +1,6 @@
 [project]
 name = "MetroLaserLARS"
-version = "0.2.1"
+version = "0.2.2"
 authors = [
   { name="Karl Olson", email="kolson@metrolaserinc.com" },
   { name="Adityan Vairavel", email="avairavel@metrolaserinc.com" },
@@ -8,7 +8,7 @@ authors = [
 ]
 description = "Data analysis for MetroLaser, Inc. Laser Acoustic Resonance Spectroscopy systems"
 readme = "README.md"
-requires-python = ">=3.8,<3.13"
+requires-python = ">=3.8,<3.10"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: Other/Proprietary License",
