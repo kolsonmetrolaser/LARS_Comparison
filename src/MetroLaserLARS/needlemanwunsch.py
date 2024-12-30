@@ -10,7 +10,6 @@ import numpy as np
 from numpy.typing import NDArray
 from numba import njit, prange
 from time import time
-from typing import Literal
 
 
 @njit  # (parallel=True)
@@ -202,13 +201,13 @@ def find_matches(x: NDArray, y: NDArray, max_stretch: float = 0.02, num_stretche
     return bestrx, bestry, bestq, best_stretch, search_space_delta
 
 
-def combine_peaks(peaks: Literal[tuple[dict], None] = None) -> dict:
+def combine_peaks(peaks: tuple[dict] | None = None) -> dict:
     """
     Combines multiple dictionaries of identified peaks into a single dictionary
 
     Parameters
     ----------
-    peaks : Literal[tuple[dict], None], optional
+    peaks : tuple[dict] | None, optional
         tuple of the peaks dictionary, below
         peaks : dict
             A dictionary of peak data, containing the keys:
@@ -225,8 +224,6 @@ def combine_peaks(peaks: Literal[tuple[dict], None] = None) -> dict:
         A single combined peak dictionary
 
     """
-    from copy import deepcopy
-    original_peaks = deepcopy(peaks)
 
     combined_peaks = {}
     while peaks:
