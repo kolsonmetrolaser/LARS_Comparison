@@ -513,7 +513,7 @@ See the log for more detail, available in the log window or
                           'activebackground': active_bg, 'activeforeground': active_fg}
 
     common_kwargs = {'update_status': update_status, 'varframe': root}
-    threaded_var = tk.BooleanVar(root, value=False)
+    threaded_var = tk.BooleanVar(root, value=True)
 
     # Start building App
 
