@@ -102,6 +102,7 @@ def can_skip_calculation(calculation: str = 'fitting', **settings: dict) -> bool
                     or ('max_noise_reduction_iter' in diff_keys and recursive_noise_reduction and standard_peak_fitting)
                     or ('regularization_ratio' in diff_keys and recursive_noise_reduction and standard_peak_fitting)
                     or ('ml_threshold' in diff_keys and ml_peak_fitting)
+                    or ('ml_weights_path' in diff_keys and ml_peak_fitting)
                 )
             # Rematch peaks if these are different
             if calculation in ['matching']:

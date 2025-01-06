@@ -14,8 +14,11 @@ padding_heading = {'pady': 10, 'padx': 10}
 padding_setting = {'pady': 4, 'padx': 4}
 padding_option = {'pady': 0, 'padx': 4}
 padding_none = {'pady': 0, 'padx': 0}
-kwargs_pickle = {'title': "Select a data_dict[...].pkl file",
-                 'filetypes': [("Pickled Data Dictionaries", "data_dict*.pkl"), ("All Files", "*.*")]}
+filetype_kwargs = {'pickle': {'title': "Select a data_dict[...].pkl file",
+                              'filetypes': [("Pickled Data Dictionaries", "data_dict*.pkl"), ("All Files", "*.*")]},
+                   'ml_weights': {'title': "Select a weights file",
+                                  'filetypes': [("weights", "*.h5"), ("All Files", "*.*")]}
+                   }
 
 background_color = '#FFFEFC'
 entry_color = 'white'
@@ -404,8 +407,7 @@ def labeled_file_select(baseframe, headingtxt: str = '', varframe=None, subheadi
         entry = tk.Entry(frame, width=entry_width, textvariable=var, bg=entry_color)
         if selection == 'file':
             fun = select_file
-            if filetype == 'pickle':
-                kwargs = kwargs_pickle
+            kwargs = filetype_kwargs[filetype]
         elif selection == 'dir':
             kwargs = {}
             fun = select_directory

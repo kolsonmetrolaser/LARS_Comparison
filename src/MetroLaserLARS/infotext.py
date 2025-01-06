@@ -244,6 +244,11 @@ spectrum with peak confidence levels above this threshold will be marked
 as a peak.
 """
 
+ml_weights = """
+Set weights for machine learning peak finding. A default set of weights
+is included with the program.
+"""
+
 max_stretch = """
 Maximum stretching factor allowed. The stretching factor is a scaling factor
 for the frequencies of the measured data with respect to the reference data,
@@ -376,6 +381,7 @@ infotext = {
     'max_noise_reduction_iter': max_noise_reduction_iter,
     'regularization_ratio': regularization_ratio,
     'ml_threshold': ml_threshold,
+    'ml_weights': ml_weights,
     'max_stretch': max_stretch,
     'num_stretches': num_stretches,
     'stretching_iterations': stretching_iterations,

@@ -91,6 +91,7 @@ def run_app_main():
             settings['regularization_ratio']      = regularization_ratio_var.get() # noqa
             # machine learning
             settings['ml_threshold']              = ml_threshold_var.get() # noqa
+            settings['ml_weights_path']           = ml_weights_path_var.get() # noqa
             # PEAK MATCHING
             # stretching
             settings['max_stretch']               = max_stretch_var.get() # noqa
@@ -171,6 +172,7 @@ def run_app_main():
             regularization_ratio_var.set(      settings['regularization_ratio'] if 'regularization_ratio' in settings else 0.5) # noqa
             # machine learning
             ml_threshold_var.set(              settings['ml_threshold'] if 'ml_threshold' in settings else 0.01) # noqa
+            ml_weights_path_var.set(           settings['ml_weights_path'] if 'ml_weights_path' in settings else 'default weights') # noqa
             # PEAK MATCHING
             # stretching
             max_stretch_var.set(               settings['max_stretch'] if 'max_stretch' in settings else 0.02) # noqa
@@ -511,7 +513,7 @@ See the log for more detail, available in the log window or
                           'activebackground': active_bg, 'activeforeground': active_fg}
 
     common_kwargs = {'update_status': update_status, 'varframe': root}
-    threaded_var = tk.BooleanVar(root, value=True)
+    threaded_var = tk.BooleanVar(root, value=False)
 
     # Start building App
 
@@ -547,6 +549,7 @@ All pairs of subfolders will be compared.""",
                                                                subheading='Load data from previous analysis.',
                                                                label='Enter path to pickled data or select a file:',
                                                                infotext=infotext['pickled_data_path'], side=tk.LEFT,
+                                                               filetype='pickle',
                                                                **common_kwargs)
     frame_load_button = tk.Frame(roottop)
     frame_load_button.pack(side=tk.TOP)
@@ -716,6 +719,8 @@ All pairs of subfolders will be compared.""",
     # PEAK FITTING
     frame_peak_fit = tk.Frame(rootr)
     frame_peak_fit.pack(side=tk.TOP)
+    frame_peak_fit_split = tk.Frame(frame_peak_fit)
+    frame_peak_fit_split.pack(side=tk.BOTTOM)
     heading("Peak Fitting", lvl=1, frame=frame_peak_fit, padding=False)
 
     peak_fitting_strategy_var, _, _, _, _, _ = labeled_options(frame_peak_fit, 'Peak Fitting Algorithm:',
@@ -726,9 +731,9 @@ All pairs of subfolders will be compared.""",
                                                                **common_kwargs)
     peak_fitting_strategy_var.trace_add("write", update_peak_fitting_settings)
 
-    frame_peak_fitl = tk.Frame(frame_peak_fit)
+    frame_peak_fitl = tk.Frame(frame_peak_fit_split)
     frame_peak_fitl.pack(side=tk.LEFT)
-    frame_peak_fitr = tk.Frame(frame_peak_fit)
+    frame_peak_fitr = tk.Frame(frame_peak_fit_split)
     frame_peak_fitr.pack(side=tk.LEFT)
     heading_baseline = heading("Baseline", lvl=2, frame=frame_peak_fitl, padding=False)
     heading_smoothing = heading("Smoothing", lvl=2, frame=frame_peak_fitr, padding=False)
@@ -815,7 +820,13 @@ All pairs of subfolders will be compared.""",
         labeled_entry(frame_peak_fitl, 'ML confidence threshold:',
                       padding=padding_setting, vardefault=0.01, vartype=tk.DoubleVar,
                       infotext=infotext['ml_threshold'], **common_kwargs)
-    ml_threshold_frame.pack_forget()
+
+    import infotext as it
+    ml_weights_path_var, ml_weights_path_frame, _, _, _, _ = labeled_file_select(frame_peak_fit,
+                                                                                 label='ML weights file:',
+                                                                                 vardefault='default weights',
+                                                                                 filetype='ml_weights',
+                                                                                 infotext=it.ml_weights, side=tk.TOP, **common_kwargs)
 
     peak_fitting_objects_std = [heading_baseline,
                                 baseline_smoothness_frame, baseline_polyorder_frame, baseline_itermax_frame,
@@ -826,9 +837,12 @@ All pairs of subfolders will be compared.""",
                                 heading_noise_reduction,
                                 recursive_noise_reduction_frame, max_noise_reduction_iter_frame, regularization_ratio_frame]
     peak_fitting_objects_ml = [heading_ml_settings,
-                               ml_threshold_frame,
+                               ml_threshold_frame, ml_weights_path_frame,
                                heading_smoothing,
                                sgf_windowsize_frame, sgf_applications_frame, sgf_polyorder_frame]
+    for o in peak_fitting_objects_ml:
+        if o not in peak_fitting_objects_std:
+            o.pack_forget()
 
     # PEAK MATCHING
     frame_peak_match = tk.Frame(rootr)

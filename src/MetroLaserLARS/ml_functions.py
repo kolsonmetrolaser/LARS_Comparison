@@ -26,12 +26,17 @@ except ModuleNotFoundError:
     from MetroLaserLARS.app_helpers import resource_path  # type: ignore
     from MetroLaserLARS.helpers import peaks_dict_from_array  # type: ignore
 
+default_ml_weights_path = 'output/weights/009.weights.h5'
+
 
 def load_model(**settings):
     ml_classes = 3 if 'ml_classes' not in settings else settings['ml_classes']
     ml_windows = 256 if 'ml_windows' not in settings else settings['ml_windows']
-    ml_weights_path = 'output/weights/009.weights.h5' if 'ml_weights_path' not in settings else settings['ml_weights_path']
+    ml_weights_path = default_ml_weights_path if 'ml_weights_path' not in settings else settings['ml_weights_path']
     ml_input_size = 8192 if 'ml_input_size' not in settings else settings['ml_input_size']
+
+    if ml_weights_path == 'default weights':
+        ml_weights_path = default_ml_weights_path
 
     label_encoder = LabelEncoder(ml_windows)
     model = ConvNet(
@@ -45,7 +50,14 @@ def load_model(**settings):
         output_shape=(ml_windows, ml_classes),
         residual=False
     )
-    model.load_weights(resource_path(ml_weights_path))
+    if ml_weights_path != default_ml_weights_path:
+        try:
+            model.load_weights(ml_weights_path)
+        except Exception:
+            print('Loading custom ML peak finding weights failed, reverting to default weights')
+            model.load_weights(resource_path(default_ml_weights_path))
+    else:
+        model.load_weights(resource_path(ml_weights_path))
     return model, label_encoder
 
 
@@ -108,13 +120,13 @@ def analyze_data(data: LarsData, **settings) -> tuple[dict, NDArray, NDArray, ND
 
     newvels = sgf(vels, n=sgf_applications, w=sgf_windowsize, p=sgf_polyorder)
 
-    probs, locs, areas = predict(freqs, newvels, settings['model'], settings['label_encoder'], **settings)
+    probs, locs, areas = predict(freqs, newvels, settings['model'], settings['label_encoder'], settings)
 
     peaks = peaks_dict_from_array(locs)
     return peaks, freqs, vels, newvels, name
 
 
-def predict(x: NDArray, y: NDArray, model, label_encoder, **settings):
+def predict(x: NDArray, y: NDArray, model, label_encoder, settings):
     ml_peak_fit_threshold = 0.01 if 'ml_threshold' not in settings else settings['ml_threshold']
     ml_input_size = 8192 if 'ml_input_size' not in settings else settings['ml_input_size']
 
