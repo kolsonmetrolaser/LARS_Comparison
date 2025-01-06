@@ -7,10 +7,10 @@ Created on Tue Nov 12 15:08:28 2024
 import tkinter as tk
 
 try:
-    from infotext import infotext
+    import infotext as it
     from app_helpers import labeled_options, labeled_entry, make_window
 except ModuleNotFoundError:
-    from MetroLaserLARS.infotext import infotext  # type: ignore
+    import MetroLaserLARS.infotext as it  # type: ignore
     from MetroLaserLARS.app_helpers import labeled_options, labeled_entry, make_window  # type: ignore
 
 
@@ -94,9 +94,9 @@ grouped folder structure" is set to True).""")
     labeled_options(window, 'Definition type:',
                     var=part_matching_strategy_var,
                     options=options,
-                    infotext=infotext['part_matching_strategy'], **common_kwargs)
+                    infotext=it.part_matching_strategy, **common_kwargs)
 
-    labeled_entry(window, 'Reference Part(s):', var=reference_var, entry_width=20, infotext=infotext['reference'])
+    labeled_entry(window, 'Reference Part(s):', var=reference_var, entry_width=20, infotext=it.reference)
 
     frame_input = tk.Frame(window)
     frame_input.pack()

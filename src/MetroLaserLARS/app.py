@@ -19,7 +19,7 @@ from PyThreadKiller import PyThreadKiller
 
 # Internal imports
 try:
-    from infotext import infotext
+    import infotext as it
     from LARS_Comparison import LARS_Comparison_from_app
     from app_helpers import heading, labeled_options, labeled_file_select, labeled_entry
     from app_helpers import padding_none, padding_setting, padding_option, padding_heading
@@ -31,7 +31,7 @@ try:
     from app_window_results_table import open_results_table_window
     from app_window_peak_list import open_peak_list_window
 except ModuleNotFoundError:
-    from MetroLaserLARS.infotext import infotext  # type: ignore
+    import MetroLaserLARS.infotext as it  # type: ignore
     from MetroLaserLARS.LARS_Comparison import LARS_Comparison_from_app  # type: ignore
     from MetroLaserLARS.app_helpers import heading, labeled_options, labeled_file_select, labeled_entry  # type: ignore
     from MetroLaserLARS.app_helpers import padding_none, padding_setting, padding_option, padding_heading  # type: ignore
@@ -526,7 +526,7 @@ See the log for more detail, available in the log window or
 All pairs of subfolders will be compared.""",
                                                        label='Enter path to LARS data or select a folder:',
                                                        selection='dir',
-                                                       infotext=infotext['directory'], **common_kwargs)
+                                                       infotext=it.directory, **common_kwargs)
 
     frame_data_format = tk.Frame(rootload)
     frame_data_format.pack(side=tk.TOP)
@@ -534,21 +534,21 @@ All pairs of subfolders will be compared.""",
     data_format_var, _, _, _, _, _ = labeled_options(frame_data_format, 'Data format to load:',
                                                      padding=padding_setting, vartype=tk.StringVar,
                                                      vardefault='auto', options=['auto', '.all', '.csv', '.tdms', '.npz'],
-                                                     infotext=infotext['data_format'], side=tk.LEFT, **common_kwargs)
+                                                     infotext=it.data_format, side=tk.LEFT, **common_kwargs)
     # new_data_format
     new_data_format_var, _, _, _, _, _ = labeled_options(frame_data_format, 'Save data to different format (does not work when loading .all):',
                                                          padding=padding_setting, vartype=tk.StringVar,
                                                          vardefault='none',
                                                          options=['none', '.csv', '.npz', '.all', '.csv and .npz',
                                                                   '.all and .npz', 'all of the above'],
-                                                         infotext=infotext['new_data_format'], **common_kwargs)
+                                                         infotext=it.new_data_format, **common_kwargs)
 
     # pickled_data_path
 
     pickled_data_path_var, _, _, _, _, _ = labeled_file_select(rootload, headingtxt='Pickled Data',
                                                                subheading='Load data from previous analysis.',
                                                                label='Enter path to pickled data or select a file:',
-                                                               infotext=infotext['pickled_data_path'], side=tk.LEFT,
+                                                               infotext=it.pickled_data_path, side=tk.LEFT,
                                                                filetype='pickle',
                                                                **common_kwargs)
     frame_load_button = tk.Frame(roottop)
@@ -574,18 +574,18 @@ All pairs of subfolders will be compared.""",
     slc_limits_max_var, _, _, _, _, _ = labeled_entry(frame_slc_limits, '-',
                                                       postlabel='Hz', padding=padding_none,
                                                       vardefault=60000, vartype=tk.DoubleVar, side=tk.LEFT,
-                                                      infotext=infotext['slc_limits'], **common_kwargs)
+                                                      infotext=it.slc_limits, **common_kwargs)
 
     # combine
     combine_var, _, _, _, _, _ = labeled_options(rootl, 'How data within a folder should be combined:',
                                                  padding=padding_setting, vartype=tk.StringVar,
                                                  vardefault='max', options=['max', 'mean', 'none', 'all'],
-                                                 infotext=infotext['combine'], **common_kwargs)
+                                                 infotext=it.combine, **common_kwargs)
 
     # grouped_folders
     grouped_folders_var, _, _, _, _, _ = labeled_options(rootr, 'Use grouped folder structure:', padding=padding_setting,
                                                          vartype=tk.StringVar, vardefault=bool_options[1],
-                                                         infotext=infotext['grouped_folders'], **common_kwargs)
+                                                         infotext=it.grouped_folders, **common_kwargs)
 
     # part_matching
     frame_part_matching = tk.Frame(rootr)
@@ -656,25 +656,25 @@ All pairs of subfolders will be compared.""",
     peak_plot_width_var, _, _, _, _, _ = labeled_entry(rootl, 'Width of peak fit plots:',
                                                        postlabel='kHz', padding=padding_setting,
                                                        vardefault=20, vartype=tk.DoubleVar,
-                                                       infotext=infotext['peak_plot_width'], **common_kwargs)
+                                                       infotext=it.peak_plot_width, **common_kwargs)
 
     # show_plots
     frame_show_save_plots = tk.Frame(rootl)
     frame_show_save_plots.pack(side=tk.TOP)
     show_plots_var, _, _, _, _, _ = labeled_options(frame_show_save_plots, 'Show plots:', padding=padding_setting,
                                                     side=tk.LEFT, vartype=tk.StringVar, vardefault=bool_options[1],
-                                                    infotext=infotext['show_plots'], **common_kwargs)
+                                                    infotext=it.show_plots, **common_kwargs)
 
     # save_plots
     save_plots_var, _, _, _, _, _ = labeled_options(frame_show_save_plots, 'Save plots:', padding=padding_setting,
                                                     side=tk.LEFT, vartype=tk.StringVar, vardefault=bool_options[1],
-                                                    infotext=infotext['save_plots'], **common_kwargs)
+                                                    infotext=it.save_plots, **common_kwargs)
 
     # PRINT_MODE
     PRINT_MODE_var, _, _, _, _, _ = labeled_options(rootl, 'Print details:',
                                                     padding=padding_setting, vartype=tk.StringVar,
                                                     vardefault='full', options=['none', 'sparse', 'full'],
-                                                    infotext=infotext['PRINT_MODE'], **common_kwargs)
+                                                    infotext=it.PRINT_MODE, **common_kwargs)
     # SAVING
 
     heading("Saving", lvl=1, frame=rootl, padding=False)
@@ -682,18 +682,18 @@ All pairs of subfolders will be compared.""",
     # save_data
     save_data_var, _, _, _, _, _ = labeled_options(rootl, 'Save data to .pkl file:', padding=padding_setting,
                                                    vartype=tk.StringVar, vardefault=bool_options[0], command=hide_save_tag,
-                                                   infotext=infotext['save_data'], **common_kwargs)
+                                                   infotext=it.save_data, **common_kwargs)
 
     # save_results
     save_results_var, _, _, _, _, _ = labeled_options(rootl, 'Save results to .pkl file:', padding=padding_setting,
                                                       vartype=tk.StringVar, vardefault=bool_options[0], command=hide_save_tag,
-                                                      infotext=infotext['save_results'], **common_kwargs)
+                                                      infotext=it.save_results, **common_kwargs)
 
     # save_tag
     save_tag_var, frame_save_tag, save_tag_label, save_tag_entry, save_tag_label2, save_tag_infolabel =\
         labeled_entry(rootl, 'Save filename: data_dict... and peak_results', postlabel='.pkl', padding=padding_setting,
                       vardefault='', vartype=tk.StringVar,
-                      infotext=infotext['save_tag'], **common_kwargs)
+                      infotext=it.save_tag, **common_kwargs)
     save_tag_var.trace_add("write", update_save_tag_label)
 
     save_tag_dummy_label = tk.Label(frame_save_tag, text=" "*42, font=("Courier New", 9))
@@ -701,7 +701,7 @@ All pairs of subfolders will be compared.""",
     # save_directory
     save_directory_var, _, _, _, _, _ = labeled_file_select(rootl, subheading='Enter path or select a folder to save results, data, and/or plots:',
                                                             selection='dir', vardefault='Same as LARS Data Directory',
-                                                            infotext=infotext['save_folder'], **common_kwargs)
+                                                            infotext=it.save_folder, **common_kwargs)
 
     def update_peak_fitting_settings(*args):
         if peak_fitting_strategy_var.get() == 'Machine Learning':
@@ -727,7 +727,7 @@ All pairs of subfolders will be compared.""",
                                                                padding=padding_setting, vartype=tk.StringVar,
                                                                vardefault='Standard',
                                                                options=['Standard', 'Machine Learning'],
-                                                               infotext=infotext['peak_fitting_strategy'], side=tk.TOP,
+                                                               infotext=it.peak_fitting_strategy, side=tk.TOP,
                                                                **common_kwargs)
     peak_fitting_strategy_var.trace_add("write", update_peak_fitting_settings)
 
@@ -742,37 +742,37 @@ All pairs of subfolders will be compared.""",
     baseline_smoothness_var, baseline_smoothness_frame, _, _, _, _ =\
         labeled_entry(frame_peak_fitl, 'Basline smoothness: 10^',
                       padding=padding_setting, vardefault=12, vartype=tk.DoubleVar,
-                      infotext=infotext['baseline_smoothness'], **common_kwargs)
+                      infotext=it.baseline_smoothness, **common_kwargs)
 
     # baseline_polyorder
     baseline_polyorder_var, baseline_polyorder_frame, _, _, _, _ =\
         labeled_entry(frame_peak_fitl, 'Basline polyorder:',
                       padding=padding_setting, vardefault=2, vartype=tk.IntVar,
-                      infotext=infotext['baseline_polyorder'], **common_kwargs)
+                      infotext=it.baseline_polyorder, **common_kwargs)
 
     # baseline_itermax
     baseline_itermax_var, baseline_itermax_frame, _, _, _, _ =\
         labeled_entry(frame_peak_fitl, 'Basline itermax:',
                       padding=padding_setting, vardefault=10, vartype=tk.IntVar,
-                      infotext=infotext['baseline_itermax'], **common_kwargs)
+                      infotext=it.baseline_itermax, **common_kwargs)
 
     # sgf_windowsize
     sgf_windowsize_var, sgf_windowsize_frame, _, _, _, _ =\
         labeled_entry(frame_peak_fitr, 'SGF Windowsize:',
                       padding=padding_setting, vardefault=101, vartype=tk.IntVar,
-                      infotext=infotext['sgf_windowsize'], **common_kwargs)
+                      infotext=it.sgf_windowsize, **common_kwargs)
 
     # sgf_applications
     sgf_applications_var, sgf_applications_frame, _, _, _, _ =\
         labeled_entry(frame_peak_fitr, 'SGF Applications:',
                       padding=padding_setting, vardefault=2, vartype=tk.IntVar,
-                      infotext=infotext['sgf_applications'], **common_kwargs)
+                      infotext=it.sgf_applications, **common_kwargs)
 
     # sgf_polyorder
     sgf_polyorder_var, sgf_polyorder_frame, _, _, _, _ =\
         labeled_entry(frame_peak_fitr, 'SGF polyorder:',
                       padding=padding_setting, vardefault=0, vartype=tk.IntVar,
-                      infotext=infotext['sgf_polyorder'], **common_kwargs)
+                      infotext=it.sgf_polyorder, **common_kwargs)
 
     # headings
     heading_peak_finding = heading("Peak Finding", lvl=2, frame=frame_peak_fitl, padding=False)
@@ -782,46 +782,45 @@ All pairs of subfolders will be compared.""",
     peak_height_min_var, peak_height_min_frame, _, _, _, _ =\
         labeled_entry(frame_peak_fitl, 'Peak height minimum: noise *',
                       padding=padding_setting, vardefault=1.2, vartype=tk.DoubleVar,
-                      infotext=infotext['peak_height_min'], **common_kwargs)
+                      infotext=it.peak_height_min, **common_kwargs)
 
     # peak_prominence_min
     peak_prominence_min_var, peak_prominence_min_frame, _, _, _, _ =\
         labeled_entry(frame_peak_fitl, 'Peak prominence minimum: noise *',
                       padding=padding_setting, vardefault=1.2, vartype=tk.DoubleVar,
-                      infotext=infotext['peak_prominence_min'], **common_kwargs)
+                      infotext=it.peak_prominence_min, **common_kwargs)
 
     # peak_ph_ratio_min
     peak_ph_ratio_min_var, peak_ph_ratio_min_frame, _, _, _, _ =\
         labeled_entry(frame_peak_fitl, 'Peak prominence-to-height minimum:',
                       padding=padding_setting, vardefault=0.5, vartype=tk.DoubleVar,
-                      infotext=infotext['peak_ph_ratio_min'], **common_kwargs)
+                      infotext=it.peak_ph_ratio_min, **common_kwargs)
 
     # recursive_noise_reduction
     recursive_noise_reduction_var, recursive_noise_reduction_frame, _, _, _, _ =\
         labeled_options(frame_peak_fitr, 'Recursively reduce noise:',
                         padding=padding_setting, vartype=tk.StringVar,
                         vardefault=bool_options[0],
-                        infotext=infotext['recursive_noise_reduction'], **common_kwargs)
+                        infotext=it.recursive_noise_reduction, **common_kwargs)
 
     # max_noise_reduction_iter
     max_noise_reduction_iter_var, max_noise_reduction_iter_frame, _, _, _, _ =\
         labeled_entry(frame_peak_fitr, 'Max noise reduction iterations:',
                       padding=padding_setting, vardefault=10, vartype=tk.IntVar,
-                      infotext=infotext['max_noise_reduction_iter'], **common_kwargs)
+                      infotext=it.max_noise_reduction_iter, **common_kwargs)
 
     # regularization_ratio
     regularization_ratio_var, regularization_ratio_frame, _, _, _, _ =\
         labeled_entry(frame_peak_fitr, 'Noise reduction regularization factor:',
                       padding=padding_setting, vardefault=0.5, vartype=tk.DoubleVar,
-                      infotext=infotext['regularization_ratio'], **common_kwargs)
+                      infotext=it.regularization_ratio, **common_kwargs)
 
     heading_ml_settings = heading("ML Settings", lvl=2, frame=frame_peak_fitl, padding=False)
     ml_threshold_var, ml_threshold_frame, _, _, _, _ =\
         labeled_entry(frame_peak_fitl, 'ML confidence threshold:',
                       padding=padding_setting, vardefault=0.01, vartype=tk.DoubleVar,
-                      infotext=infotext['ml_threshold'], **common_kwargs)
+                      infotext=it.ml_threshold, **common_kwargs)
 
-    import infotext as it
     ml_weights_path_var, ml_weights_path_frame, _, _, _, _ = labeled_file_select(frame_peak_fit,
                                                                                  label='ML weights file:',
                                                                                  vardefault='default weights',
@@ -859,19 +858,19 @@ All pairs of subfolders will be compared.""",
     # max_stretch
     max_stretch_var, _, _, _, _, _ = labeled_entry(frame_peak_matchl, 'Max stretching: 1 ±',
                                                    padding=padding_setting, vardefault=0.02, vartype=tk.DoubleVar,
-                                                   infotext=infotext['max_stretch'], **common_kwargs)
+                                                   infotext=it.max_stretch, **common_kwargs)
 
     # num_stretches
     num_stretches_var, _, _, _, _, _ = labeled_entry(frame_peak_matchl, 'Number of stretches per iteration: 10^',
                                                      padding=padding_setting, vardefault=4, vartype=tk.DoubleVar,
-                                                     infotext=infotext['num_stretches'], **common_kwargs)
+                                                     infotext=it.num_stretches, **common_kwargs)
 
     # nw_normalized
     nw_normalized_var, _, _, _, _, _ = labeled_options(frame_peak_matchr, 'Normalize frequency for peak matching:',
                                                        padding=padding_setting, vartype=tk.StringVar,
                                                        vardefault=bool_options[1],
                                                        command=update_peak_match_window_label,
-                                                       infotext=infotext['nw_normalized'], **common_kwargs)
+                                                       infotext=it.nw_normalized, **common_kwargs)
 
     # peak_match_window
     # var, frame, label1, entry, label2, infolabel
@@ -881,13 +880,13 @@ All pairs of subfolders will be compared.""",
                       postlabel='Hz',
                       padding=padding_setting, vardefault=150,
                       vartype=tk.DoubleVar,
-                      infotext=infotext['peak_match_window'], **common_kwargs)
+                      infotext=it.peak_match_window, **common_kwargs)
 
     # matching_penalty_order
     matching_penalty_order_var, _, _, _, _, _ = labeled_entry(frame_peak_matchr,
                                                               'Matching penalty order:',
                                                               padding=padding_setting, vardefault=1, vartype=tk.DoubleVar,
-                                                              infotext=infotext['matching_penalty_order'], **common_kwargs)
+                                                              infotext=it.matching_penalty_order, **common_kwargs)
 
     # dummy
     frame_dummy = tk.Frame(frame_peak_matchr)
