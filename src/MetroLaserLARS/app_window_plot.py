@@ -368,8 +368,10 @@ def open_plot_window(root, data_dict_var, pair_results_var, slc_limits_min_var, 
             custom_plot_action_var.set('Clear All')
             custom_plot_clear_var.set(False)
             return
-
-        data_selection2_var.trace_remove("write", data_selection2_var_traceid_var.get())
+        try:
+            data_selection2_var.trace_remove("write", data_selection2_var_traceid_var.get())
+        except tk.TclError:
+            pass
         update_plot_contents(canvas, name_to_key, **common_kwargs)
         traceid = data_selection2_var.trace_add("write", update_plot_contents_wrapper)
         data_selection2_var_traceid_var.set(traceid)
