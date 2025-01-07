@@ -2,7 +2,7 @@
 """
 Created on Mon Oct 28 12:46:51 2024
 
-@author: KOl'son
+@author: KOlson
 """
 
 import pickle

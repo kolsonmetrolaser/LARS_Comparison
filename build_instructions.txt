@@ -28,7 +28,7 @@ pyinstaller --onefile **.py
 
 current:
 conda activate larsexe
-pip install --upgrade git+https://github.com/kolsonmetrolaser/LARS_Comparison
+pip install --force-reinstall --upgrade git+https://github.com/kolsonmetrolaser/LARS_Comparison --no-deps
 	if "CredentialHelperSelector" popup, install the .exe from 
 	https://github.com/microsoft/Git-Credential-Manager-for-Windows/releases
 cd **.py file directory**
