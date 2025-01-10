@@ -120,7 +120,13 @@ def analyze_data(data: LarsData, **settings) -> tuple[dict, NDArray, NDArray, ND
 
     newvels = sgf(vels, n=sgf_applications, w=sgf_windowsize, p=sgf_polyorder)
 
-    probs, locs, areas = predict(freqs, newvels, settings['model'], settings['label_encoder'], settings)
+    if slc_limits[1]-slc_limits[0] < 50_000:
+        df = freqs[1]-freqs[0]
+        addon = np.linspace(np.max(freqs)+df, np.min(freqs)+50_000-2*df, int((np.min(freqs)+50_000-np.max(freqs)-2*df)/df))
+        freqs = np.append(freqs, addon)
+        newvels = np.append(newvels, newvels[-1]*np.ones_like(addon))
+
+    _, locs, _ = predict(freqs, newvels, settings['model'], settings['label_encoder'], settings)
 
     peaks = peaks_dict_from_array(locs)
     return peaks, freqs, vels, newvels, name
