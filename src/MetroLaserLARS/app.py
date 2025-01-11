@@ -28,6 +28,7 @@ try:
     from app_helpers import background_color as bgc
     from app_window_part_matching import open_part_matching_window
     from app_window_plot import open_plot_window
+    from app_window_clustering import open_clustering_window
     from app_window_results_table import open_results_table_window
     from app_window_peak_list import open_peak_list_window
 except ModuleNotFoundError:
@@ -40,6 +41,7 @@ except ModuleNotFoundError:
     from MetroLaserLARS.app_helpers import background_color as bgc  # type: ignore
     from MetroLaserLARS.app_window_part_matching import open_part_matching_window  # type: ignore
     from MetroLaserLARS.app_window_plot import open_plot_window  # type: ignore
+    from MetroLaserLARS.app_window_clustering import open_clustering_window  # type: ignore
     from MetroLaserLARS.app_window_results_table import open_results_table_window  # type: ignore
     from MetroLaserLARS.app_window_peak_list import open_peak_list_window  # type: ignore
 
@@ -915,6 +917,10 @@ All pairs of subfolders will be compared.""",
                                                  pair_results_var,
                                                  slc_limits_min_var,
                                                  slc_limits_max_var),
+                padding=padding_heading)
+
+    make_button(rootbuttons, text="Clustering",
+                command=lambda: open_clustering_window(root, pair_results_var),
                 padding=padding_heading)
 
     make_button(rootbuttons, text="Results Table",

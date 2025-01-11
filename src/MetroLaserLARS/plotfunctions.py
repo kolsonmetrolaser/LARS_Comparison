@@ -435,7 +435,7 @@ You must supply 'z' only or all three.""")
 def line_plot(x: ArrayLike, y: ArrayLike, legend=None, x_lim: tuple[float, float] = None,
               y_lim: tuple[float, float] = None, fig_size: tuple[float, float] = (12, 9), x_label: str = None,
               y_label: str = None, title: str = None, legend_location='outside', legend_title: str = None,
-              fname: str = None, line_width: float = 6, cmap=None, cmap_custom=None, style='-',
+              fname: str = None, line_width: float = 6, cmap=None, cmap_custom=None, colors_custom=None, style='-',
               axis_line_width: float = 4, plot_scale: float = 1, show_plot_in_spyder: bool = True,
               save_folder: Optional[str] = None, font_settings: dict = {'weight': 'bold', 'size': 22}, y_format=None,
               x_ticks: Optional[ArrayLike] = None, y_ticks: Optional[ArrayLike] = None,
@@ -443,7 +443,8 @@ def line_plot(x: ArrayLike, y: ArrayLike, legend=None, x_lim: tuple[float, float
               v_line_legend=None,
               y_norm: Literal[None, 'global', 'each'] = None, fig=None,
               x_slice: tuple[float, float] = (-np.inf, np.inf), legend_interactive: bool = False,
-              clear_fig: bool = True, autoconvert_to_vlines: bool = False):
+              clear_fig: bool = True, autoconvert_to_vlines: bool = False, markersize: int = 6,
+              text: Optional[list[str]] = None, force_square: bool = False):
 
     if not show_plot_in_spyder and fname is None and fig is None:
         return None
@@ -525,7 +526,13 @@ def line_plot(x: ArrayLike, y: ArrayLike, legend=None, x_lim: tuple[float, float
         ax.spines[axis].set_linewidth(axis_line_width)
         ax.tick_params(width=axis_line_width, length=2*axis_line_width, direction='in')
 
-    if cmap is not None:
+    if force_square:
+        ax.set_aspect('equal')
+
+    if colors_custom is not None:
+        colors = colors_custom
+
+    if colors_custom is None and cmap is not None:
         if cmap == 'list' and cmap_custom is not None:
             colors = []
             for i in range(len(y)):
@@ -542,26 +549,35 @@ def line_plot(x: ArrayLike, y: ArrayLike, legend=None, x_lim: tuple[float, float
             for i in range(len(y)):
                 colors.append(colormap((i+1)/(len(y)+1)))
 
-    if any(isinstance(el, list) for el in y) or isinstance(y, list):
-        if any(isinstance(el, list) for el in x) or isinstance(x, list):
+    if any(isinstance(el, list) for el in y) or isinstance(y, list) or colors_custom is not None:
+        if any(isinstance(el, list) for el in x) or isinstance(x, list) or colors_custom is not None:
             for idx, (plotx, ploty) in enumerate(zip(x, y)):
-                if cmap is not None:
+                if cmap is not None or colors_custom is not None:
                     ax.plot(plotx, ploty, style, color=colors[idx],
-                            label=legend[idx] if legend is not None else '')
+                            label=legend[idx] if legend is not None else '',
+                            markersize=markersize)
                 else:
                     ax.plot(plotx, ploty, style,
-                            label=legend[idx] if legend is not None else '')
+                            label=legend[idx] if legend is not None else '',
+                            markersize=markersize)
         else:
             for idx, ploty in enumerate(y):
                 if cmap is not None:
                     ax.plot(x, ploty, style, color=colors[idx],
-                            label=legend[idx] if legend is not None else '')
+                            label=legend[idx] if legend is not None else '',
+                            markersize=markersize)
                 else:
                     ax.plot(x, ploty, style,
-                            label=legend[idx] if legend is not None else '')
+                            label=legend[idx] if legend is not None else '',
+                            markersize=markersize)
     else:
         ax.plot(x, y, style,
-                label=legend if legend is not None else '')
+                label=legend if legend is not None else '',
+                markersize=markersize)
+
+    if text is not None and len(text) == len(x) and len(text) == len(y):
+        for i, t in enumerate(text):
+            ax.annotate(" "+t, (x[i], y[i]))
 
     if y_format is not None:
         ax.yaxis.set_major_formatter(y_format)
