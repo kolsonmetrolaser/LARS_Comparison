@@ -48,8 +48,10 @@ def open_clustering_window(root, pair_results_var):
     for i in range(num_points):
         print(f'{names[i]: >10}: {clusterer.labels_[i]}')
 
-    nmds = MDS(n_components=2, metric=True, max_iter=3000, eps=1e-12, dissimilarity="precomputed", n_jobs=1)
-    pos = nmds.fit_transform(pairwise_distances**2)
+    mds_seed = np.random.RandomState(seed=0)
+    mds = MDS(n_components=2, metric=True, max_iter=3000, eps=1e-12,
+              dissimilarity="precomputed", n_jobs=1, random_state=mds_seed)
+    pos = mds.fit_transform(pairwise_distances**2)
 
     # Rotate data so the the first point is in the 0, 1 position
     if pos[0, 0] == 0 and pos[0, 1] == 0:
