@@ -8,6 +8,7 @@ Created on Wed Oct  2 08:49:38 2024
 import numpy as np
 from numpy.typing import ArrayLike
 from numpy.testing import assert_equal
+from scipy.stats import gmean
 import os.path as osp
 import pickle
 
@@ -159,3 +160,55 @@ def peaks_dict_from_array(locs):
     peaks['lefts'] = np.nan*np.zeros_like(locs)
     peaks['rights'] = np.nan*np.zeros_like(locs)
     return peaks
+
+
+def names_from_pair_results(pair_results):
+    names = []
+    for pr in pair_results:
+        if pr['names'][0] not in names:
+            names.append(pr['names'][0])
+        if pr['names'][1] not in names:
+            names.append(pr['names'][1])
+    return names
+
+
+def pair_result_from_names(pair_results, name1, name2):
+    for pr in pair_results:
+        if ((name1 == pr['names'][0] and name2 == pr['names'][1])
+                or (name1 == pr['names'][1] and name2 == pr['names'][0])):
+            return pr
+    return None
+
+
+def array_from_pair_results(pair_results, key: str = 'stretch'):
+    names = names_from_pair_results(pair_results)
+    n = len(names)
+    A = np.nan*np.ones((n, n))
+
+    for i in range(n):
+        for j in range(n):
+            pr = pair_result_from_names(pair_results, names[i], names[j])
+            if pr is not None:
+                A[i, j] = 1/pr[key] if key == 'stretch' and j > i else pr[key]
+
+    return A
+
+
+def transitivity_2(A: ArrayLike = [[]]):
+    M = np.array(A)
+
+    if len(np.shape(M)) != 2 and np.shape(M)[0] != np.shape(M)[1]:
+        raise ValueError("Input must be an nxn ArrayLike object")
+
+    n = np.shape(M)[0]
+
+    transitivity = np.nan*np.ones_like(M)
+
+    for i in range(n):
+        for j in range(i+1, n):
+            if i != j:
+                transitivity[i, j] = gmean([min(M[i, k]*M[k, j]/M[i, j],
+                                                M[i, j]/(M[i, k]*M[k, j]))
+                                            for k in range(n)
+                                            if k != i and k != j])
+    return gmean(transitivity.flatten(), nan_policy='omit'), np.nanmin(transitivity)

@@ -13,10 +13,12 @@ try:
     from app_helpers import labeled_options, labeled_entry, padding_setting, make_window
     from app_helpers import labeled_widget_label, make_button
     from app_helpers import background_color as bgc
+    from helpers import transitivity_2, array_from_pair_results
 except ModuleNotFoundError:
     from MetroLaserLARS.app_helpers import labeled_options, labeled_entry, padding_setting, make_window  # type: ignore
     from MetroLaserLARS.app_helpers import labeled_widget_label, make_button  # type: ignore
     from MetroLaserLARS.app_helpers import background_color as bgc  # type: ignore
+    from MetroLaserLARS.helpers import transitivity_2, array_from_pair_results  # type: ignore
 
 
 def get_curr_screen_geometry():
@@ -93,8 +95,6 @@ def open_results_table_window(root, data_dict_var, pair_results_var, **common_kw
         default_font_name = tk.font.nametofont('TkTextFont').actual()['family']
         default_font_name = ''.join(default_font_name.split())
 
-        if data is None:
-            data = table_options_var.get()
         input_to_internal = {'Match Probability': 'match_probability',
                              'Stretching Factor': 'stretch',
                              'Matching Quality': 'quality',
@@ -103,15 +103,19 @@ def open_results_table_window(root, data_dict_var, pair_results_var, **common_kw
                              'Number of Unmatched Peaks': 'unmatched',
                              }
 
-        explainers = {'match_probability': 'A∩B/(A+B-A∩B) where A and B are the sets of peaks',
-                      'stretch': 'The frequencies of the measurements are multiplied by the stretch value',
-                      'quality': 'Average distance between peaks',
-                      'same_part': '1 if the parts were defined as equal, 0 if not',
+        data = input_to_internal[data] if data in input_to_internal else input_to_internal[table_options_var.get()]
+
+        if data is None:
+            data = table_options_var.get()
+
+        transitivity_gmean, transitivity_min = transitivity_2(array_from_pair_results(pair_results, 'stretch')) if data == 'stretch' else (0, 0)
+        explainers = {'match_probability': 'A∩B/(A+B-A∩B) where A and B are the sets of peaks.',
+                      'stretch': f'The frequencies of the measurements are multiplied by the stretch value.    Overall transitivity: {transitivity_gmean:.5f}    Worst transitivity: {transitivity_min:.5f}',
+                      'quality': 'Average distance between peaks.',
+                      'same_part': '1 if the parts were defined as equal, 0 if not.',
                       'matched': 'Number of matching peaks. The diagonal gives the number of peaks for that part.',
                       'unmatched': 'Number of non-matching peaks.'
                       }
-
-        data = input_to_internal[data] if data in input_to_internal else data
 
         explainer_label.config(text=explainers[data])
 

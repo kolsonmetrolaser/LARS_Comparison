@@ -218,7 +218,10 @@ Only load .npz, .tdms, .all, or .csv files. Full path: {permanent_path}"""
                 # else:
                 #     ldvV = data[nn['v']]
 
-                return cls(name=pathlib.Path(permanent_path).parts[-2], path=osp.split(permanent_path)[0],
+                # return cls(name=osp.basename(permanent_path), path=permanent_path,
+                #            time=np.array([]), pztV=np.array([]),
+                #            ldvV=np.array([]), freq=data[nn['f']], vel=data[nn['a']])
+                return cls(name=osp.join(*(pathlib.Path(osp.splitext(permanent_path)[0]).parts[-2:])), path=permanent_path,
                            time=np.array([]), pztV=np.array([]),
                            ldvV=np.array([]), freq=data[nn['f']], vel=data[nn['a']])
             # elif unrecognized_columns and len(data) == 5:  # in a .all style format
@@ -228,6 +231,9 @@ Only load .npz, .tdms, .all, or .csv files. Full path: {permanent_path}"""
             #     return cls(name=osp.basename(permanent_path), path=permanent_path, time=np.array([]), pztV=np.array([]),
             #                ldvV=np.array([]), freq=data_list[3], vel=data_list[4])
             elif unrecognized_columns and ext == '.LARSsim':
+                return cls(name=osp.basename(permanent_path), path=permanent_path,
+                           time=np.array([]), pztV=np.array([]),
+                           ldvV=np.array([]), freq=data[nn['f']], vel=np.array([]))
                 return cls(name=pathlib.Path(permanent_path).parts[-2], path=osp.split(permanent_path)[0],
                            time=np.array([]), pztV=np.array([]),
                            ldvV=np.array([]), freq=data[nn['f']], vel=np.array([]))
