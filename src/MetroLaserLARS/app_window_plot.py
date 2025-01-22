@@ -12,10 +12,10 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 
 try:
     from plotfunctions import line_plot, make_legend_interactive
-    from app_helpers import CustomVar, padding_setting, plot_style_widget, make_window
+    from app_helpers import CustomVar, padding_setting, plot_style_widget, make_window, labeled_entry
 except ModuleNotFoundError:
     from MetroLaserLARS.plotfunctions import line_plot, make_legend_interactive  # type: ignore
-    from MetroLaserLARS.app_helpers import CustomVar, padding_setting, plot_style_widget, make_window  # type: ignore
+    from MetroLaserLARS.app_helpers import CustomVar, padding_setting, plot_style_widget, make_window, labeled_entry  # type: ignore
 
 
 def open_plot_window(root, data_dict_var, pair_results_var, slc_limits_min_var, slc_limits_max_var, **common_kwargs):
@@ -160,16 +160,22 @@ def open_plot_window(root, data_dict_var, pair_results_var, slc_limits_min_var, 
             data_selection2_menu.pack_forget()
             custom_plot_action_label.pack_forget()
             custom_plot_action_menu.pack_forget()
+            stretch_label.pack_forget()
+            stretch_entry.pack_forget()
         elif t in ['Compare Raw', 'Matched Peaks']:
             data_selection2_label.pack(side=tk.LEFT)
             data_selection2_menu.pack(side=tk.LEFT)
             custom_plot_action_label.pack_forget()
             custom_plot_action_menu.pack_forget()
+            stretch_label.pack_forget()
+            stretch_entry.pack_forget()
         elif t in ['Custom Plot']:
             data_selection2_label.pack_forget()
             data_selection2_menu.pack_forget()
             custom_plot_action_label.pack(side=tk.LEFT)
             custom_plot_action_menu.pack(side=tk.LEFT)
+            stretch_label.pack(side=tk.LEFT)
+            stretch_entry.pack(side=tk.LEFT)
 
         # Make Plots
         if t == 'Raw Data':
@@ -183,8 +189,6 @@ def open_plot_window(root, data_dict_var, pair_results_var, slc_limits_min_var, 
             _ = line_plot(x, y, legend=[n], x_label='Frequency (kHz)', y_label='Intensity (µm/s)',
                           y_lim=y_lim, title='Raw Data', **kwargs)
         elif t == 'Peak Fits':
-            data_selection2_label.pack_forget()
-            data_selection2_menu.pack_forget()
             x, y, p = data.freq.copy()/1000, data.newvel.copy(), data.peaks['positions']/1000
             f0, f1 = common_kwargs['x_lim']
             x = x[np.logical_and(x > f0, x < f1)]
@@ -249,6 +253,7 @@ def open_plot_window(root, data_dict_var, pair_results_var, slc_limits_min_var, 
                               title='Stretched peak matches raw', **kwargs)
         elif t == 'Custom Plot':
             action = custom_plot_action_var.get()
+            stretch = stretch_var.get()
             if action == 'Clear All':
                 if (
                     len(canvas.figure.get_children()) != 1
@@ -262,10 +267,10 @@ def open_plot_window(root, data_dict_var, pair_results_var, slc_limits_min_var, 
                 ):
                     canvas.figure.clear()
             elif 'Add' in action:
-                x, p = data.freq.copy()/1000, data.peaks['positions']/1000
+                x, p = stretch*data.freq.copy()/1000, stretch*data.peaks['positions']/1000
                 y = data.newvel.copy() if 'Smoothed' in action else data.vel.copy()
                 f0, f1 = common_kwargs['x_lim']
-                x = x[np.logical_and(x > f0, x < f1)] if 'Smoothed' in action else x
+                x = x[np.logical_and(x > stretch*f0, x < stretch*f1)] if 'Smoothed' in action else x
 
                 if 'with Peaks' in action:
                     vline_kwargs = {'v_line_pos': p, 'v_line_width': 2, 'v_line_legend': [n+' Peaks']}
@@ -351,6 +356,9 @@ def open_plot_window(root, data_dict_var, pair_results_var, slc_limits_min_var, 
     data_selection2_label = tk.Label(frame_options, text="Data to Compare")
     data_selection2_menu = ttk.OptionMenu(frame_options, data_selection2_var,
                                           data2_options[0], *data2_options)
+
+    stretch_var, _, stretch_label, stretch_entry, _, _ = labeled_entry(frame_options, label='Stretch', varframe=window,
+                                                                       vardefault=1, vartype=tk.DoubleVar, infobox=False)
 
     custom_plot_options = ['Add Raw', 'Add Smoothed', 'Add Raw with Peaks', 'Add Smoothed with Peaks',
                            'Remove', 'Remove Peaks', 'Clear All']
