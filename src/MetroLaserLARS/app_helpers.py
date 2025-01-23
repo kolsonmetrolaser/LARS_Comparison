@@ -85,10 +85,15 @@ def clone_widget(widget, master=None):
 def log_decorator(func, log_var, log_file_loc_var, running_var):
     def inner(inputStr):
         try:
-            log_var.set(log_var.get()+inputStr)
-            if not running_var.get():
-                with open(log_file_loc_var.get(), 'a') as f:
-                    f.write(inputStr)
+            new_text = log_var.get() + inputStr
+            if len(new_text) > 100000:
+                pass
+            if not running_var.get() or len(new_text) > 100000:
+                with open(log_file_loc_var.get(), 'a', encoding="utf-8") as f:
+                    f.write(new_text)
+                    log_var.set('')
+            else:
+                log_var.set(log_var.get()+inputStr)
             return func(inputStr)
         except Exception:
             print('Error inside log_decorator, doing default print')
@@ -107,12 +112,14 @@ def make_window(parent, title: str = '', size: tuple[int, int] | None = None):
     return window
 
 
-def open_log_window(root, log_var):
+def open_log_window(root, log_var, log_file_loc_var):
     window = make_window(root, "Log", (800, 450))
     print('opened log window')
 
     log_text = tk.Text(window, bg='white')
-    log_text.insert("0.0", log_var.get())
+    with open(log_file_loc_var.get(), 'r') as f:
+        text_from_log_file = f.read()
+    log_text.insert("0.0", text_from_log_file + log_var.get())
     log_text.pack(side=tk.LEFT, expand=True, fill='both')
 
     def update_log(*_):

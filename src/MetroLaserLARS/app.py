@@ -267,8 +267,9 @@ def run_app_main():
 
         def progress_window_cleanup():
             running_var.set(False)
-            with open(log_file_loc_var.get(), 'w', encoding="utf-8") as f:
+            with open(log_file_loc_var.get(), 'a', encoding="utf-8") as f:
                 f.write(log_var.get())
+            log_var.set('')
             update_status()
             progress_window.destroy()
 
@@ -933,7 +934,7 @@ All pairs of subfolders will be compared.""",
                 padding=padding_heading)
 
     make_button(rootbuttons, text="Log",
-                command=lambda: open_log_window(root, log_var),
+                command=lambda: open_log_window(root, log_var, log_file_loc_var),
                 padding=padding_heading)
 
     directory_var_prev = tk.StringVar(root, value='')
