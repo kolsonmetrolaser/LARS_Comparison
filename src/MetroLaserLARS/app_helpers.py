@@ -86,8 +86,6 @@ def log_decorator(func, log_var, log_file_loc_var, running_var):
     def inner(inputStr):
         try:
             new_text = log_var.get() + inputStr
-            if len(new_text) > 100000:
-                pass
             if not running_var.get() or len(new_text) > 100000:
                 with open(log_file_loc_var.get(), 'a', encoding="utf-8") as f:
                     f.write(new_text)
