@@ -13,7 +13,6 @@ import scipy.signal as sig
 import pywt
 
 #  TODO: explore autotuning filters with https://nirpyresearch.com/choosing-optimal-parameters-savitzky-golay-smoothing-filter/
-#  TODO: try skimage wavelet denoising https://nirpyresearch.com/wavelet-denoising-spectra/
 
 
 def sgf(a: ArrayLike, n: int = 1, w: int = 101, p: int = 0) -> NDArray:
