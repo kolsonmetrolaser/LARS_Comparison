@@ -573,7 +573,7 @@ All pairs of subfolders will be compared.""",
 
     # stft
     stft_var, _, _, _, _, _ = labeled_options(rootl, 'Use STFT:', padding=padding_setting,
-                                              side=tk.LEFT, vartype=tk.StringVar, vardefault=bool_options[1],
+                                              side=tk.TOP, vartype=tk.StringVar, vardefault=bool_options[1],
                                               infotext=it.stft, **common_kwargs)
 
     # slc_limits and slc limits
@@ -788,7 +788,7 @@ All pairs of subfolders will be compared.""",
 
     # hybrid_smoothing
     hybrid_smoothing_var, _, _, _, _, _ = labeled_options(frame_peak_fitr, 'Use hybrid smoothing:', padding=padding_setting,
-                                                          side=tk.LEFT, vartype=tk.StringVar, vardefault=bool_options[1],
+                                                          side=tk.TOP, vartype=tk.StringVar, vardefault=bool_options[1],
                                                           infotext=it.hybrid_smoothing, **common_kwargs)
     # headings
     heading_peak_finding = heading("Peak Finding", lvl=2, frame=frame_peak_fitl, padding=False)
