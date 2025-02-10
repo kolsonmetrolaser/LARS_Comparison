@@ -6,7 +6,6 @@ Created on Mon Nov 18 15:52:07 2024
 """
 import tkinter as tk
 import numpy as np
-import pathlib
 import os.path as osp
 from copy import copy
 
