@@ -64,7 +64,7 @@ def wavelet_smoothing_filter(a: ArrayLike, threshold: float = 0.05, family: str 
     return a
 
 
-def hybrid_smoothing(a: ArrayLike, savgol_n: int = 1, savgol_w: int = 15, savgol_p: int = 3, wt_threshold: float = 0.05):
+def hybrid_smoothing_filter(a: ArrayLike, savgol_n: int = 1, savgol_w: int = 15, savgol_p: int = 3, wt_threshold: float = 0.05):
     return sgf(wavelet_smoothing_filter(a, threshold=wt_threshold), savgol_n, savgol_w, savgol_p)
 
 

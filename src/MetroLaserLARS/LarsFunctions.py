@@ -20,14 +20,14 @@ try:
     import LarsDataClass
     from LarsDataClass import LarsData
     import plotfunctions as pf
-    from filters import airpls, sgf, hybrid_smoothing
+    from filters import airpls, sgf, hybrid_smoothing_filter
     from helpers import group, can_skip_calculation, peaks_dict_from_array
     import needlemanwunsch as nw
 except ModuleNotFoundError:
     from MetroLaserLARS import LarsDataClass  # type: ignore
     from MetroLaserLARS.LarsDataClass import LarsData  # type: ignore
     import MetroLaserLARS.plotfunctions as pf  # type: ignore
-    from MetroLaserLARS.filters import airpls, sgf, hybrid_smoothing  # type: ignore
+    from MetroLaserLARS.filters import airpls, sgf, hybrid_smoothing_filter  # type: ignore
     from MetroLaserLARS.helpers import group, can_skip_calculation, peaks_dict_from_array  # type: ignore
     import MetroLaserLARS.needlemanwunsch as nw  # type: ignore
 
@@ -281,6 +281,7 @@ def analyze_data(data: LarsData, **settings) -> tuple[dict, NDArray, NDArray, ND
     save_folder = settings['save_folder']
     save_plots = settings['save_plots'] if 'save_plots' in settings else False
     show_plots = settings['show_plots'] if 'show_plots' in settings else False
+    hybrid_smoothing = settings['hybrid_smoothing'] if 'hybrid_smoothing' in settings else False
     PRINT_MODE = settings['PRINT_MODE'] if 'PRINT_MODE' in settings else 'none'
 
     freqs = data.freq
@@ -301,8 +302,7 @@ def analyze_data(data: LarsData, **settings) -> tuple[dict, NDArray, NDArray, ND
               simulated peaks at:     {peaklist/1000} kHz""")
         return peaks, freqs, data.vel, data.vel, data.name
 
-    old_smoothing = True
-    if old_smoothing:
+    if not hybrid_smoothing:
 
         vels = data.vel[slc]
 
@@ -314,7 +314,7 @@ def analyze_data(data: LarsData, **settings) -> tuple[dict, NDArray, NDArray, ND
 
         peaks = fit_peaks(freqs, vels_filtered, **settings)
     else:
-        vels = hybrid_smoothing(data.vel, savgol_w=15, savgol_p=3)[slc]
+        vels = hybrid_smoothing_filter(data.vel, savgol_w=15, savgol_p=3)[slc]
         vels_baseline_removed, baseline = vels, np.zeros_like(vels)
         vels_rms_norm_zeroed, noise = remove_noise(vels_baseline_removed)
         vels_filtered = vels_rms_norm_zeroed
@@ -347,7 +347,7 @@ def analyze_data(data: LarsData, **settings) -> tuple[dict, NDArray, NDArray, ND
             break
         vels_peaks_removed = vels_peaks_removed[indices_nonpeak]
 
-        if old_smoothing:
+        if not hybrid_smoothing:
             _, baseline_peaks_removed = remove_baseline(vels_peaks_removed_for_baseline, **settings)
             baseline = baseline_peaks_removed.copy()
 
@@ -367,7 +367,7 @@ def analyze_data(data: LarsData, **settings) -> tuple[dict, NDArray, NDArray, ND
 
         vels_rms_norm_zeroed, noise = remove_noise(vels_baseline_removed, noise=noise)
 
-        if old_smoothing:
+        if not hybrid_smoothing:
             vels_filtered = sgf(vels_rms_norm_zeroed, n=sgf_applications, w=sgf_windowsize, p=sgf_polyorder)
         else:
             vels_filtered = vels_rms_norm_zeroed
@@ -474,6 +474,7 @@ def LARS_analysis(folder: str = '', previously_loaded_data: None | LarsData = No
 
     """
     peak_fitting_strategy = 'Standard' if 'peak_fitting_strategy' not in settings else settings['peak_fitting_strategy']
+    use_stft = False if 'stft' not in settings else settings['stft']
 
     if folder == '':
         return None
