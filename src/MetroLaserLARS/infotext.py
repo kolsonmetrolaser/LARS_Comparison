@@ -350,51 +350,10 @@ of parts to compare against separated by a comma and a space
 (e.g.: Part1, Part2, Part3)
 """
 
-
-# infotext = {
-#     # DATA
-#     'directory': directory,
-#     'data_format': data_format,
-#     'new_data_format': new_data_format,
-#     'pickled_data_path': pickled_data_path,
-#     'slc_limits': slc_limits,
-#     'combine': combine,
-#     'plot': plot,
-#     'plot_detail': plot_detail,
-#     'plot_recursive_noise': plot_recursive_noise,
-#     'plot_classification': plot_classification,
-#     'show_plots': show_plots,
-#     'save_plots': save_plots,
-#     'peak_plot_width': peak_plot_width,
-#     'PRINT_MODE': PRINT_MODE,
-#     'peak_fitting_strategy': peak_fitting_strategy,
-#     'baseline_smoothness': baseline_smoothness,
-#     'baseline_polyorder': baseline_polyorder,
-#     'baseline_itermax': baseline_itermax,
-#     'sgf_applications': sgf_applications,
-#     'sgf_windowsize': sgf_windowsize,
-#     'sgf_polyorder': sgf_polyorder,
-#     'peak_height_min': peak_height_min,
-#     'peak_prominence_min': peak_prominence_min,
-#     'peak_ph_ratio_min': peak_ph_ratio_min,
-#     'recursive_noise_reduction': recursive_noise_reduction,
-#     'max_noise_reduction_iter': max_noise_reduction_iter,
-#     'regularization_ratio': regularization_ratio,
-#     'ml_threshold': ml_threshold,
-#     'ml_weights': ml_weights,
-#     'max_stretch': max_stretch,
-#     'num_stretches': num_stretches,
-#     'stretching_iterations': stretching_iterations,
-#     'stretch_iteration_factor': stretch_iteration_factor,
-#     'peak_match_window': peak_match_window,
-#     'matching_penalty_order': matching_penalty_order,
-#     'nw_normalized': nw_normalized,
-#     'save_data': save_data,
-#     'save_results': save_results,
-#     'save_tag': save_tag,
-#     'save_folder': save_folder,
-#     'save_settings': save_settings,
-#     'grouped_folders': grouped_folders,
-#     'part_matching_strategy': part_matching_strategy,
-#     'reference': reference
-# }
+stretching_transitivity = """
+This is an approximate measure of the quality of the stretching data. One should
+expect the stretching factor between the spectra for A and C to be the same as
+the stretching factor between A and B multiplied by that between B and C. That is,
+stretching should be transitive (A->C = A->B->C). This number is the geometric mean
+of the ratio between paths of length 1 and length 2, and should be very close to 1.
+"""

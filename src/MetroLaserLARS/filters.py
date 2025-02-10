@@ -10,6 +10,10 @@ from numpy.typing import ArrayLike, NDArray
 from scipy import sparse
 from scipy.sparse.linalg import spsolve
 import scipy.signal as sig
+import pywt
+
+#  TODO: explore autotuning filters with https://nirpyresearch.com/choosing-optimal-parameters-savitzky-golay-smoothing-filter/
+#  TODO: try skimage wavelet denoising https://nirpyresearch.com/wavelet-denoising-spectra/
 
 
 def sgf(a: ArrayLike, n: int = 1, w: int = 101, p: int = 0) -> NDArray:
@@ -44,6 +48,25 @@ def sgf(a: ArrayLike, n: int = 1, w: int = 101, p: int = 0) -> NDArray:
         return sig.savgol_filter(a, w, p, mode='nearest')
     else:
         return sgf(sig.savgol_filter(a, w, p, mode='nearest'), n-1)
+
+
+def wavelet_smoothing_filter(a: ArrayLike, threshold: float = 0.05, family: str = 'db3', mode: str = 'symmetric', threshold_mode: str = 'garrote', max_level: int = 3):
+    #  threshold_mode='garrote' probably better
+    wp = pywt.WaveletPacket(data=a,
+                            wavelet=family,
+                            mode=mode,
+                            maxlevel=max_level)
+    for node in wp.get_level(max_level):
+        data = node.data
+        thresholded_data = pywt.threshold(data, threshold*np.max(np.abs(data)), mode=threshold_mode)
+        node.data = thresholded_data
+    a = wp.reconstruct(update=False)
+    a[a < 0] = 0
+    return a
+
+
+def hybrid_smoothing(a: ArrayLike, savgol_n: int = 1, savgol_w: int = 15, savgol_p: int = 3, wt_threshold: float = 0.05):
+    return sgf(wavelet_smoothing_filter(a, threshold=wt_threshold), savgol_n, savgol_w, savgol_p)
 
 
 def whittaker_smooth(x, w, lam, differences=1):

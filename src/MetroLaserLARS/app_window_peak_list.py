@@ -19,7 +19,7 @@ except ModuleNotFoundError:
     from MetroLaserLARS.app_helpers import make_window  # type: ignore
 
 
-def open_peak_list_window(root, data_dict_var):
+def open_peak_list_window(root, data_dict_var, directory_var):
 
     window = make_window(root, "Peak List", (800, 450))
 
@@ -83,7 +83,8 @@ def open_peak_list_window(root, data_dict_var):
             dataout[i, :len(v.peaks['positions'])] = v.peaks['positions']
             header += v.name + ','
         header = header[:-1]
-        f = osp.join(pathlib.Path(list(dd.keys())[0]).parent, 'peak_list.csv')
+        # f = osp.join(pathlib.Path(list(dd.keys())[0]).parent, 'peak_list.csv')
+        f = osp.join(directory_var.get(), 'peak_list.csv')
         np.savetxt(f, dataout.T, delimiter=',', header=header)
         print(f'Saved peak list to {f}')
 

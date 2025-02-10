@@ -20,14 +20,14 @@ try:
     import LarsDataClass
     from LarsDataClass import LarsData
     import plotfunctions as pf
-    from filters import airpls, sgf
+    from filters import airpls, sgf, hybrid_smoothing
     from helpers import group, can_skip_calculation, peaks_dict_from_array
     import needlemanwunsch as nw
 except ModuleNotFoundError:
     from MetroLaserLARS import LarsDataClass  # type: ignore
     from MetroLaserLARS.LarsDataClass import LarsData  # type: ignore
     import MetroLaserLARS.plotfunctions as pf  # type: ignore
-    from MetroLaserLARS.filters import airpls, sgf  # type: ignore
+    from MetroLaserLARS.filters import airpls, sgf, hybrid_smoothing  # type: ignore
     from MetroLaserLARS.helpers import group, can_skip_calculation, peaks_dict_from_array  # type: ignore
     import MetroLaserLARS.needlemanwunsch as nw  # type: ignore
 
@@ -123,6 +123,9 @@ def fit_peaks(x: ArrayLike, y: ArrayLike, **settings) -> dict:
 
     peak_height_min = settings['peak_height_min'] if 'peak_height_min' in settings else 0.2
     peak_prominence_min = settings['peak_prominence_min'] if 'peak_prominence_min' in settings else 0.2
+
+    # TODO: ignore prominence and ph ratio mins when peak is at very edge of data
+
     peak_ph_ratio_min = settings['peak_ph_ratio_min'] if 'peak_ph_ratio_min' in settings else 0.5
 
     d = {}
@@ -298,15 +301,24 @@ def analyze_data(data: LarsData, **settings) -> tuple[dict, NDArray, NDArray, ND
               simulated peaks at:     {peaklist/1000} kHz""")
         return peaks, freqs, data.vel, data.vel, data.name
 
-    vels = data.vel[slc]
+    old_smoothing = True
+    if old_smoothing:
 
-    vels_baseline_removed, baseline = remove_baseline(vels, **settings)
+        vels = data.vel[slc]
 
-    vels_rms_norm_zeroed, noise = remove_noise(vels_baseline_removed)
+        vels_baseline_removed, baseline = remove_baseline(vels, **settings)
 
-    vels_filtered = sgf(vels_rms_norm_zeroed, n=sgf_applications, w=sgf_windowsize, p=sgf_polyorder)
+        vels_rms_norm_zeroed, noise = remove_noise(vels_baseline_removed)
 
-    peaks = fit_peaks(freqs, vels_filtered, **settings)
+        vels_filtered = sgf(vels_rms_norm_zeroed, n=sgf_applications, w=sgf_windowsize, p=sgf_polyorder)
+
+        peaks = fit_peaks(freqs, vels_filtered, **settings)
+    else:
+        vels = hybrid_smoothing(data.vel, savgol_w=15, savgol_p=3)[slc]
+        vels_baseline_removed, baseline = vels, np.zeros_like(vels)
+        vels_rms_norm_zeroed, noise = remove_noise(vels_baseline_removed)
+        vels_filtered = vels_rms_norm_zeroed
+        peaks = fit_peaks(freqs, vels_filtered, **settings)
 
     if plot and ((plot_detail and not recursive_noise_reduction)
                  or (recursive_noise_reduction and plot_recursive_noise)):
@@ -335,12 +347,16 @@ def analyze_data(data: LarsData, **settings) -> tuple[dict, NDArray, NDArray, ND
             break
         vels_peaks_removed = vels_peaks_removed[indices_nonpeak]
 
-        _, baseline_peaks_removed = remove_baseline(vels_peaks_removed_for_baseline, **settings)
-        baseline = baseline_peaks_removed.copy()
+        if old_smoothing:
+            _, baseline_peaks_removed = remove_baseline(vels_peaks_removed_for_baseline, **settings)
+            baseline = baseline_peaks_removed.copy()
 
-        updated_baseline = baseline.copy()
+            updated_baseline = baseline.copy()
 
-        vels_peaks_removed_baseline_removed = vels_peaks_removed - baseline[indices_nonpeak]
+            vels_peaks_removed_baseline_removed = vels_peaks_removed - baseline[indices_nonpeak]
+        else:
+            updated_baseline = np.zeros_like(remove_baseline(vels_peaks_removed_for_baseline, **settings)[1])
+            vels_peaks_removed_baseline_removed = vels_peaks_removed
 
         rms = np.sqrt(np.mean(vels_peaks_removed_baseline_removed**2))
         # rms = np.std(vels_peaks_removed_baseline_removed)
@@ -351,7 +367,10 @@ def analyze_data(data: LarsData, **settings) -> tuple[dict, NDArray, NDArray, ND
 
         vels_rms_norm_zeroed, noise = remove_noise(vels_baseline_removed, noise=noise)
 
-        vels_filtered = sgf(vels_rms_norm_zeroed, n=sgf_applications, w=sgf_windowsize, p=sgf_polyorder)
+        if old_smoothing:
+            vels_filtered = sgf(vels_rms_norm_zeroed, n=sgf_applications, w=sgf_windowsize, p=sgf_polyorder)
+        else:
+            vels_filtered = vels_rms_norm_zeroed
 
         peaks_updated = fit_peaks(freqs, vels_filtered, **settings)
 
@@ -486,7 +505,78 @@ def LARS_analysis(folder: str = '', previously_loaded_data: None | LarsData = No
         analysis_func = analyze_data
     analysis_list = []
     for data_to_analyze in data_to_analyze_list:
-        analysis = analysis_func(data_to_analyze, **settings)
+        # TODO : make this a proper setting
+        use_stft = False
+        if use_stft:
+            print('using stft...')
+            from copy import deepcopy
+            import scipy.signal as sig
+            import plotfunctions as pf
+            from helpers import get_lines_of_data
+            data_to_analyze_stft = deepcopy(data_to_analyze)
+            f, t, a = sig.stft(np.concatenate(data_to_analyze_stft.ldvV), round(1/(data_to_analyze_stft.time[1]-data_to_analyze_stft.time[0])), nperseg=125000//4)
+            a = np.abs(a)
+            # fres, tres = len(f), len(t)
+            sweep_start, sweep_end, sweep_time = 10000, 70000, 2
+            n = 1
+            for i in range(1):
+                mask = get_lines_of_data(t, f, a, sweep_start, sweep_end, sweep_time, n)
+                _, F = np.meshgrid(t, f)
+                f, a = F[mask], a[mask]
+
+                f_u, ui = np.unique(f, return_inverse=True)
+                a_u = np.zeros_like(f_u)
+                np.add.at(a_u, ui, a)
+                a_u /= np.max(t)/sweep_time
+            pf.line_plot(f_u, a_u/np.max(a_u), style='.')
+            pf.line_plot(data_to_analyze_stft.freq[20000:], data_to_analyze_stft.vel[20000:]/np.max(data_to_analyze_stft.vel[20000:]), style='.')
+            data_to_analyze_stft.freq = f_u
+            data_to_analyze_stft.vel = a_u
+            analysis = analysis_func(data_to_analyze_stft, **settings)
+
+            def remove_duplicate_peaks(peaks):
+                done = False
+                delta = 1.01
+                original_peak_count = peaks['count']
+                while not done:
+                    max_same = 0
+                    max_same_positions = []
+                    positions = peaks['positions']
+                    for pos in positions:
+                        same_positions = [i for i, p in enumerate(positions) if p > pos/delta and p < pos*delta]
+                        max_same = max(max_same, len(same_positions))
+                        max_same_positions = same_positions if max_same == len(same_positions) else max_same_positions
+                    if max_same > 1:
+                        mask = np.ones(len(positions), dtype=bool)
+                        mask[max_same_positions] = False
+
+                        peaks['positions'] = np.concatenate((positions[:max_same_positions[0]],
+                                                             [np.mean(positions[max_same_positions])],
+                                                             positions[max_same_positions[-1]+1:]))
+                        peaks['lefts'] = np.concatenate((peaks['lefts'][:max_same_positions[0]],
+                                                         [np.min(peaks['lefts'][max_same_positions])],
+                                                         peaks['lefts'][max_same_positions[-1]+1:]))
+                        peaks['rights'] = np.concatenate((peaks['rights'][:max_same_positions[0]],
+                                                          [np.max(peaks['rights'][max_same_positions])],
+                                                          peaks['rights'][max_same_positions[-1]+1:]))
+                        peaks['heights'] = np.concatenate((peaks['heights'][:max_same_positions[0]],
+                                                           [np.max(peaks['heights'][max_same_positions])],
+                                                           peaks['heights'][max_same_positions[-1]+1:]))
+                        peaks['widths'] = np.concatenate((peaks['widths'][:max_same_positions[0]],
+                                                          [peaks['rights'][max_same_positions[0]] - peaks['lefts'][max_same_positions[0]]],
+                                                          peaks['widths'][max_same_positions[-1]+1:]))
+                        peaks['count'] = len(peaks['positions'])
+                        peaks['indices'] = np.arange(len(peaks['positions']))
+                    else:
+                        done = True
+                        if peaks['count'] < original_peak_count:
+                            print(f"""    condensed duplicate peaks to:     {peaks['positions']/1000} kHz""")
+                return peaks
+
+            analysis = (remove_duplicate_peaks(analysis[0]),)+analysis[1:]
+            pass
+        else:
+            analysis = analysis_func(data_to_analyze, **settings)
         analysis_list.append(analysis)
         data_to_analyze.newvel = analysis[3]
         data_to_analyze.peaks = analysis[0]

@@ -231,11 +231,11 @@ def combine_peaks(peaks: tuple[dict] | None = None) -> dict:
             # TODO: determine new peaks
             tmp_peaks = peaks[0]
 
-            # Peaks are the same if they are within 0.3%
+            # Peaks are the same if they are within 1% (used to be 0.3%)
             # print(pos_tmp)
             # print(pos_com)
             bestrx, bestry, _, _, _ = find_matches(tmp_peaks['positions'], combined_peaks['positions'],
-                                                   max_stretch=0, gap=0.003, nw_normalized=True)
+                                                   max_stretch=0, gap=0.01, nw_normalized=True)
             for x, y in zip(bestrx, bestry):
                 if x == -1 and y != -1:  # in combined peaks but not tmp peaks
                     pass

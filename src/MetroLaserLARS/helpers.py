@@ -212,3 +212,24 @@ def transitivity_2(A: ArrayLike = [[]]):
                                             for k in range(n)
                                             if k != i and k != j])
     return gmean(transitivity.flatten(), nan_policy='omit'), np.nanmin(transitivity)
+
+
+def get_line_of_data(x, y, x0, y0, x1, y1, mask, width):
+    x0idx = 0 if x0 <= np.min(x) else (len(x)-1 if x0 >= np.max(x) else np.where(x >= x0)[0][0])
+    x1idx = 0 if x1 <= np.min(x) else (len(x)-1 if x1 >= np.max(x) else np.where(x > x1)[0][0]-1)
+    y0idx = 0 if y0 <= np.min(y) else (len(y)-1 if y0 >= np.max(y) else np.where(y >= y0)[0][0])
+    y1idx = 0 if y1 <= np.min(y) else (len(y)-1 if y1 >= np.max(y) else np.where(y > y1)[0][0]-1)
+    length = int(np.hypot(x1idx-x0idx, y1idx-y0idx))
+    xidx, yidx = np.linspace(x0idx, x1idx, length, dtype=int), np.linspace(y0idx, y1idx, length, dtype=int)
+    for j in range(width):
+        mask[yidx, xidx] = True
+        xidx[xidx < len(x)-1] += 1
+    return mask
+
+
+def get_lines_of_data(t, f, Zxx, sweep_start, sweep_end, sweep_time, width):
+    t_max = np.max(t)
+    mask = np.zeros_like(Zxx, dtype=bool)
+    for i in range(int(t_max/sweep_time)):
+        mask = get_line_of_data(t, f, sweep_time*i, sweep_start, sweep_time*(i+1), sweep_end, mask, width)
+    return mask

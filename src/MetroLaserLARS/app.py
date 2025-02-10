@@ -930,7 +930,7 @@ All pairs of subfolders will be compared.""",
                 padding=padding_heading)
 
     make_button(rootbuttons, text="Peak List",
-                command=lambda: open_peak_list_window(root, data_dict_var),
+                command=lambda: open_peak_list_window(root, data_dict_var, directory_var),
                 padding=padding_heading)
 
     make_button(rootbuttons, text="Log",

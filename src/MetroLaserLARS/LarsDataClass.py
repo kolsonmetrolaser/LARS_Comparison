@@ -130,6 +130,8 @@ class LarsData:
                 data[:, 3] = np.linspace(0, 0.5*(len(data[:, 3])-1), len(data[:, 3]))
             return cls(name=osp.basename(permanent_path), path=permanent_path, time=np.array([]), pztV=np.array([]),
                        ldvV=np.array([]), freq=data[:, 3], vel=data[:, 4])
+            # return cls(name=osp.basename(permanent_path), path=permanent_path, time=data[:, 0], pztV=data[:, 2],
+            #            ldvV=data[:, 5:].T, freq=data[:, 3], vel=data[:, 4])
 
         elif ext == '.csv':
             header = np.loadtxt(path, max_rows=1, delimiter=',', dtype=str)
@@ -159,8 +161,8 @@ class LarsData:
                 data[nn['a']] = datain[:, 1]
 
         else:
-            raise f"""Tried to load LARS data form an {ext} file, which is an invalid file type.
-Only load .npz, .tdms, .all, or .csv files. Full path: {permanent_path}"""
+            raise Exception(f"""Tried to load LARS data form an {ext} file, which is an invalid file type.
+Only load .npz, .tdms, .all, or .csv files. Full path: {permanent_path}""")
         if ext != '.all':
             if new_data_format in ['.npz', '.csv and .npz',
                                    '.all and .npz', 'all of the above', 'both']:
@@ -213,14 +215,9 @@ Only load .npz, .tdms, .all, or .csv files. Full path: {permanent_path}"""
                     unrecognized_columns = True
 
             if not unrecognized_columns:
-                # if data[nn['v']].ndim > 1:
-                #     ldvV = np.mean(data[nn['v']], axis=0)
-                # else:
-                #     ldvV = data[nn['v']]
-
-                # return cls(name=osp.basename(permanent_path), path=permanent_path,
-                #            time=np.array([]), pztV=np.array([]),
-                #            ldvV=np.array([]), freq=data[nn['f']], vel=data[nn['a']])
+                # return cls(name=osp.join(*(pathlib.Path(osp.splitext(permanent_path)[0]).parts[-2:])), path=permanent_path,
+                #            time=data[nn['t']], pztV=data[nn['p']],
+                #            ldvV=data[nn['v']], freq=data[nn['f']], vel=data[nn['a']])
                 return cls(name=osp.join(*(pathlib.Path(osp.splitext(permanent_path)[0]).parts[-2:])), path=permanent_path,
                            time=np.array([]), pztV=np.array([]),
                            ldvV=np.array([]), freq=data[nn['f']], vel=data[nn['a']])
