@@ -67,6 +67,13 @@ The file data_dict.pkl is created if the setting
 "Save data to .pkl file" is set to True.
 """
 
+stft = """
+Uses a Short Time Fourier Transform to analyze the data. Only available when the
+full time series data is saved. This technique ignores noise that is collected
+during parts of the measurement where the corresponding frequencies are not being
+excited, but reduces the frequency resolution significantly.
+"""
+
 slc_limits = """
 Select the maximum and minimum frequencies (in Hz) to be
 considered during data analysis. This does NOT need to
@@ -152,6 +159,11 @@ for Sovitzky-Golay filter.
 
 sgf_polyorder = """
 Polynomial order for Sovitzky-Golay filter.
+"""
+
+hybrid_smoothing = """
+Uses wavelet smoothing before applying the Sovitzky-Golay filter.
+Typically produces significantly better smoothing results.
 """
 
 peak_height_min = """

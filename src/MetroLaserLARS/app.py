@@ -58,6 +58,7 @@ def run_app_main():
             settings['pickled_data_path']         = pickled_data_path_var.get() # noqa
             settings['interpolate_raw_spectra']   = True # noqa
             # DATA DEFINITIONS
+            settings['stft']                      =True if stft_var.get() == 'True' else False # noqa
             settings['slc_limits']                = (slc_limits_min_var.get(), slc_limits_max_var.get()) # noqa
             settings['combine']                   = combine_var.get() # noqa
             settings['grouped_folders']           = True if grouped_folders_var.get() == 'True' else False # noqa
@@ -83,6 +84,7 @@ def run_app_main():
             settings['sgf_applications']          = sgf_applications_var.get() # noqa
             settings['sgf_windowsize']            = sgf_windowsize_var.get() # noqa
             settings['sgf_polyorder']             = sgf_polyorder_var.get() # noqa
+            settings['hybrid_smoothing']          = True if hybrid_smoothing_var.get() == 'True' else False # noqa
             # peak finding
             settings['peak_height_min']           = peak_height_min_var.get()-1 # noqa
             settings['peak_prominence_min']       = peak_prominence_min_var.get()-1 # noqa
@@ -138,6 +140,7 @@ def run_app_main():
             new_data_format_var.set(           settings['new_data_format'] if 'new_data_format' in settings else 'none') # noqa
             pickled_data_path_var.set(         settings['pickled_data_path'] if 'pickled_data_path' in settings else '') # noqa
             # DATA DEFINITIONS
+            stft_var.set(                      ('True' if settings['stft'] else 'False') if 'stft' in settings else 'False') # noqa
             slc_limits_min_var.set(            settings['slc_limits'][0] if 'slc_limits' in settings else 10000) # noqa
             slc_limits_max_var.set(            settings['slc_limits'][1] if 'slc_limits' in settings else 60000) # noqa
             combine_var.set(                   settings['combine'] if 'combine' in settings else 'max') # noqa
@@ -164,6 +167,7 @@ def run_app_main():
             sgf_applications_var.set(          settings['sgf_applications'] if 'sgf_applications' in settings else 2) # noqa
             sgf_windowsize_var.set(            settings['sgf_windowsize'] if 'sgf_windowsize' in settings else 101) # noqa
             sgf_polyorder_var.set(             settings['sgf_polyorder'] if 'sgf_polyorder' in settings else 0) # noqa
+            hybrid_smoothing_var.set(          ('True' if settings['hybrid_smoothing'] else 'False') if 'hybrid_smoothing' in settings else 'False') # noqa
             # peak finding
             peak_height_min_var.set(           settings['peak_height_min']+1 if 'peak_height_min' in settings else 0.2) # noqa
             peak_prominence_min_var.set(       settings['peak_prominence_min']+1 if 'peak_prominence_min' in settings else 0.2) # noqa
@@ -567,6 +571,11 @@ All pairs of subfolders will be compared.""",
 
     heading("Data", lvl=1, frame=rootl, side=tk.TOP)
 
+    # stft
+    stft_var, _, _, _, _, _ = labeled_options(rootl, 'Use STFT:', padding=padding_setting,
+                                              side=tk.LEFT, vartype=tk.StringVar, vardefault=bool_options[1],
+                                              infotext=it.stft, **common_kwargs)
+
     # slc_limits and slc limits
     frame_slc_limits = tk.Frame(rootl)
     frame_slc_limits.pack(**padding_setting, side=tk.TOP)
@@ -777,6 +786,10 @@ All pairs of subfolders will be compared.""",
                       padding=padding_setting, vardefault=0, vartype=tk.IntVar,
                       infotext=it.sgf_polyorder, **common_kwargs)
 
+    # hybrid_smoothing
+    hybrid_smoothing_var, _, _, _, _, _ = labeled_options(frame_peak_fitr, 'Use hybrid smoothing:', padding=padding_setting,
+                                                          side=tk.LEFT, vartype=tk.StringVar, vardefault=bool_options[1],
+                                                          infotext=it.hybrid_smoothing, **common_kwargs)
     # headings
     heading_peak_finding = heading("Peak Finding", lvl=2, frame=frame_peak_fitl, padding=False)
     heading_noise_reduction = heading("Noise Reduction", lvl=2, frame=frame_peak_fitr, padding=False)
